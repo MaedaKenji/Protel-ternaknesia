@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -53,11 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Error'),
+        title: const Text('Error'),
         content: Text(message),
         actions: <Widget>[
           ElevatedButton(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () {
               Navigator.of(ctx).pop();
             },
@@ -71,11 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Success'),
+        title: const Text('Success'),
         content: Text(message),
         actions: <Widget>[
           ElevatedButton(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () {
               Navigator.of(ctx).pop();
               // Arahkan ke halaman berikutnya, atau reset form login
@@ -91,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: const Text('Login'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -100,25 +102,25 @@ class _LoginScreenState extends State<LoginScreen> {
           children: <Widget>[
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.emailAddress,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
               obscureText: true, // To hide the password input
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _login,
-              child: Text('Login'),
+              child: const Text('Login'),
             ),
           ],
         ),
