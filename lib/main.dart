@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: NFCPage(), // Set LoginScreen sebagai halaman utama
+      home: LoginScreen(), // Set LoginScreen sebagai halaman utama
     );
   }
 }
