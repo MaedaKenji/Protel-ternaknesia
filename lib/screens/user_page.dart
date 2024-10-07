@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ternaknesia/services/api_service.dart';
 
 class UsersPage extends StatefulWidget {
+  const UsersPage({super.key});
+
   @override
   _UsersPageState createState() => _UsersPageState();
 }
@@ -24,7 +26,7 @@ class _UsersPageState extends State<UsersPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Users'),
+        title: const Text('Users'),
       ),
       body: ListView.builder(
         itemCount: users.length,

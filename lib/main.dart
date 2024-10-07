@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ternaknesia/screens/nfc_screen.dart';
 import 'screens/login_screen.dart';
 
 void main() {
@@ -6,14 +7,16 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Login pppppp',
+      title: 'Login App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginScreen(), // Set LoginScreen sebagai halaman utama
+      home: NFCPage(), // Set LoginScreen sebagai halaman utama
     );
   }
 }
