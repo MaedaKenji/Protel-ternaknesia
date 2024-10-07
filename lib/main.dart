@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
+import 'package:ternaknesia/screens/nfc_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginScreen(), // Set LoginScreen sebagai halaman utama
+      home: const NfcScreen(), // Set LoginScreen sebagai halaman utama
     );
   }
 }
