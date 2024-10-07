@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
+import 'dart:math';
 
 class NfcScreen extends StatefulWidget {
   const NfcScreen({super.key});
@@ -11,31 +11,32 @@ class NfcScreen extends StatefulWidget {
 class _NfcScreenState extends State<NfcScreen> {
   String _nfcData = "No NFC tag read yet.";
 
-  // Function to start NFC reading
-  Future<void> _readNfcTag() async {
-    try {
-      // Start NFC session
-      NFCTag tag = await FlutterNfcKit.poll();
-      
-      // Process NFC data (Example: reading UID)
-      setState(() {
-        _nfcData = 'NFC Tag found: ${tag.id}';
-      });
+  // Function to generate dummy NFC data
+  String _generateDummyNfcData() {
+    final random = Random();
+    final tagId = List.generate(8, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join(':');
+    return 'NFC Tag found: $tagId';
+  }
 
-      // End NFC session
-      await FlutterNfcKit.finish();
-    } catch (e) {
-      setState(() {
-        _nfcData = 'Error reading NFC: $e';
-      });
-    }
+  // Function to simulate NFC reading
+  Future<void> _simulateNfcReading() async {
+    setState(() {
+      _nfcData = 'Reading NFC tag...';
+    });
+
+    // Simulate a delay to mimic NFC reading process
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      _nfcData = _generateDummyNfcData();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('NFC Reader'),
+        title: const Text('NFC Reader (Simulation)'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -43,13 +44,14 @@ class _NfcScreenState extends State<NfcScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'Tap your NFC tag below:',
+              'Tap the button to simulate NFC tag reading:',
               style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _readNfcTag,
-              child: const Text('Read NFC Tag'),
+              onPressed: _simulateNfcReading,
+              child: const Text('Simulate NFC Tag Reading'),
             ),
             const SizedBox(height: 20),
             Text(
