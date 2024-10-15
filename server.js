@@ -2,10 +2,19 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
 require('dotenv').config();
+
+// Models
+const Cow = require('./models/Cow');
+
+
 
 const app = express();
 app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
+const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
@@ -14,22 +23,19 @@ mongoose.connect(process.env.MONGODB_URI)
   })
   .catch(err => console.error('MongoDB connection error:', err));
 
-const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-});
+// Impor User model dari folder models
+const User = require('./models/user');
 
-const User = mongoose.model('user', UserSchema); //(<database name>, UserSchema) databasename akan diganti ke lowercase dan otomatis ditambahkan s diakhir kalimatnya
-
+app.use(cors({
+  origin: '*',  // Mengizinkan semua domain, atau ganti dengan domain yang diizinkan
+}));
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  // console.log(email, password);
   
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      console.log('User not found');
       return res.status(400).json({ success: false, message: 'User not found' });
     }
     
@@ -45,30 +51,49 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Untuk mengambil semua user
 app.get('/users', async (req, res) => {
   try {
     const users = await User.find({});
     res.json({ success: true, users });
   } catch (error) {
-    console.error('Error fetching users:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
-// Untuk menambahkan user
 app.post('/register', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, password: hashedPassword });
+    const newUser = new User({ email, password });
     await newUser.save();
     res.json({ success: true, message: 'User registered successfully' });
   } catch (error) {
-    console.error('Registration error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// API untuk mendapatkan data sapi
+app.get('/cows', async (req, res) => {
+  try {
+    const Cows = await Cow.find();
+    res.json(Cows);  // Mengirimkan semua data sapi sebagai JSON
+  } catch (err) {
+    console.error('Error fetching cow data:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// API untuk menambah data sapi baru
+app.post('/cows', async (req, res) => {
+  try {
+    const newCow = new Cow(req.body);
+    await newCow.save();
+    res.json({ message: 'Cow data added successfully', cow: newCow });
+  } catch (err) {
+    console.error('Error adding cow data:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+// Start server with full URL
+app.listen(PORT, () => console.log(`Server running on ${SERVER_URL}`));
