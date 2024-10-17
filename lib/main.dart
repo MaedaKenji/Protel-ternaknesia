@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
 import 'screens/login_screen.dart';
+import 'package:ternaknesia/screens/nfc_screen.dart';
 
 void main() {
   runApp(MyApp());
