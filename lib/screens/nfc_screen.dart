@@ -11,7 +11,7 @@ class NFCPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const InputPage(),
+      home: const InputPage(), // Halaman Input sebagai halaman utama
     );
   }
 }
@@ -24,15 +24,6 @@ class InputPage extends StatefulWidget {
 }
 
 class _InputPageState extends State<InputPage> {
-  int _currentIndex = 1; // Indeks awal sesuai dengan halaman Input
-
-  // Fungsi untuk mengganti halaman saat icon ditekan
-  void _onItemTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,7 +32,9 @@ class _InputPageState extends State<InputPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context); // Kembali ke halaman sebelumnya
+          },
         ),
         actions: [
           IconButton(
@@ -102,28 +95,6 @@ class _InputPageState extends State<InputPage> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex, // Indeks saat ini
-        onTap: _onItemTapped, // Fungsi untuk ganti halaman
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.input),
-            label: 'Input',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        selectedItemColor: Colors.brown, // Warna item yang dipilih
-        unselectedItemColor: Colors.grey, // Warna item tidak dipilih
-        backgroundColor: Colors.white, // Warna latar belakang bar
-        type: BottomNavigationBarType.fixed, // Menampilkan semua item
       ),
     );
   }
