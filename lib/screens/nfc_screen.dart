@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(NFCPage());
+  runApp(const NFCPage());
 }
 
 class NFCPage extends StatelessWidget {
@@ -11,13 +11,27 @@ class NFCPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: InputPage(),
+      home: const InputPage(),
     );
   }
 }
 
-class InputPage extends StatelessWidget {
+class InputPage extends StatefulWidget {
   const InputPage({super.key});
+
+  @override
+  State<InputPage> createState() => _InputPageState();
+}
+
+class _InputPageState extends State<InputPage> {
+  int _currentIndex = 1; // Indeks awal sesuai dengan halaman Input
+
+  // Fungsi untuk mengganti halaman saat icon ditekan
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +72,8 @@ class InputPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.brown, // Warna sesuai gambar
-                minimumSize:
-                    const Size(double.infinity, 50), // Lebar tombol penuh
+                backgroundColor: Colors.brown,
+                minimumSize: const Size(double.infinity, 50),
               ),
               child: const Text('OK'),
             ),
@@ -81,18 +94,18 @@ class InputPage extends StatelessWidget {
               icon: const Icon(Icons.nfc),
               label: const Text('SCAN WITH NFC'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Background warna putih
-                foregroundColor: Colors.black, // Warna teks dan ikon hitam
-                side: const BorderSide(color: Colors.black), // Border hitam
-                minimumSize:
-                    const Size(double.infinity, 50), // Lebar tombol penuh
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.black),
+                minimumSize: const Size(double.infinity, 50),
               ),
             ),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
+        currentIndex: _currentIndex, // Indeks saat ini
+        onTap: _onItemTapped, // Fungsi untuk ganti halaman
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -107,7 +120,10 @@ class InputPage extends StatelessWidget {
             label: 'Profile',
           ),
         ],
-        selectedItemColor: Colors.brown,
+        selectedItemColor: Colors.brown, // Warna item yang dipilih
+        unselectedItemColor: Colors.grey, // Warna item tidak dipilih
+        backgroundColor: Colors.white, // Warna latar belakang bar
+        type: BottomNavigationBarType.fixed, // Menampilkan semua item
       ),
     );
   }

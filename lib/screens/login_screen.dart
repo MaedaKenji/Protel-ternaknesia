@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() {
-  runApp(LoginScreen());
+  runApp(const LoginScreen());
 }
 
 class LoginScreen extends StatelessWidget {
@@ -16,9 +16,10 @@ class LoginScreen extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: LoginPage(),
+      debugShowCheckedModeBanner: false,
+      home: const LoginPage(), // Halaman awal
       routes: {
-        '/home': (context) => HomePage(),
+        '/home': (context) => const HomeScreen(), // Rute ke HomeScreen
       },
     );
   }
@@ -28,16 +29,16 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // Fungsi Login
   void _login() {
-    // Pindah ke halaman Home
-    Navigator.pushNamed(context, '/home');
+    Navigator.pushNamed(context, '/home'); // Pindah ke HomeScreen
   }
 
   @override
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Image.network(
-                'https://upload.wikimedia.org/wikipedia/commons/7/7e/Ternaknesia.png', // URL Logo sementara
+                'https://upload.wikimedia.org/wikipedia/commons/7/7e/Ternaknesia.png', // URL Logo
                 height: 100,
               ),
               const SizedBox(height: 20),
@@ -81,12 +82,13 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: _login,
+                onPressed: _login, // Fungsi Login
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.orange, // Ganti primary jadi backgroundColor
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  backgroundColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 50,
+                    vertical: 15,
+                  ),
                 ),
                 child: const Text('LOGIN'),
               ),
@@ -95,15 +97,13 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Handle Google Login
+                  // Tambahkan fungsi Google Login di sini
                 },
                 icon: const Icon(Icons.login),
                 label: const Text('Login with Google'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.white, // Ganti primary jadi backgroundColor
-                  foregroundColor:
-                      Colors.black, // Ganti onPrimary jadi foregroundColor
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
                   side: const BorderSide(color: Colors.black),
                 ),
               ),
@@ -115,20 +115,51 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0; // Indeks awal
+
+  // Fungsi untuk mengganti halaman saat item ditekan
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-      ),
-      body: const Center(
-        child: Text(
-          'Welcome to Home Page!',
-          style: TextStyle(fontSize: 24),
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex, // Indeks item saat ini
+        onTap: _onItemTapped, // Fungsi saat item ditekan
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.input),
+            label: 'Input',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.data_usage),
+            label: 'Data',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        selectedItemColor: Colors.brown,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

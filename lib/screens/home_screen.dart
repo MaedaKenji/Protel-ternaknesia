@@ -1,51 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:ternaknesia/screens/login_screen.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
 
 void main() {
-  runApp(HomePage());
+  runApp(const HomeScreen());
 }
 
-class HomePage extends StatelessWidget {
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Custom Bottom Navigation',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: MainPage(),
+      debugShowCheckedModeBanner: false,
+      home: const HomePage(), // Halaman awal
     );
   }
 }
 
-class MainPage extends StatefulWidget {
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
-  _MainPageState createState() => _MainPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0;
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0; // Indeks awal
 
-  static const List<Widget> _pages = <Widget>[
-    //HomePage(),
-    LoginScreen(),
-    NFCPage(),
-  ];
-
+  // Fungsi untuk menangani navigasi saat item ditekan
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == 1) {
+      // Pindah ke NFCScreen saat ikon 'Input' ditekan
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const NFCPage()),
+      );
+    } else {
+      setState(() {
+        _currentIndex = index; // Perbarui indeks untuk ikon lainnya
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      appBar: AppBar(
+        title: const Text('Home Page'),
+        backgroundColor: Colors.orange,
+      ),
+      body: Center(
+        child: Text(
+          'Selected Index: $_currentIndex',
+          style: const TextStyle(fontSize: 24),
+        ),
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.orange, // Warna latar belakang bar
-        items: const <BottomNavigationBarItem>[
+        currentIndex: _currentIndex, // Indeks saat ini
+        onTap: _onItemTapped, // Fungsi navigasi
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -63,59 +76,10 @@ class _MainPageState extends State<MainPage> {
             label: 'Profile',
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.white, // Warna ikon saat dipilih
-        unselectedItemColor: Colors.white60, // Warna ikon saat tidak dipilih
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // Memastikan semua item tampil
-      ),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'This is the Home Page',
-        style: TextStyle(fontSize: 24),
-      ),
-    );
-  }
-}
-
-class InputScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'This is the Input Page',
-        style: TextStyle(fontSize: 24),
-      ),
-    );
-  }
-}
-
-class DataScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'This is the Data Page',
-        style: TextStyle(fontSize: 24),
-      ),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'This is the Profile Page',
-        style: TextStyle(fontSize: 24),
+        selectedItemColor: Colors.brown, // Warna ikon aktif
+        unselectedItemColor: Colors.grey, // Warna ikon tidak aktif
+        backgroundColor: Colors.white, // Warna latar belakang
+        type: BottomNavigationBarType.fixed, // Menampilkan semua item
       ),
     );
   }
