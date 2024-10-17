@@ -33,7 +33,7 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
   // Daftar halaman yang bisa diakses melalui navigasi
   final List<Widget> _pages = [
     const HomeScreen(),
-    const InputDataPage(),
+    const NFCPage(),
     const ProfilePage(),
   ];
 

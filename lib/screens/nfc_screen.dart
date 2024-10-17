@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ternaknesia/screens/inputdata.dart';
 
 void main() {
   runApp(const NFCPage());
@@ -11,7 +12,7 @@ class NFCPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const InputPage(), // Halaman Input sebagai halaman utama
+      home: const InputPage(), // Halaman Input NFC sebagai halaman utama
     );
   }
 }
@@ -63,7 +64,15 @@ class _InputPageState extends State<InputPage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                // Navigasi ke halaman InputDataPage saat tombol OK ditekan
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const InputDataPage(),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.brown,
                 minimumSize: const Size(double.infinity, 50),
