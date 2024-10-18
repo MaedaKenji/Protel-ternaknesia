@@ -7,9 +7,8 @@ import 'screens/profil.dart';
 import 'screens/inputdata.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -21,6 +20,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: Navbar(), // Set LoginScreen sebagai halaman utama
+
     );
   }
 }
