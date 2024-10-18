@@ -1,6 +1,6 @@
 
  const mongoose = require('mongoose');
-const Cow = require('./models/Cow'); // pastikan path ini mengarah ke model yang kamu buat
+const Cow = require('./models/cow'); // pastikan path ini mengarah ke model yang kamu buat
 const faker = require('faker'); // gunakan faker untuk membuat data acak
 require('dotenv').config();
 

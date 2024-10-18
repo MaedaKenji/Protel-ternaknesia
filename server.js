@@ -6,7 +6,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 // Models
-const Cow = require('./models/Cow');
+const Cow = require('./models/cow');
 
 
 
@@ -82,15 +82,51 @@ app.get('/cows', async (req, res) => {
   }
 });
 
-// API untuk menambah data sapi baru
-app.post('/cows', async (req, res) => {
+// API untuk menambahkan record baru berdasarkan ID sapi yang ada
+app.post('/api/cows/:id', async (req, res) => {
   try {
-    const newCow = new Cow(req.body);
-    await newCow.save();
-    res.json({ message: 'Cow data added successfully', cow: newCow });
-  } catch (err) {
-    console.error('Error adding cow data:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    const cowId = req.params.id;
+    const cowData = req.body; // Data baru yang akan ditambahkan
+
+    // Cari sapi berdasarkan ID
+    const cow = await Cow.findById(cowId);
+
+    if (!cow) {
+      // Jika sapi dengan ID tidak ditemukan, kembalikan error
+      return res.status(404).json({ message: 'Sapi tidak ditemukan' });
+    }
+
+    // Tambahkan data baru ke array yang sesuai berdasarkan cowData
+    if (cowData.health) {
+      cow.health.push({ sehat: cowData.health.sehat });
+    }
+    if (cowData.birahi) {
+      cow.birahi.push({ birahi: cowData.birahi.birahi });
+    }
+    if (cowData.hasilPerolehanSusu) {
+      cow.hasilPerolehanSusu.push({ hasil: cowData.hasilPerolehanSusu.hasil });
+    }
+    if (cowData.beratPakanHijauan) {
+      cow.beratPakanHijauan.push({
+        beratPakanHijauan: cowData.beratPakanHijauan.beratPakanHijauan,
+        beratPakanKonsentrat: cowData.beratPakanKonsentrat.beratPakanKonsentrat
+      });
+    }
+    if (cowData.tingkatStress) {
+      cow.tingkatStress.push({ stress: cowData.tingkatStress.stress });
+    }
+    if (cowData.catatanTambahan) {
+      cow.catatanTambahan.push({ note: cowData.catatanTambahan.note });
+    }
+
+    // Simpan perubahan ke database
+    const updatedCow = await cow.save();
+
+    // Kirim response sukses
+    res.status(200).json(updatedCow);
+  } catch (error) {
+    // Kirim response error
+    res.status(400).json({ message: error.message });
   }
 });
 
