@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -145,7 +145,7 @@ Widget build(BuildContext context) {
   }
 
   Future<void> _storeToken(String token) async {
-  final storage = FlutterSecureStorage();
-  await storage.write(key: 'jwt_token', value: token);
+  // final storage = FlutterSecureStorage();
+  // await storage.write(key: 'jwt_token', value: token);
 }
 }

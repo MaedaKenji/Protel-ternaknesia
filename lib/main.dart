@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ternaknesia/screens/cow_analysis_page.dart';
 import 'package:ternaknesia/screens/login_screen.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
+import 'package:ternaknesia/screens/dashboard.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const CowAnalysisPage(), // Set LoginScreen sebagai halaman utama
+      home:  DataWidget(), // Set LoginScreen sebagai halaman utama
     );
   }
 }

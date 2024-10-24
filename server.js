@@ -7,6 +7,8 @@ require('dotenv').config();
 
 // Models
 const Cow = require('./models/cow');
+// Impor User model dari folder models
+const User = require('./models/user');
 
 
 
@@ -23,8 +25,7 @@ mongoose.connect(process.env.MONGODB_URI)
   })
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Impor User model dari folder models
-const User = require('./models/user');
+
 
 app.use(cors({
   origin: '*',  // Mengizinkan semua domain, atau ganti dengan domain yang diizinkan
@@ -128,6 +129,54 @@ app.post('/api/cows/:id', async (req, res) => {
     // Kirim response error
     res.status(400).json({ message: error.message });
   }
+});
+
+app.get('/api/cows/all-susu', async (req, res) => {
+  try {
+    const data = await Cow.find();
+    if (!data) {
+      return res.status(404).json({ message: 'Data not found' });
+    }
+    // const allSusu = data.map(cow => {
+    //   const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
+    //   return {
+    //     cowId: cow._id,
+    //     lastMilkResult: lastEntry ? lastEntry.hasil : null,
+    //     lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null
+    //   };
+    // });
+    // res.json({ allSusu });
+    let totalMilk = 0;
+    const allSusu = data.map(cow => {
+      const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
+      const lastMilkResult = lastEntry ? lastEntry.hasil : 0;
+      
+      // Menambahkan hasil ke total
+      totalMilk += lastMilkResult;
+
+      return {
+        cowId: cow._id,
+        lastMilkResult: lastMilkResult,
+        lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null
+      };
+    });
+
+    res.json({ 
+      totalMilk: totalMilk
+    });
+  }  catch (err) {
+    // console.error('Error fetching cow data:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// Middleware untuk menangani error
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: 'Terjadi kesalahan pada server',
+  });
 });
 
 
