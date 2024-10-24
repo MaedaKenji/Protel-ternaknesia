@@ -16,7 +16,15 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+// const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
 const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
+
+function isSameDay(date1, date2) {
+  return date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate();
+}
+
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
@@ -33,18 +41,18 @@ app.use(cors({
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  
+
   try {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ success: false, message: 'User not found' });
     }
-    
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
-    
+
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ success: true, token });
   } catch (error) {
@@ -131,7 +139,7 @@ app.post('/api/cows/:id', async (req, res) => {
   }
 });
 
-app.get('/api/cows/all-susu', async (req, res) => {
+app.get('/api/cows/today', async (req, res) => {
   try {
     const data = await Cow.find();
     if (!data) {
@@ -147,24 +155,46 @@ app.get('/api/cows/all-susu', async (req, res) => {
     // });
     // res.json({ allSusu });
     let totalMilk = 0;
+    let sapiTelahDiperah = 0;
+    let sapiTelahDiberipakan = 0;
+    const timeNow = new Date();
+    // console.log('timeNow', timeNow);
+
     const allSusu = data.map(cow => {
       const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
       const lastMilkResult = lastEntry ? lastEntry.hasil : 0;
-      
-      // Menambahkan hasil ke total
-      totalMilk += lastMilkResult;
+
+      // Menambahkan hasil ke total jika timestamp-nya adalah hari ini
+      if (lastEntry && isSameDay(new Date(lastEntry.timestamp), timeNow)) {
+        totalMilk += lastMilkResult;
+        sapiTelahDiperah++;
+      }
+
+      // Mendapatkan berat pakan hijauan terakhir
+      const lastFeedEntry = cow.beratPakanHijauan[cow.beratPakanHijauan.length - 1];
+      let lastFeedWeight = 0;
+
+      // Memeriksa apakah timestamp pakan adalah hari ini
+      if (lastFeedEntry && isSameDay(new Date(lastFeedEntry.timestamp), timeNow)) {
+        lastFeedWeight = lastFeedEntry.berat;
+        sapiTelahDiberipakan++;
+      }
 
       return {
         cowId: cow._id,
         lastMilkResult: lastMilkResult,
-        lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null
+        lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null,
+        lastFeedWeight: lastFeedWeight,
+        lastFeedTimestamp: lastFeedEntry ? lastFeedEntry.timestamp : null
       };
     });
 
-    res.json({ 
-      totalMilk: totalMilk
+    res.json({
+      totalMilk: totalMilk,
+      sapiTelahDiberipakan: sapiTelahDiberipakan,
+      sapiTelahDiperah: sapiTelahDiperah
     });
-  }  catch (err) {
+  } catch (err) {
     // console.error('Error fetching cow data:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -181,4 +211,4 @@ app.use((err, req, res, next) => {
 
 
 // Start server with full URL
-app.listen(PORT, () => console.log(`Server running on ${SERVER_URL}`));
+app.listen(PORT, SERVER_URL, () => console.log(`Server running on `));

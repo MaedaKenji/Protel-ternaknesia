@@ -6,12 +6,10 @@ import 'dart:convert';
 
 class DataWidget extends StatefulWidget {
   const DataWidget({Key? key}) : super(key: key);
-  
+
   @override
-  State<DataWidget> createState() => _DataWidgetState();  
+  State<DataWidget> createState() => _DataWidgetState();
 }
-
-
 
 class _DataWidgetState extends State<DataWidget> {
   // Replace these with your actual data fetching logic
@@ -25,18 +23,32 @@ class _DataWidgetState extends State<DataWidget> {
   //   };
   // }
   Future<Map<String, dynamic>> fetchData() async {
-    const String url = '${AppConfig.serverUrl}/api/cows/all-susu';
+    const String url = '${AppConfig.serverUrl}/api/cows/today';
     final response = await http.get(Uri.parse(url));
-    int totalMilk = 0;
+
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      totalMilk = data['totalMilk'];
+
+      int totalMilk = data['totalMilk'] ?? 0;
+      int sapiTelahDiperah = data['sapiTelahDiperah'] ?? 0;
+      int sapiTelahDiberipakan = data['sapiTelahDiberipakan'] ?? 0;
+
+      List<Map<String, dynamic>> allSusu =
+          List<Map<String, dynamic>>.from(data['allSusu'] ?? []);
+
+      return {
+        'totalMilk': totalMilk,
+        'sapiTelahDiperah': sapiTelahDiperah,
+        'sapiTelahDiberipakan': sapiTelahDiberipakan,
+        'allSusu': allSusu,
+      };
     } else {
       throw Exception('Failed to load cow data');
-    }
-    return {'susu': totalMilk};
-  }
+      // print(response.body);
 
+      // return {};
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,19 +66,19 @@ class _DataWidgetState extends State<DataWidget> {
               // Card for "Perolehan susu hari ini"
               _dataCard(
                 title: 'Perolehan susu hari ini',
-                value: '${data['susu']} L',
+                value: '${data['totalMilk']} L',
               ),
               const SizedBox(height: 16),
               // Card for "Sapi yang telah diperah"
               _dataCard(
                 title: 'Sapi yang telah diperah',
-                value: '${data['sapi_diperah']}',
+                value: '${data['sapiTelahDiperah']}',
               ),
               const SizedBox(height: 16),
               // Card for "Sapi yang telah diberi pakan"
               _dataCard(
                 title: 'Sapi yang telah diberi pakan',
-                value: '${data['sapi_pakan']}',
+                value: '${data['sapiTelahDiberipakan']}',
               ),
             ],
           );
