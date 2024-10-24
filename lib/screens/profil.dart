@@ -29,7 +29,7 @@ class ProfilePage extends StatelessWidget {
             const CircleAvatar(
               radius: 60,
               backgroundImage: NetworkImage(
-                  'https://preview.redd.it/handsome-squidward-v0-x0y0u0c010bb1.jpg?width=640&crop=smart&auto=webp&s=021b409d0c1b121b7f109ffbc41ee3d2ed23f049'), // Gambar profil dari URL
+                  'https://cdn-icons-png.flaticon.com/512/1998/1998627.png'), // Gambar profil dari URL
             ),
             const SizedBox(height: 10),
             // Nama Pengguna
