@@ -5,10 +5,10 @@ class UsersPage extends StatefulWidget {
   const UsersPage({super.key});
 
   @override
-  _UsersPageState createState() => _UsersPageState();
+  UsersPageState createState() => UsersPageState();
 }
 
-class _UsersPageState extends State<UsersPage> {
+class UsersPageState extends State<UsersPage> {
   List<dynamic> users = [];
 
   @override
