@@ -3,12 +3,17 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const axios = require('axios');
+const moment = require('moment-timezone');
 require('dotenv').config();
 
 // Models
 const Cow = require('./models/cow');
-// Impor User model dari folder models
 const User = require('./models/user');
+const Record = require('./models/record');
+
+// Constants
+const nowUtcPlus7 = moment.tz("Asia/Bangkok").format();
 
 
 
@@ -145,20 +150,15 @@ app.get('/api/cows/today', async (req, res) => {
     if (!data) {
       return res.status(404).json({ message: 'Data not found' });
     }
-    // const allSusu = data.map(cow => {
-    //   const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
-    //   return {
-    //     cowId: cow._id,
-    //     lastMilkResult: lastEntry ? lastEntry.hasil : null,
-    //     lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null
-    //   };
-    // });
-    // res.json({ allSusu });
     let totalMilk = 0;
     let sapiTelahDiperah = 0;
     let sapiTelahDiberipakan = 0;
-    const timeNow = new Date();
-    // console.log('timeNow', timeNow);
+    let beratPakanHijauan = 0;
+    let beratPakanKonsentrat = 0;
+    // const timeNow = new Date();
+    const timeNow = moment.tz("Asia/Bangkok").format
+    console.log(timeNow);
+
 
     const allSusu = data.map(cow => {
       const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
@@ -189,13 +189,85 @@ app.get('/api/cows/today', async (req, res) => {
       };
     });
 
+    // await axios.post(`${process.env.BASE_URL}/api/milk-records`, { totalMilk });
+
     res.json({
       totalMilk: totalMilk,
       sapiTelahDiberipakan: sapiTelahDiberipakan,
       sapiTelahDiperah: sapiTelahDiperah
     });
   } catch (err) {
-    // console.error('Error fetching cow data:', err);
+    res.status(500).json({ message: 'Server error', error: err.message, url: process.env.BASE_URL });
+  }
+});
+
+app.post('/api/records', async (req, res) => {
+  try {
+    const { hasilPerah, jumlahSapiSehat, beratHijauan, beratSentrat } = req.body;
+    const timeNow = new Date(Date.now() + 7 * 60 * 60 * 1000);;
+    // console.log(timeNow);
+
+    // Cek record terakhir
+    let record = await Record.findOne();
+
+    if (!record) {
+      // Jika tidak ada record, buat record baru
+      record = new Record({
+        hasilPerah: [],
+        jumlahSapiSehat: [],
+        beratHijauan: [],
+        beratSentrat: []
+      });
+    }
+
+    // Fungsi untuk menambahkan atau memperbarui data
+    const addOrUpdateData = (array, newValue) => {
+      const lastEntry = array[array.length - 1];
+      if (!lastEntry) {
+        // Jika array kosong, tambahkan entry baru
+        array.push({ nilai: newValue, timestamp: timeNow });
+      } else if (isSameDay(new Date(lastEntry.timestamp), timeNow) && timeNow > new Date(lastEntry.timestamp)) {
+        // Jika timestamp sama (hari yang sama) dan timeNow lebih besar, perbarui nilai
+        lastEntry.nilai = newValue;
+        lastEntry.timestamp = timeNow; // Update timestamp juga
+      } else if (!isSameDay(new Date(lastEntry.timestamp), timeNow)) {
+        // Jika hari berbeda, tambahkan entry baru
+        array.push({ nilai: newValue, timestamp: timeNow });
+      } else {
+        // Jika hari berbeda, tambahkan entry baru
+        array.push({ nilai: newValue, timestamp: timeNow });
+      }
+    }
+    const addNewData2 = (array, newValue) => {
+      const lastEntry = array[array.length - 1];
+      {
+        const nextDay = new Date(timeNow);
+        nextDay.setDate(nextDay.getDate() + 3);
+        array.push({ nilai: newValue, timestamp: nextDay });
+      }
+    };
+
+
+    // Tambahkan data baru ke masing-masing array
+    if (hasilPerah !== undefined) addOrUpdateData(record.hasilPerah, hasilPerah);
+    if (jumlahSapiSehat !== undefined) addOrUpdateData(record.jumlahSapiSehat, jumlahSapiSehat);
+    if (beratHijauan !== undefined) addOrUpdateData(record.beratHijauan, beratHijauan);
+    if (beratSentrat !== undefined) addOrUpdateData(record.beratSentrat, beratSentrat);
+    // addNewData2(record.jumlahSapiSehat, jumlahSapiSehat);
+
+    await record.save();
+    res.status(201).json({ message: 'Record updated', record: record });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message, req: req.body });
+  }
+});
+
+
+app.get('/api/records', async (req, res) => {
+  try {
+    const records = await Record.find();
+    res.json(records);
+  } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
@@ -211,4 +283,4 @@ app.use((err, req, res, next) => {
 
 
 // Start server with full URL
-app.listen(PORT, SERVER_URL, () => console.log(`Server running on `));
+app.listen(PORT, SERVER_URL, () => console.log(`Server running on ${SERVER_URL} port ${PORT}`));
