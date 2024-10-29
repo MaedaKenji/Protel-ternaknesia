@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home:  DataWidget(), // Set LoginScreen sebagai halaman utama
+      home:  NfcScreen(), // Set LoginScreen sebagai halaman utama
     );
   }
 }

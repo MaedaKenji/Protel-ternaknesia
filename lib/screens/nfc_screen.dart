@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
 
 class NfcScreen extends StatefulWidget {
   const NfcScreen({super.key});
@@ -11,26 +12,43 @@ class NfcScreen extends StatefulWidget {
 class _NfcScreenState extends State<NfcScreen> {
   String _nfcData = "No NFC tag read yet.";
 
-  // Function to generate dummy NFC data
-  String _generateDummyNfcData() {
-    final random = Random();
-    final tagId = List.generate(8, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join(':');
-    return 'NFC Tag found: $tagId';
-  }
-
-  // Function to simulate NFC reading
-  Future<void> _simulateNfcReading() async {
+   // Function to read real NFC tag data
+  Future<void> _readNfcTag() async {
     setState(() {
       _nfcData = 'Reading NFC tag...';
     });
 
-    // Simulate a delay to mimic NFC reading process
-    await Future.delayed(const Duration(seconds: 2));
+      try {
+      // Wait for the NFC tag to be detected
+      final tag = await FlutterNfcKit.poll();
 
-    setState(() {
-      _nfcData = _generateDummyNfcData();
-    });
+      // Build a tag information string
+      String tagInfo = 'NFC Tag found:\n';
+      tagInfo += 'ID: ${tag.id}\n';
+      tagInfo += 'Type: ${tag.type}\n';
+
+      // Check if NDEF is available and not null
+      if (tag.ndefAvailable == true) {
+        final ndef = await FlutterNfcKit.readNDEFRecords();
+        tagInfo += 'NDEF Data: ${ndef.map((e) => e.payload).join(', ')}';
+      } else {
+        tagInfo += 'No NDEF data available';
+      }
+
+      setState(() {
+        _nfcData = tagInfo;
+      });
+
+      // Finish NFC session
+      await FlutterNfcKit.finish();
+    } catch (e) {
+      setState(() {
+        _nfcData = 'Error reading NFC tag: $e';
+      });
+    }
   }
+
+  // Function to simulate NFC reading
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +68,7 @@ class _NfcScreenState extends State<NfcScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _simulateNfcReading,
+              onPressed: _readNfcTag,
               child: const Text('Simulate NFC Tag Reading'),
             ),
             const SizedBox(height: 20),
