@@ -116,6 +116,7 @@ class _InputDataPageState extends State<InputDataPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.orange[100],
         elevation: 0,
         leading: IconButton(

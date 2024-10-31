@@ -6,21 +6,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context); // Kembali ke halaman sebelumnya
-          },
-        ),
-        title: const Text(
-          'PROFILE PAGE',
-          style: TextStyle(color: Colors.black),
-        ),
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
         child: Column(
