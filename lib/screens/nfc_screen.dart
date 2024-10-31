@@ -13,6 +13,10 @@ class NFCPage extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const InputPage(), // Halaman Input NFC sebagai halaman utama
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+      ),
     );
   }
 }
@@ -28,22 +32,6 @@ class _InputPageState extends State<InputPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context); // Kembali ke halaman sebelumnya
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.wifi, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(

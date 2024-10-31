@@ -32,6 +32,7 @@ node_modules/
 .pub-cache/
 .pub/
 /build/
+tes.dart
 
 # Symbolication related
 app.*.symbols
