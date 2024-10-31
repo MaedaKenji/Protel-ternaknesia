@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ternaknesia/screens/nambahsapi.dart';
 import 'package:ternaknesia/screens/datasapipage.dart';
 
+// Data Page
 class DataPage extends StatelessWidget {
   const DataPage({Key? key}) : super(key: key);
 
@@ -163,68 +165,6 @@ class DataPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// The detailed data page for each cow
-class DataSapiPage extends StatelessWidget {
-  final String id;
-  final String gender;
-  final String age;
-  final String healthStatus;
-
-  const DataSapiPage({
-    Key? key,
-    required this.id,
-    required this.gender,
-    required this.age,
-    required this.healthStatus,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Data Sapi $id'),
-        backgroundColor: Colors.orange[100],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ID Sapi: $id',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text('Kelamin: $gender'),
-            Text('Umur: $age'),
-            Text('Status Kesehatan: $healthStatus'),
-            const SizedBox(height: 20),
-            // Additional details and functionalities can be added here
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// The add new cow page
-class TambahSapiPage extends StatelessWidget {
-  const TambahSapiPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tambah Sapi'),
-        backgroundColor: Colors.orange[100],
-      ),
-      body: Center(
-        child: const Text('Form Tambah Sapi'),
       ),
     );
   }
