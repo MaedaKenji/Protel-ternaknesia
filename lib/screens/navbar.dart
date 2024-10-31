@@ -3,6 +3,8 @@ import 'package:ternaknesia/screens/home_screen.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
 import 'package:ternaknesia/screens/inputdata.dart';
 import 'package:ternaknesia/screens/profil.dart';
+import 'package:ternaknesia/screens/datapage.dart';
+import 'package:ternaknesia/screens/datasapipage.dart';// Import the DataPage
 
 void main() {
   runApp(const Navbar());
@@ -15,7 +17,7 @@ class Navbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const NavigationBarPage(), // Halaman utama dengan navigasi
+      home: const NavigationBarPage(), // Main navigation page
     );
   }
 }
@@ -28,12 +30,13 @@ class NavigationBarPage extends StatefulWidget {
 }
 
 class _NavigationBarPageState extends State<NavigationBarPage> {
-  int _currentIndex = 0; // Indeks halaman aktif
+  int _currentIndex = 0; // Current page index
 
-  // Daftar halaman yang bisa diakses melalui navigasi
+  // List of pages accessible through navigation
   final List<Widget> _pages = [
     const HomeScreen(),
     const NFCPage(),
+    const DataPage(), // Added DataPage
     const ProfilePage(),
   ];
 
@@ -41,14 +44,14 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex, // Menampilkan halaman berdasarkan indeks
-        children: _pages, // Daftar halaman
+        index: _currentIndex, // Display page based on index
+        children: _pages, // List of pages
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex, // Indeks item saat ini
+        currentIndex: _currentIndex, // Current selected index
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // Perbarui indeks halaman
+            _currentIndex = index; // Update page index
           });
         },
         items: const [
@@ -57,18 +60,22 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.input),
+            icon: Icon(Icons.nfc),
             label: 'Input',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Data',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],
-        selectedItemColor: Colors.orange, // Warna ikon aktif
-        unselectedItemColor: Colors.grey, // Warna ikon tidak aktif
-        backgroundColor: Colors.white, // Latar belakang navigasi
-        type: BottomNavigationBarType.fixed, // Menampilkan semua item
+        selectedItemColor: Colors.orange, // Active icon color
+        unselectedItemColor: Colors.grey, // Inactive icon color
+        backgroundColor: Colors.orange, // Background color
+        type: BottomNavigationBarType.fixed, // Show all items
       ),
     );
   }
