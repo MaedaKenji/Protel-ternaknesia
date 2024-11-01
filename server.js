@@ -262,6 +262,60 @@ app.post('/api/records', async (req, res) => {
   }
 });
 
+app.get('/api/cows/today/bulanan', async (req, res) => {
+  try {
+    const data = await Cow.find();
+    if (!data) {
+      return res.status(404).json({ message: 'Data not found' });
+    }
+    let totalMilk = 0;
+    let beratPakanHijauan = 0;
+    let beratPakanKonsentrat = 0;
+    const timeNow = moment.tz("Asia/Bangkok").format
+    console.log(timeNow);
+
+
+    const allSusu = data.map(cow => {
+      const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
+      const lastMilkResult = lastEntry ? lastEntry.hasil : 0;
+
+      // Menambahkan hasil ke total jika timestamp-nya adalah hari ini
+      if (lastEntry && isSameDay(new Date(lastEntry.timestamp), timeNow)) {
+        totalMilk += lastMilkResult;
+        sapiTelahDiperah++;
+      }
+
+      // Mendapatkan berat pakan hijauan terakhir
+      const lastFeedEntry = cow.beratPakanHijauan[cow.beratPakanHijauan.length - 1];
+      let lastFeedWeight = 0;
+
+      // Memeriksa apakah timestamp pakan adalah hari ini
+      if (lastFeedEntry && isSameDay(new Date(lastFeedEntry.timestamp), timeNow)) {
+        lastFeedWeight = lastFeedEntry.berat;
+        sapiTelahDiberipakan++;
+      }
+
+      return {
+        cowId: cow._id,
+        lastMilkResult: lastMilkResult,
+        lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null,
+        lastFeedWeight: lastFeedWeight,
+        lastFeedTimestamp: lastFeedEntry ? lastFeedEntry.timestamp : null
+      };
+    });
+
+    
+
+    res.json({
+      totalMilk: totalMilk,
+      sapiTelahDiberipakan: sapiTelahDiberipakan,
+      sapiTelahDiperah: sapiTelahDiperah
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message, url: process.env.BASE_URL });
+  }
+});
+
 
 app.get('/api/records', async (req, res) => {
   try {

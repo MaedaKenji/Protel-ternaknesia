@@ -40,13 +40,6 @@ class _InputPageState extends State<InputPage> {
             const TextField(
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Nama Sapi',
-              ),
-            ),
-            const SizedBox(height: 20),
-            const TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
                 labelText: 'ID Sapi',
               ),
             ),
