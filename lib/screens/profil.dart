@@ -70,8 +70,8 @@ class ProfilePage extends StatelessWidget {
                   // Tambahkan aksi edit profil di sini
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.orange,
-                  side: const BorderSide(color: Colors.orange),
+                  foregroundColor: Color(0xFFC35804),
+                  side: const BorderSide(color: Color(0xFFC35804)),
                   padding: const EdgeInsets.symmetric(
                       vertical: 15.0, horizontal: 30.0),
                 ),

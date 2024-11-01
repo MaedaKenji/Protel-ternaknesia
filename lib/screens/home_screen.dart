@@ -18,10 +18,10 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Background ringan
+      backgroundColor: Colors.white, // Background ringan
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.orange[300],
+        backgroundColor: Color(0xFFC35804),
         title: const Text(
           'SAPPY\nSelamat Bekerja!',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -124,7 +124,7 @@ class SummaryCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange,
+                color: Color(0xFFC35804),
               ),
             ),
             const SizedBox(height: 4),

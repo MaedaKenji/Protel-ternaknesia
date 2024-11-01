@@ -28,8 +28,17 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
 
   void _submitData() {
     if (_formKey.currentState!.validate()) {
-      // Process data submission
-      _showSuccessDialog();
+      // Buat objek data sapi baru
+      final newCattleData = {
+        'id': _idController.text,
+        'gender': _gender,
+        'age': _ageController.text,
+        'weight': int.tryParse(_weightController.text) ?? 0,
+        'status': _status?.toUpperCase(),
+      };
+
+      // Kirim data sapi baru kembali ke DataPage
+      Navigator.pop(context, newCattleData);
     } else {
       _showErrorDialog('Please check your inputs.');
     }
@@ -46,7 +55,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: const [
-              Icon(Icons.check_circle, size: 50, color: Colors.orange),
+              Icon(Icons.check_circle, size: 50, color: Color(0xFFC35804)),
               SizedBox(height: 10),
               Text(
                 'DATA SAPI BERHASIL DITAMBAHKAN',
@@ -110,7 +119,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.orange[100],
+        backgroundColor: Color(0xFFC35804),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
@@ -221,7 +230,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       child: ElevatedButton(
         onPressed: _submitData,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange,
+          backgroundColor: Color(0xFFC35804),
           padding: const EdgeInsets.symmetric(vertical: 15.0),
         ),
         child: const Text(

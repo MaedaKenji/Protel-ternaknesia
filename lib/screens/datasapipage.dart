@@ -19,7 +19,7 @@ class DataSapiPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.orange[100],
+        backgroundColor: Color(0xFFC35804),
         title: Text('ID SAPI: $id'),
         centerTitle: true,
       ),
@@ -202,7 +202,7 @@ class DataSapiPage extends StatelessWidget {
                   ],
                   isCurved: true,
                   barWidth: 3,
-                  color: Colors.orange, // Use 'color' instead of 'colors'
+                  color: Color(0xFFC35804), // Use 'color' instead of 'colors'
                   dotData: FlDotData(show: true),
                 ),
               ],
@@ -245,7 +245,7 @@ class DataSapiPage extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           IconButton(
-            icon: const Icon(Icons.edit, color: Colors.orange),
+            icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
             onPressed: () {
               // Add logic for editing the condition
             },

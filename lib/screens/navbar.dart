@@ -4,7 +4,7 @@ import 'package:ternaknesia/screens/nfc_screen.dart';
 import 'package:ternaknesia/screens/inputdata.dart';
 import 'package:ternaknesia/screens/profil.dart';
 import 'package:ternaknesia/screens/datapage.dart';
-import 'package:ternaknesia/screens/datasapipage.dart';// Import the DataPage
+import 'package:ternaknesia/screens/datasapipage.dart'; // Import the DataPage
 
 void main() {
   runApp(const Navbar());
@@ -72,9 +72,9 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
             label: 'Profile',
           ),
         ],
-        selectedItemColor: Colors.orange, // Active icon color
-        unselectedItemColor: Colors.grey, // Inactive icon color
-        backgroundColor: Colors.orange, // Background color
+        selectedItemColor: Colors.white, // Active icon color
+        unselectedItemColor: Colors.white.withOpacity(0.4), // Inactive icon color
+        backgroundColor: Color(0xFFC35804), // Background color
         type: BottomNavigationBarType.fixed, // Show all items
       ),
     );
