@@ -262,9 +262,9 @@ app.post('/api/records', async (req, res) => {
   }
 });
 
-app.get('/api/cows/today/bulanan', async (req, res) => {
+app.get('/api/cows/today/bulanan/susu', async (req, res) => {
   try {
-    const data = await Cow.find();
+    const data = await Record.find();
     if (!data) {
       return res.status(404).json({ message: 'Data not found' });
     }
@@ -273,49 +273,44 @@ app.get('/api/cows/today/bulanan', async (req, res) => {
     let beratPakanKonsentrat = 0;
     const timeNow = moment.tz("Asia/Bangkok").format
     console.log(timeNow);
+    // console.log(data);
 
+    const monthlyMilkResults = {};
 
-    const allSusu = data.map(cow => {
-      const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
-      const lastMilkResult = lastEntry ? lastEntry.hasil : 0;
-
-      // Menambahkan hasil ke total jika timestamp-nya adalah hari ini
-      if (lastEntry && isSameDay(new Date(lastEntry.timestamp), timeNow)) {
-        totalMilk += lastMilkResult;
-        sapiTelahDiperah++;
+    data.forEach(cow => {
+      console.log(cow);
+      if (cow.totalMilk === undefined) {
+        console.log('Cow has no milk data');
       }
+      else {
+      cow.totalMilk.forEach(entry => {
+        const milkAmount = entry.hasil || 0; // Ambil hasil perah atau 0 jika tidak ada
+        const entryDate = new Date(entry.timestamp);
+        const monthYear = entryDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-      // Mendapatkan berat pakan hijauan terakhir
-      const lastFeedEntry = cow.beratPakanHijauan[cow.beratPakanHijauan.length - 1];
-      let lastFeedWeight = 0;
+        // Jika bulan tahun belum ada di objek, inisialisasi
+        if (!monthlyMilkResults[monthYear]) {
+          monthlyMilkResults[monthYear] = 0;
+        }
 
-      // Memeriksa apakah timestamp pakan adalah hari ini
-      if (lastFeedEntry && isSameDay(new Date(lastFeedEntry.timestamp), timeNow)) {
-        lastFeedWeight = lastFeedEntry.berat;
-        sapiTelahDiberipakan++;
-      }
-
-      return {
-        cowId: cow._id,
-        lastMilkResult: lastMilkResult,
-        lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null,
-        lastFeedWeight: lastFeedWeight,
-        lastFeedTimestamp: lastFeedEntry ? lastFeedEntry.timestamp : null
-      };
+        // Tambahkan hasil perah ke bulan yang sesuai
+        monthlyMilkResults[monthYear] += milkAmount;
+        
+      });
+    }
     });
 
-    
+    // Format hasil menjadi string
+    const resultString = Object.entries(monthlyMilkResults)
+      .map(([monthYear, total]) => `${monthYear}: ${total}`)
+      .join('; ');
 
-    res.json({
-      totalMilk: totalMilk,
-      sapiTelahDiberipakan: sapiTelahDiberipakan,
-      sapiTelahDiperah: sapiTelahDiperah
-    });
+    // Mengembalikan hasil
+    return res.json(resultString);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message, url: process.env.BASE_URL });
   }
 });
-
 
 app.get('/api/records', async (req, res) => {
   try {
@@ -337,4 +332,4 @@ app.use((err, req, res, next) => {
 
 
 // Start server with full URL
-app.listen(PORT, SERVER_URL, () => console.log(`Server running on ${SERVER_URL} port ${PORT}`));
+app.listen(PORT, SERVER_URL, () => console.log(`Server listening on ${SERVER_URL} port ${PORT}`));
