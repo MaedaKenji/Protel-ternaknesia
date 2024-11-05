@@ -6,8 +6,10 @@ import 'package:ternaknesia/screens/datasapipage.dart';
 import 'screens/login_screen.dart';
 import 'screens/profil.dart';
 import 'screens/inputdata.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  await dotenv.load();
   runApp(const MyApp());
 }
 

@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 class TambahSapiPage extends StatefulWidget {
@@ -26,10 +30,42 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
     super.dispose();
   }
 
-  void _submitData() {
+  void _submitData() async {
     if (_formKey.currentState!.validate()) {
-      // Process data submission
-      _showSuccessDialog();
+      final data = {
+        "id": _idController.text,
+        "gender": _gender,
+        "age": int.parse(_ageController.text),
+        "weight": double.parse(_weightController.text),
+        "healthRecord": true // Convert to boolean if needed
+      };
+
+      try {
+        final response = await http.post(
+          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahsapi'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(data),
+        )
+        .timeout(const Duration(seconds: 10), onTimeout: () => throw TimeoutException('Connection timed out'));
+        
+        if (response.statusCode == 201) {
+          _showSuccessDialog();
+        } else if (response.statusCode == 400) {
+          final responseBody = jsonDecode(response.body);
+          _showErrorDialog(responseBody['message'] ?? 'Error occurred');
+        } else if (response.statusCode == 500) {
+          _showErrorDialog('Internal server error');
+        } 
+        else if (response.statusCode == 404) {
+          _showErrorDialog('Resource not found');
+        }
+        else {
+          _showErrorDialog('An unexpected error occurred');
+        }
+      } catch (error) {
+         print("Error: ${error.toString()}");
+        _showErrorDialog('Failed to submit data. Please try again.');
+      }
     } else {
       _showErrorDialog('Please check your inputs.');
     }

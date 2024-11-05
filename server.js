@@ -11,6 +11,7 @@ require('dotenv').config();
 const Cow = require('./models/cow');
 const User = require('./models/user');
 const Record = require('./models/record');
+const RecordBulanan = require('./models/recordBulanan');
 
 // Constants
 const nowUtcPlus7 = moment.tz("Asia/Bangkok").format();
@@ -22,7 +23,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 // const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
-const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
+const SERVER_URL = process.env.SERVER_URL;
 
 function isSameDay(date1, date2) {
   return date1.getFullYear() === date2.getFullYear() &&
@@ -44,8 +45,11 @@ app.use(cors({
   origin: '*',  // Mengizinkan semua domain, atau ganti dengan domain yang diizinkan
 }));
 
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(email, password);
+  const user2 = await User.findOne({ email });
+  console.log(user2);
 
   try {
     const user = await User.findOne({ email });
@@ -58,14 +62,15 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ success: true, token });
+    res.json({ success: true, message: 'Login successful' });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+
   }
 });
 
-app.get('/users', async (req, res) => {
+app.get('/api/users', async (req, res) => {
   try {
     const users = await User.find({});
     res.json({ success: true, users });
@@ -74,7 +79,7 @@ app.get('/users', async (req, res) => {
   }
 });
 
-app.post('/register', async (req, res) => {
+app.post('/api/register', async (req, res) => {
   try {
     const { email, password } = req.body;
     const newUser = new User({ email, password });
@@ -86,7 +91,7 @@ app.post('/register', async (req, res) => {
 });
 
 // API untuk mendapatkan data sapi
-app.get('/cows', async (req, res) => {
+app.get('/api/cows', async (req, res) => {
   try {
     const Cows = await Cow.find();
     res.json(Cows);  // Mengirimkan semua data sapi sebagai JSON
@@ -97,52 +102,52 @@ app.get('/cows', async (req, res) => {
 });
 
 // API untuk menambahkan record baru berdasarkan ID sapi yang ada
-app.post('/api/cows/:id', async (req, res) => {
-  try {
-    const cowId = req.params.id;
-    const cowData = req.body; // Data baru yang akan ditambahkan
+// app.post('/api/cows/:id', async (req, res) => {
+//   try {
+//     const cowId = req.params.id;
+//     const cowData = req.body; // Data baru yang akan ditambahkan
 
-    // Cari sapi berdasarkan ID
-    const cow = await Cow.findById(cowId);
+//     // Cari sapi berdasarkan ID
+//     const cow = await Cow.findById(cowId);
 
-    if (!cow) {
-      // Jika sapi dengan ID tidak ditemukan, kembalikan error
-      return res.status(404).json({ message: 'Sapi tidak ditemukan' });
-    }
+//     if (!cow) {
+//       // Jika sapi dengan ID tidak ditemukan, kembalikan error
+//       return res.status(404).json({ message: 'Sapi tidak ditemukan' });
+//     }
 
-    // Tambahkan data baru ke array yang sesuai berdasarkan cowData
-    if (cowData.health) {
-      cow.health.push({ sehat: cowData.health.sehat });
-    }
-    if (cowData.birahi) {
-      cow.birahi.push({ birahi: cowData.birahi.birahi });
-    }
-    if (cowData.hasilPerolehanSusu) {
-      cow.hasilPerolehanSusu.push({ hasil: cowData.hasilPerolehanSusu.hasil });
-    }
-    if (cowData.beratPakanHijauan) {
-      cow.beratPakanHijauan.push({
-        beratPakanHijauan: cowData.beratPakanHijauan.beratPakanHijauan,
-        beratPakanKonsentrat: cowData.beratPakanKonsentrat.beratPakanKonsentrat
-      });
-    }
-    if (cowData.tingkatStress) {
-      cow.tingkatStress.push({ stress: cowData.tingkatStress.stress });
-    }
-    if (cowData.catatanTambahan) {
-      cow.catatanTambahan.push({ note: cowData.catatanTambahan.note });
-    }
+//     // Tambahkan data baru ke array yang sesuai berdasarkan cowData
+//     if (cowData.health) {
+//       cow.health.push({ sehat: cowData.health.sehat });
+//     }
+//     if (cowData.birahi) {
+//       cow.birahi.push({ birahi: cowData.birahi.birahi });
+//     }
+//     if (cowData.hasilPerolehanSusu) {
+//       cow.hasilPerolehanSusu.push({ hasil: cowData.hasilPerolehanSusu.hasil });
+//     }
+//     if (cowData.beratPakanHijauan) {
+//       cow.beratPakanHijauan.push({
+//         beratPakanHijauan: cowData.beratPakanHijauan.beratPakanHijauan,
+//         beratPakanKonsentrat: cowData.beratPakanKonsentrat.beratPakanKonsentrat
+//       });
+//     }
+//     if (cowData.tingkatStress) {
+//       cow.tingkatStress.push({ stress: cowData.tingkatStress.stress });
+//     }
+//     if (cowData.catatanTambahan) {
+//       cow.catatanTambahan.push({ note: cowData.catatanTambahan.note });
+//     }
 
-    // Simpan perubahan ke database
-    const updatedCow = await cow.save();
+//     // Simpan perubahan ke database
+//     const updatedCow = await cow.save();
 
-    // Kirim response sukses
-    res.status(200).json(updatedCow);
-  } catch (error) {
-    // Kirim response error
-    res.status(400).json({ message: error.message });
-  }
-});
+//     // Kirim response sukses
+//     res.status(200).json(updatedCow);
+//   } catch (error) {
+//     // Kirim response error
+//     res.status(400).json({ message: error.message });
+//   }
+// });
 
 app.get('/api/cows/today', async (req, res) => {
   try {
@@ -262,9 +267,46 @@ app.post('/api/records', async (req, res) => {
   }
 });
 
+app.post('/api/cows/tambahsapi', async (req, res) => {
+  try {
+    const {id, gender, age, weight, healthRecord} = req.body;
+    
+    // Check if cow with the same ID already exists
+    const existingCow = await Cow.findOne({ id });
+    if (existingCow) {
+      return res.status(400).json({ message: 'Cow with the same ID already exists' });
+    }
+  
+    const cow = new Cow({
+      id: id,
+      gender: gender,
+      age: age,
+      weight: weight,
+      healthRecord: [{ sehat: healthRecord }] // assuming healthRecord is a boolean value
+    });
+
+    await cow.save();
+    res.status(201).json({ message: 'Cow added', cow: cow });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message, req: req.body });
+  }
+});
+
+app.get('/api/cows/data', async (req, res) => {
+  try {
+    const data = await Cow.find();
+    if (!data) {
+      return res.status(404).json({ message: 'Data not found' });
+    }
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 app.get('/api/cows/today/bulanan/susu', async (req, res) => {
   try {
-    const data = await Record.find();
+    const data = await RecordBulanan.find();
     if (!data) {
       return res.status(404).json({ message: 'Data not found' });
     }
@@ -273,7 +315,7 @@ app.get('/api/cows/today/bulanan/susu', async (req, res) => {
     let beratPakanKonsentrat = 0;
     const timeNow = moment.tz("Asia/Bangkok").format
     console.log(timeNow);
-    // console.log(data);
+    console.log(data);
 
     const monthlyMilkResults = {};
 
@@ -333,3 +375,4 @@ app.use((err, req, res, next) => {
 
 // Start server with full URL
 app.listen(PORT, SERVER_URL, () => console.log(`Server listening on ${SERVER_URL} port ${PORT}`));
+console.log(`Server address: ${process.env.BASE_URL}`);
