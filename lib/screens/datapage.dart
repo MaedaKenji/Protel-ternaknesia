@@ -1,10 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:ternaknesia/screens/nambahsapi.dart';
 import 'package:ternaknesia/screens/datasapipage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-// Data Page
-class DataPage extends StatelessWidget {
+// Model Data Sapi
+class Cattle {
+  final String id;
+  final int weight;
+  final int age;
+  final String gender;
+  final String healthStatus;
+
+  Cattle({
+    required this.id,
+    required this.weight,
+    required this.age,
+    required this.gender,
+    required this.healthStatus,
+  });
+  factory Cattle.fromJson(Map<String, dynamic> json) {
+    String healthStatus = (json['healthRecord'].isNotEmpty &&
+            json['healthRecord'][0]['sehat'] == true)
+        ? 'Sehat'
+        : 'Tidak Sehat';
+
+    return Cattle(
+      id: json['id'].toString(),
+      weight: json['weight'],
+      age: json['age'],
+      gender: json['gender'],
+      healthStatus: healthStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Cattle{id: $id, weight: $weight, age: $age, gender: $gender, healthStatus: $healthStatus}';
+  }
+}
+
+class DataPage extends StatefulWidget {
   const DataPage({Key? key}) : super(key: key);
+
+  @override
+  _DataPageState createState() => _DataPageState();
+}
+
+class _DataPageState extends State<DataPage> {
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
+  Future<List<Cattle>>? cattleData;
+
+  @override
+  void initState() {
+    super.initState();
+    cattleData = fetchCattleData();
+    print(cattleData);
+  }
+
+  Future<List<Cattle>> fetchCattleData() async {
+    final response = await http.get(
+        Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows'));
+        // print(response.body);
+
+    if (response.statusCode == 200) {
+      print('Server respone code 200');
+      List<dynamic> cattleJson = json.decode(response.body);
+      // print(cattleJson);
+      print(
+          cattleJson.map((json) => Cattle.fromJson(json).toString()).toList());
+      return cattleJson.map((json) => Cattle.fromJson(json)).toList();
+    } else {
+      print('Failed to load cattle data');
+      throw Exception('Failed to load cattle data');
+    }
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      cattleData = fetchCattleData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,12 +96,19 @@ class DataPage extends StatelessWidget {
         centerTitle: true,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
           children: [
             // Search Bar
             TextField(
+              controller: searchController,
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value.toLowerCase();
+                });
+              },
               decoration: InputDecoration(
                 hintText: 'Cari',
                 border: OutlineInputBorder(
@@ -38,65 +123,63 @@ class DataPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // List of Cattle Cards
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildCattleCard(
-                    context,
-                    id: '001',
-                    weight: 100,
-                    age: '2 Bulan',
-                    status: 'SAKIT',
-                    statusColor: Colors.red,
-                    onTap: () {
-                      // Navigate to Data Sapi Page for Sapi 001
-                      Navigator.push(
+            // FutureBuilder for cattle data
+            FutureBuilder<List<Cattle>>(
+              future: cattleData,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  // Menampilkan pesan error dengan detail yang lebih lengkap
+                  return Center(
+                      child: Text('Error loading data: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No data found.'));
+                } else {
+                  // Filter data berdasarkan query
+                  final filteredCattle = snapshot.data!.where((cattle) {
+                    return cattle.id.toLowerCase().contains(searchQuery) ||
+                        cattle.healthStatus.toLowerCase().contains(searchQuery);
+                  }).toList();
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: filteredCattle.length,
+                    itemBuilder: (context, index) {
+                      final cattle = filteredCattle[index];
+                      return _buildCattleCard(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => DataSapiPage(
-                            id: '001',
-                            gender: 'Betina',
-                            age: '2 Bulan',
-                            healthStatus: 'SAKIT',
-                          ),
-                        ),
+                        id: cattle.id,
+                        weight: cattle.weight,
+                        age: cattle.age,
+                        status: cattle.healthStatus,
+                        statusColor: cattle.healthStatus.toLowerCase() == 'sehat'
+                            ? Colors.green
+                            : Colors.red,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DataSapiPage(
+                                id: cattle.id,
+                                gender: cattle.gender,
+                                age: cattle.age.toString(),
+                                healthStatus: cattle.healthStatus,
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
-                  ),
-                  const SizedBox(height: 10),
-                  _buildCattleCard(
-                    context,
-                    id: '002',
-                    weight: 100,
-                    age: '2 Bulan',
-                    status: 'SEHAT',
-                    statusColor: Colors.green,
-                    onTap: () {
-                      // Navigate to Data Sapi Page for Sapi 002
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DataSapiPage(
-                            id: '002',
-                            gender: 'Jantan',
-                            age: '2 Bulan',
-                            healthStatus: 'SEHAT',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                  );
+                  }
+              },
             ),
           ],
         ),
       ),
-      // Floating Action Button to Add New Cattle
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to Tambah Sapi Page
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -110,11 +193,10 @@ class DataPage extends StatelessWidget {
     );
   }
 
-  // Function to build individual cattle card
   Widget _buildCattleCard(BuildContext context,
       {required String id,
       required int weight,
-      required String age,
+      required int age,
       required String status,
       required Color statusColor,
       required VoidCallback onTap}) {

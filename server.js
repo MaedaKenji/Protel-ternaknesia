@@ -372,7 +372,15 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Cek nilai dari BASE_URL
+console.log(`Configured BASE_URL: ${process.env.BASE_URL}`);
+console.log(`Please check if BASE_URL is correct`);
+
+// Check if server is running
+app.get('/', (req, res) => {
+  res.send('Server is running');
+});
 
 // Start server with full URL
-app.listen(PORT, SERVER_URL, () => console.log(`Server listening on ${SERVER_URL} port ${PORT}`));
-console.log(`Server address: ${process.env.BASE_URL}`);
+app.listen(PORT, SERVER_URL, () => console.log(`Server listening on ${SERVER_URL}`));
+console.log('Port:', PORT);

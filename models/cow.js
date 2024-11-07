@@ -33,15 +33,6 @@ const birahiRecordSchema = new mongoose.Schema({
   }
 });
 
-// const healthRecordSchema = new mongoose.Schema({
-//   sehat: {
-//     type: Boolean
-//   },
-//   timestamp: {
-//     type: Date,
-//     default: Date.now
-//   }
-// });
 
 const healthRecordSchema = new mongoose.Schema({
   sehat: {
@@ -100,19 +91,6 @@ const isKandangSchema = new mongoose.Schema({
     required: true
   }
 });
-
-// const cowSchema = new mongoose.Schema({
-//   id: idSchema,
-//   gender: genderSchema,
-//   age: ageSchema,
-//   weight: weightSchema,
-//   isKandang: isKandangSchema,
-//   stressRecord: [stressRecordSchema],
-//   birahiRecord: [birahiRecordSchema],
-//   healthRecord: healthRecordSchema,
-//   pakanRecord: [pakanRecordSchema],
-//   noteRecord: [noteRecordSchema],
-// });
 
 const cowSchema = new mongoose.Schema({
   id: {
