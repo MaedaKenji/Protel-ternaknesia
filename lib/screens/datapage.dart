@@ -20,17 +20,20 @@ class Cattle {
     required this.gender,
     required this.healthStatus,
   });
+
   factory Cattle.fromJson(Map<String, dynamic> json) {
-    String healthStatus = (json['healthRecord'].isNotEmpty &&
-            json['healthRecord'][0]['sehat'] == true)
-        ? 'Sehat'
-        : 'Tidak Sehat';
+    String healthStatus =
+        (json['health_record'] != null && json['health_record'] == true)
+            ? 'Sehat'
+            : 'Tidak Sehat';
 
     return Cattle(
-      id: json['id'].toString(),
-      weight: json['weight'],
-      age: json['age'],
-      gender: json['gender'],
+      id: json['cow_id']?.toString() ?? 'Unknown ID',
+      weight: int.tryParse(json['weight']?.toString() ?? '0') ??
+          0, // Convert to int if possible, default to 0
+      age: int.tryParse(json['age']?.toString() ?? '0') ??
+          0, // Convert to int if possible, default to 0
+      gender: json['gender']?.toString() ?? 'Unknown',
       healthStatus: healthStatus,
     );
   }
@@ -40,6 +43,7 @@ class Cattle {
     return 'Cattle{id: $id, weight: $weight, age: $age, gender: $gender, healthStatus: $healthStatus}';
   }
 }
+
 
 class DataPage extends StatefulWidget {
   const DataPage({Key? key}) : super(key: key);
@@ -57,26 +61,34 @@ class _DataPageState extends State<DataPage> {
   void initState() {
     super.initState();
     cattleData = fetchCattleData();
-    print(cattleData);
   }
 
-  Future<List<Cattle>> fetchCattleData() async {
-    final response = await http.get(
-        Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows'));
-        // print(response.body);
+Future<List<Cattle>> fetchCattleData() async {
+    try {
+      final response = await http.get(Uri.parse(
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows'));
 
-    if (response.statusCode == 200) {
-      print('Server respone code 200');
-      List<dynamic> cattleJson = json.decode(response.body);
-      // print(cattleJson);
-      print(
-          cattleJson.map((json) => Cattle.fromJson(json).toString()).toList());
-      return cattleJson.map((json) => Cattle.fromJson(json)).toList();
-    } else {
-      print('Failed to load cattle data');
-      throw Exception('Failed to load cattle data');
+      if (response.statusCode == 200) {
+        List<dynamic> cattleJson = json.decode(response.body);
+
+        // Map each JSON item to a Cattle instance
+        return cattleJson.map((json) {
+          try {
+            return Cattle.fromJson(json);
+          } catch (e) {
+            // Log and handle specific errors for each item
+            throw Exception('Error parsing item: ${json['cow_id']} - $e');
+          }
+        }).toList();
+      } else {
+        throw Exception(
+            'Failed to load cattle data with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error loading cattle data: $e');
     }
   }
+
 
   Future<void> _refreshData() async {
     setState(() {
@@ -229,7 +241,7 @@ class _DataPageState extends State<DataPage> {
                       ),
                     ),
                     Text('Berat = $weight kg'),
-                    Text('Umur = $age'),
+                    Text('Umur = $age bulan'),
                   ],
                 ),
               ),

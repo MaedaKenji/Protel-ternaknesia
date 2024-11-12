@@ -37,7 +37,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
         "gender": _gender,
         "age": int.parse(_ageController.text),
         "weight": double.parse(_weightController.text),
-        "healthRecord": true // Convert to boolean if needed
+        "healthRecord": _status == 'Sehat' ? true : false
       };
 
       try {

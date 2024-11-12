@@ -22,7 +22,7 @@ const nowUtcPlus7 = moment.tz("Asia/Bangkok").format();
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 const SERVER_URL = process.env.SERVER_URL;
 
 function isSameDay(date1, date2) {
@@ -32,17 +32,16 @@ function isSameDay(date1, date2) {
 }
 
 
-// mongoose.connect(process.env.MONGODB_URI)
-//   .then(() => {
-//     console.log('Connected to MongoDB');
-//     console.log('Database Name:', mongoose.connection.name);
-//     console.log('Server & Database Up and Running');
-//   })
-//   .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    console.log('Database Name:', mongoose.connection.name);
+    console.log('Server & Database Up and Running');
+  })
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // PostgreSQL connection setup 
 const pool = new Pool({ host: process.env.PGHOST, user: process.env.PGUSER, password: process.env.PGPASSWORD, database: process.env.PGDATABASE, port: process.env.PGPORT, });
-// console.log("host:", process.env.PGHOST , "user:", process.env.PGUSER, "password:", process.env.PGPASSWORD, "database:", process.env.PGDATABASE, "port:", process.env.PGPORT, );
 
 // Test the connection 
 pool.connect((err) => { if (err) { console.error('PostgreSQL connection error:', err); } else { console.log('Connected to PostgreSQL'); } });
@@ -103,22 +102,11 @@ app.post('/api/register', async (req, res) => {
 
 
 //-------------------------------api/cows/----------------------------------------
+// API untuk mendapatkan data sapi
 app.get('/api/cows', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT c.cow_id, c.gender, c.age, c.health_record, c.stress_level, c.birahi, c.status, c.note, bw.weight AS weight, bw.date AS weight_date
-      FROM cows c
-      LEFT JOIN (
-        SELECT cow_id, weight, date
-        FROM body_weight
-        WHERE (cow_id, date) IN (
-          SELECT cow_id, MAX(date)
-          FROM body_weight
-          GROUP BY cow_id
-        )
-      ) bw ON c.cow_id = bw.cow_id
-    `);
-    res.json(result.rows);
+    const Cows = await Cow.find();
+    res.json(Cows);  // Mengirimkan semua data sapi sebagai JSON
   } catch (err) {
     console.error('Error fetching cow data:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -127,73 +115,16 @@ app.get('/api/cows', async (req, res) => {
 
 app.get('/api/cows/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Query untuk mendapatkan data sapi berdasarkan cow_id
-    const cowQuery = 'SELECT * FROM cows WHERE cow_id = $1';
-    const cowResult = await pool.query(cowQuery, [id]);
-    const cow = cowResult.rows[0];
-
+    const cow = await Cow.findOne({ id: req.params.id });
     if (!cow) {
-      return res.status(404).json({ message: 'Cow not found' });
+      return res.status(404).json({ message: 'Cow not found', cow: cow });
     }
-
-    // Query untuk mendapatkan 5 weight terakhir dari tabel body_weight berdasarkan cow_id
-    const weightQuery = `
-      SELECT date, weight
-      FROM body_weight
-      WHERE cow_id = $1
-      ORDER BY date DESC
-      LIMIT 5
-    `;
-    const weightResult = await pool.query(weightQuery, [id]);
-
-    // Query untuk mendapatkan 5 production_amount terakhir dari tabel milk_production berdasarkan cow_id
-    const milkQuery = `
-      SELECT date, production_amount
-      FROM milk_production
-      WHERE cow_id = $1
-      ORDER BY date DESC
-      LIMIT 5
-    `;
-    const milkResult = await pool.query(milkQuery, [id]);
-
-    // Query untuk mendapatkan 5 data pakan hijauan terakhir dari tabel feed_hijauan berdasarkan cow_id
-    const feedHijauanQuery = `
-      SELECT date, amount
-      FROM feed_hijauan
-      WHERE cow_id = $1
-      ORDER BY date DESC
-      LIMIT 5
-    `;
-    const feedHijauanResult = await pool.query(feedHijauanQuery, [id]);
-
-    // Query untuk mendapatkan 5 data pakan konsentrat terakhir dari tabel feed_sentrate berdasarkan cow_id
-    const feedSentrateQuery = `
-      SELECT date, amount
-      FROM feed_sentrate
-      WHERE cow_id = $1
-      ORDER BY date DESC
-      LIMIT 5
-    `;
-    const feedSentrateResult = await pool.query(feedSentrateQuery, [id]);
-
-    // Gabungkan data sapi dengan data weight, milk production, dan pakan terakhir
-    res.json({
-      ...cow,
-      recent_weights: weightResult.rows,
-      recent_milk_production: milkResult.rows,
-      recent_feed_hijauan: feedHijauanResult.rows,
-      recent_feed_sentrate: feedSentrateResult.rows
-    });
+    res.json(cow);
   } catch (err) {
-    console.error('Error fetching cow by id:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
-
-
-
 
 app.post('/api/cows/tambahdata/:id', async (req, res) => {
   try {
@@ -299,30 +230,27 @@ app.get('/api/cows/today', async (req, res) => {
 });
 
 app.post('/api/cows/tambahsapi', async (req, res) => {
-  const { id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
-  console.log("Request Body:", req.body); // Log to check incoming data
-
-  if (!id) {
-    return res.status(400).json({ message: 'cow_id (id) is required' });
-  }
   try {
-    const result = await pool.query(
-      'INSERT INTO cows (cow_id, gender, age, health_record) VALUES ($1, $2, $3, $4) RETURNING *',
-      [id, gender, age, healthRecord]
-    );
-
-    // Setelah itu, masukkan data weight ke tabel body_weight dengan cow_id yang sudah didapatkan
-    const insertWeightResult = await pool.query(
-      'INSERT INTO body_weight (cow_id, date, weight) VALUES ($1, $2, $3) RETURNING *',
-      [id, new Date(), weight]
-    );
-
-    console.log('Data bobot:', insertWeightResult.rows[0]);
+    const {id, gender, age, weight, healthRecord} = req.body;
     
-    res.status(201).json({ message: 'Cow added', cow: result.rows[0] });
+    // Check if cow with the same ID already exists
+    const existingCow = await Cow.findOne({ id });
+    if (existingCow) {
+      return res.status(400).json({ message: 'Cow with the same ID already exists' });
+    }
+  
+    const cow = new Cow({
+      id: id,
+      gender: gender,
+      age: age,
+      weight: weight,
+      healthRecord: [{ sehat: healthRecord }] // assuming healthRecord is a boolean value
+    });
+
+    await cow.save();
+    res.status(201).json({ message: 'Cow added', cow: cow });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error', error: err.message, req: req.body });
   }
 });
 

@@ -38,6 +38,10 @@ const healthRecordSchema = new mongoose.Schema({
   sehat: {
     type: Boolean,
     required: true
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
   }
 });
 
@@ -46,7 +50,11 @@ const pakanRecordSchema = new mongoose.Schema({
     type: Number
   },
   beratPakanKonsentrat: {
-    type: Number
+    type: Number,
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
   },
   timestamp: {
     type: Date,
@@ -55,42 +63,25 @@ const pakanRecordSchema = new mongoose.Schema({
 });
 
 
-const idSchema = new mongoose.Schema({
-  id: {
-    type: String,
-    required: true
-  }
-});
-
-const genderSchema = new mongoose.Schema({
-  gender: {
-    type: String,
-    enum: ['Jantan', 'Betina'],
-    required: true
-  }
-});
-
-const ageSchema = new mongoose.Schema({
-  age: {
-    type: Number,
-    required: true
-  }
-});
-
-
-const weightSchema = new mongoose.Schema({
+const beratAndSusuSchema = new mongoose.Schema({
   weight: {
     type: Number,
     required: true
+
+  },
+  perah: {
+    type: Number,
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
   }
 });
 
-const isKandangSchema = new mongoose.Schema({
-  isKandang: {
-    type: Boolean,
-    required: true
-  }
-});
 
 const cowSchema = new mongoose.Schema({
   id: {
@@ -106,15 +97,12 @@ const cowSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  weight: {
-    type: Number,
-    required: true
-  },
   isKandang: {
     type: Boolean,
     required: true,
     default: true
   },
+  beratAndSusu: [beratAndSusuSchema],
   stressRecord: [stressRecordSchema],
   birahiRecord: [birahiRecordSchema],
   healthRecord: [healthRecordSchema],
