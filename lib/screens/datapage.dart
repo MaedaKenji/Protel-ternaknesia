@@ -4,7 +4,7 @@ import 'package:ternaknesia/screens/datasapipage.dart';
 
 // Data Page
 class DataPage extends StatefulWidget {
-  const DataPage({Key? key}) : super(key: key);
+  const DataPage({super.key});
 
   @override
   State<DataPage> createState() => _DataPageState();
@@ -123,7 +123,7 @@ class _DataPageState extends State<DataPage> {
             });
           }
         },
-        backgroundColor: Color(0xFFC35804),
+        backgroundColor: const Color(0xFFC35804),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

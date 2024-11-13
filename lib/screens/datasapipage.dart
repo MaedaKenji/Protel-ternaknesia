@@ -8,14 +8,15 @@ class DataSapiPage extends StatefulWidget {
   final String healthStatus;
 
   const DataSapiPage({
-    Key? key,
+    super.key,
     required this.id,
     required this.gender,
     required this.age,
     required this.healthStatus,
-  }) : super(key: key);
+  });
 
   @override
+  // ignore: library_private_types_in_public_api
   _DataSapiPageState createState() => _DataSapiPageState();
 }
 
@@ -57,7 +58,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return const AlertDialog(
           content: Row(
             children: [
               Icon(Icons.check_circle, color: Colors.orange, size: 40),
@@ -90,7 +91,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFC35804),
+        backgroundColor: const Color(0xFFC35804),
         title: Text('ID SAPI: ${widget.id}'),
         centerTitle: true,
       ),
@@ -115,12 +116,12 @@ class _DataSapiPageState extends State<DataSapiPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_back),
+                  icon: const Icon(Icons.arrow_back),
                   onPressed: _previousChart,
                 ),
                 Expanded(child: _buildChart()),
                 IconButton(
-                  icon: Icon(Icons.arrow_forward),
+                  icon: const Icon(Icons.arrow_forward),
                   onPressed: _nextChart,
                 ),
               ],
@@ -131,11 +132,11 @@ class _DataSapiPageState extends State<DataSapiPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: Icon(Icons.add, color: Colors.orange),
+                  icon: const Icon(Icons.add, color: Colors.orange),
                   onPressed: _addNewData,
                 ),
                 IconButton(
-                  icon: Icon(Icons.history, color: Colors.orange),
+                  icon: const Icon(Icons.history, color: Colors.orange),
                   onPressed: _showHistory,
                 ),
               ],
@@ -263,21 +264,21 @@ class _DataSapiPageState extends State<DataSapiPage> {
               lineBarsData: [
                 LineChartBarData(
                   spots: [
-                    FlSpot(1, 20),
-                    FlSpot(2, 30),
-                    FlSpot(3, 40),
+                    const FlSpot(1, 20),
+                    const FlSpot(2, 30),
+                    const FlSpot(3, 40),
                     FlSpot(4, currentValue),
-                    FlSpot(5, 60),
+                    const FlSpot(5, 60),
                   ],
                   isCurved: true,
                   barWidth: 3,
                   color: const Color(0xFFC35804),
-                  dotData: FlDotData(show: true),
+                  dotData: const FlDotData(show: true),
                 ),
               ],
               borderData: FlBorderData(show: false),
-              titlesData: FlTitlesData(show: false),
-              gridData: FlGridData(show: false),
+              titlesData: const FlTitlesData(show: false),
+              gridData: const FlGridData(show: false),
             ),
           ),
         ),
@@ -362,23 +363,23 @@ class _DataSapiPageState extends State<DataSapiPage> {
 class _NewDataDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    TextEditingController _controller = TextEditingController();
+    TextEditingController controller = TextEditingController();
 
     return AlertDialog(
-      title: Text("SILAHKAN INPUT DATA BARU :"),
+      title: const Text("SILAHKAN INPUT DATA BARU :"),
       content: TextField(
-        controller: _controller,
-        decoration: InputDecoration(suffixText: "Kg"),
+        controller: controller,
+        decoration: const InputDecoration(suffixText: "Kg"),
         keyboardType: TextInputType.number,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text("BATAL"),
+          child: const Text("BATAL"),
         ),
         TextButton(
-          onPressed: () => Navigator.of(context).pop(_controller.text + " Kg"),
-          child: Text("OK"),
+          onPressed: () => Navigator.of(context).pop("${controller.text} Kg"),
+          child: const Text("OK"),
         ),
       ],
     );
@@ -390,12 +391,12 @@ class _HistoryDialog extends StatelessWidget {
   final List<String> data;
   final Function(int) onDelete;
 
-  _HistoryDialog({required this.data, required this.onDelete});
+  const _HistoryDialog({required this.data, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("RIWAYAT PAKAN"),
+      title: const Text("RIWAYAT PAKAN"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: data.asMap().entries.map((entry) {
@@ -408,11 +409,11 @@ class _HistoryDialog extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit, color: Colors.orange),
+                    icon: const Icon(Icons.edit, color: Colors.orange),
                     onPressed: () {}, // Logika untuk edit data
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: Colors.orange),
+                    icon: const Icon(Icons.close, color: Colors.orange),
                     onPressed: () => onDelete(index),
                   ),
                 ],
@@ -424,11 +425,11 @@ class _HistoryDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text("BATAL"),
+          child: const Text("BATAL"),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text("OK"),
+          child: const Text("OK"),
         ),
       ],
     );

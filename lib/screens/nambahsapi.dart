@@ -1,7 +1,9 @@
+// ignore_for_file: use_build_context_synchronously, unused_element
+
 import 'package:flutter/material.dart';
 
 class TambahSapiPage extends StatefulWidget {
-  const TambahSapiPage({Key? key}) : super(key: key);
+  const TambahSapiPage({super.key});
 
   @override
   State<TambahSapiPage> createState() => _TambahSapiPageState();
@@ -52,9 +54,9 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          content: Column(
+          content: const Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(Icons.check_circle, size: 50, color: Color(0xFFC35804)),
               SizedBox(height: 10),
               Text(
@@ -82,12 +84,12 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error, size: 50, color: Colors.red),
+              const Icon(Icons.error, size: 50, color: Colors.red),
               const SizedBox(height: 10),
-              Text(
+              const Text(
                 'Gagal Menambah Data',
                 style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
@@ -119,7 +121,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Color(0xFFC35804),
+        backgroundColor: const Color(0xFFC35804),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
@@ -230,7 +232,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       child: ElevatedButton(
         onPressed: _submitData,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFFC35804),
+          backgroundColor: const Color(0xFFC35804),
           padding: const EdgeInsets.symmetric(vertical: 15.0),
         ),
         child: const Text(
