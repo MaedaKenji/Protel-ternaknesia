@@ -48,12 +48,13 @@ const pool = new Pool({ host: process.env.PGHOST, user: process.env.PGUSER, pass
 pool.connect((err) => { if (err) { console.error('PostgreSQL connection error:', err); } else { console.log('Connected to PostgreSQL'); } });
 
 
+//-------------------------------api/users/----------------------------------------
 
 app.use(cors({
   origin: '*',  // Mengizinkan semua domain, atau ganti dengan domain yang diizinkan
 }));
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/users/login', async (req, res) => {
   const { email, password } = req.body;
   console.log(email, password);
   const user2 = await User.findOne({ email });
@@ -78,7 +79,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users/user', async (req, res) => {
   try {
     const users = await User.find({});
     res.json({ success: true, users });
@@ -87,7 +88,7 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/users/register', async (req, res) => {
   try {
     const { email, password } = req.body;
     const newUser = new User({ email, password });
@@ -192,52 +193,78 @@ app.get('/api/cows/:id', async (req, res) => {
   }
 });
 
+app.post('/api/cows/tambahsapi', async (req, res) => {
+  const { id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
+  console.log("Request Body:", req.body); // Log to check incoming data
 
-
-
-app.post('/api/cows/tambahdata/:id', async (req, res) => {
+  if (!id) {
+    return res.status(400).json({ message: 'cow_id (id) is required' });
+  }
   try {
-    // Dapatkan data berdasarkan `id` sapi
-    let cow = await Cow.findOne({ id: req.params.id });
-    console.log('API masuk')
+    const result = await pool.query(
+      'INSERT INTO cows (cow_id, gender, age, health_record) VALUES ($1, $2, $3, $4) RETURNING *',
+      [id, gender, age, healthRecord]
+    );
 
-    // Jika sapi tidak ditemukan, buat sapi baru
-    if (!cow) {
-      return res.status(404).json({ message: 'Cow not found' });
-    }
+    // Setelah itu, masukkan data weight ke tabel body_weight dengan cow_id yang sudah didapatkan
+    const insertWeightResult = await pool.query(
+      'INSERT INTO body_weight (cow_id, date, weight) VALUES ($1, $2, $3) RETURNING *',
+      [id, new Date(), weight]
+    );
 
-    // Cek dan tambahkan data sesuai body yang dikirim
-    if (req.body.beratAndSusu) {
-      cow.beratAndSusu.push(req.body.beratAndSusu);
-    }
+    console.log('Data bobot:', insertWeightResult.rows[0]);
 
-    if (req.body.stressRecord) {
-      cow.stressRecord.push(req.body.stressRecord);
-    }
-
-    if (req.body.birahiRecord) {
-      cow.birahiRecord.push(req.body.birahiRecord);
-    }
-
-    if (req.body.healthRecord) {
-      cow.healthRecord.push(req.body.healthRecord);
-    }
-
-    if (req.body.pakanRecord) {
-      cow.pakanRecord.push(req.body.pakanRecord);
-    }
-
-    if (req.body.noteRecord) {
-      cow.noteRecord.push(req.body.noteRecord);
-    }
-
-    // Simpan perubahan atau data baru ke database
-    const updatedCow = await cow.save();
-
-    res.json(updatedCow);
+    res.status(201).json({ message: 'Cow added', cow: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+app.post('/api/cows/tambahdata/:id', async (req, res) => {
+  const { id } = req.params; // cow_id
+  const data = req.body; // Data dalam bentuk {key: value}
+  const key = Object.keys(data)[0];
+  const value = data[key];
+  console.log("Request Body:", req.body);
+  console.log("ID:", id);
+
+  try {
+    // Cek key untuk menentukan tabel dan kolom yang tepat
+    if (key === 'produksiSusu') {
+      // Menambahkan data ke tabel milk_production
+      const result = await pool.query(
+        'INSERT INTO milk_production (cow_id, date, production_amount) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Milk production data added', data: result.rows[0] });
+    } else if (key === 'beratBadan') {
+      // Menambahkan data ke tabel body_weight
+      const result = await pool.query(
+        'INSERT INTO body_weight (cow_id, date, weight) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Body weight data added', data: result.rows[0] });
+    } else if (key === 'pakanHijau') {
+      // Menambahkan data ke tabel feed_hijauan
+      const result = await pool.query(
+        'INSERT INTO feed_hijauan (cow_id, date, amount) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Feed hijauan data added', data: result.rows[0] });
+    } else if (key === 'pakanSentrat') {
+      // Menambahkan data ke tabel feed_sentrate
+      const result = await pool.query(
+        'INSERT INTO feed_sentrate (cow_id, date, amount) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Feed sentrate data added', data: result.rows[0] });
+    } else {
+      res.status(400).json({ message: 'Invalid data key' });
+    }
+  } catch (err) {
+    console.error('Error adding data:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
@@ -298,33 +325,7 @@ app.get('/api/cows/today', async (req, res) => {
   }
 });
 
-app.post('/api/cows/tambahsapi', async (req, res) => {
-  const { id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
-  console.log("Request Body:", req.body); // Log to check incoming data
 
-  if (!id) {
-    return res.status(400).json({ message: 'cow_id (id) is required' });
-  }
-  try {
-    const result = await pool.query(
-      'INSERT INTO cows (cow_id, gender, age, health_record) VALUES ($1, $2, $3, $4) RETURNING *',
-      [id, gender, age, healthRecord]
-    );
-
-    // Setelah itu, masukkan data weight ke tabel body_weight dengan cow_id yang sudah didapatkan
-    const insertWeightResult = await pool.query(
-      'INSERT INTO body_weight (cow_id, date, weight) VALUES ($1, $2, $3) RETURNING *',
-      [id, new Date(), weight]
-    );
-
-    console.log('Data bobot:', insertWeightResult.rows[0]);
-    
-    res.status(201).json({ message: 'Cow added', cow: result.rows[0] });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
 
 app.get('/api/cows/data', async (req, res) => {
   try {

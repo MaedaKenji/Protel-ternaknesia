@@ -26,6 +26,69 @@ class DataSapiPage extends StatefulWidget {
 class _DataSapiPageState extends State<DataSapiPage> {
   int _currentChartIndex = 0;
   List<String> historyData = ['70 Kg', '65 Kg', '72 Kg', '68 Kg'];
+  List<double> beratBadan = [];
+  List<double> susu = [];
+  List<double> pakanHijau = [];
+  List<double> pakanSentrat = [];
+
+  bool isLoading = false;
+  String errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  // Fetch data from API
+  Future<void> fetchData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final url = Uri.parse(
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print(data);
+
+        setState(() {
+          // Mengisi list beratBadan dengan konversi String ke double
+          beratBadan = List<double>.from(data['recent_weights']
+                  ?.map((item) => double.parse(item['weight'] ?? '0')) ??
+              []);
+
+          // Kosongkan list lainnya jika tidak diperlukan
+          susu = List<double>.from(data['recent_milk_production']?.map(
+                  (item) => double.parse(item['production_amount'] ?? '0')) ??
+              []);
+          pakanHijau = List<double>.from(data['recent_feed_hijauan']
+                  ?.map((item) => double.parse(item['amount'] ?? '0')) ??
+              []);
+          pakanSentrat = List<double>.from(data['recent_feed_sentrate']
+                  ?.map((item) => double.parse(item['amount'] ?? '0')) ??
+              []);
+        });
+      } else {
+        setState(() {
+          errorMessage =
+              'Gagal memuat data. Status code: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Terjadi kesalahan: $e';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   void _nextChart() {
     setState(() {
@@ -42,20 +105,59 @@ class _DataSapiPageState extends State<DataSapiPage> {
     });
   }
 
-  void _addNewData() async {
-    String? newData = await showDialog(
+  
+  void _addNewData() {
+    String key;
+    if (_currentChartIndex == 0) {
+      key = 'produksiSusu';
+    } else if (_currentChartIndex == 1) {
+      key = 'beratBadan';
+    } else if (_currentChartIndex == 2) {
+      key = 'pakanHijau';
+    } 
+    else {
+      key = 'pakanSentrat';
+    }
+
+    showDialog(
       context: context,
-      builder: (context) {
-        return _NewDataDialog();
-      },
-    );
-    if (newData != null) {
-      setState(() {
-        historyData.add(newData);
-      });
-      _showSuccessDialog();
+      builder: (context) =>
+          _NewDataDialog(id: '${widget.id}'), // Ganti dengan ID yang sesuai
+    ).then((data) {
+      if (data != null && data.isNotEmpty) {
+        final Map<String, String> dictionary = {key: data};
+        _sendDataToServer(dictionary);
+      }
+    });
+  }
+
+  Future<void> _sendDataToServer(Map<String, String> data) async {
+    try {
+      final url = Uri.parse(
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahdata/${widget.id}');
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print(response.body);
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data berhasil dikirim ke server")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal mengirim data ke server")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     }
   }
+
 
   void _showSuccessDialog() {
     showDialog(
@@ -225,7 +327,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: widget.healthStatus == 'SEHAT' ? Colors.green : Colors.red,
+                color: widget.healthStatus.toUpperCase() == 'SEHAT' ? Colors.green : Colors.red,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -243,15 +345,41 @@ class _DataSapiPageState extends State<DataSapiPage> {
     return IndexedStack(
       index: _currentChartIndex,
       children: [
-        _buildLineChart('Berat Badan', 70),
-        _buildLineChart('Produksi Susu', 25),
-        _buildLineChart('Pakan Hijauan', 30),
-        _buildLineChart('Pakan Sentrat', 20),
+        _buildLineChart('PRODUKSI SUSU', susu),
+        _buildLineChart('BERAT BADAN', beratBadan),
+        _buildLineChart('PAKAN HIJAU', pakanHijau),
+        _buildLineChart('PAKAN SENTRAT', pakanSentrat),
       ],
     );
   }
 
-  Widget _buildLineChart(String title, double currentValue) {
+  Widget _buildLineChart(String title, List<double> values) {
+    if (values.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            height: 150,
+            alignment: Alignment.center,
+            child: const Text('Data tidak tersedia'),
+          ),
+          const SizedBox(height: 10),
+        ],
+      );
+    }
+
+    // Convert values to FlSpot list for dynamic chart data
+    List<FlSpot> spots = values.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble() + 1, entry.value);
+    }).toList();
+
+    double currentValue = values.last;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -266,13 +394,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
             LineChartData(
               lineBarsData: [
                 LineChartBarData(
-                  spots: [
-                    const FlSpot(1, 20),
-                    const FlSpot(2, 30),
-                    const FlSpot(3, 40),
-                    FlSpot(4, currentValue),
-                    const FlSpot(5, 60),
-                  ],
+                  spots: spots,
                   isCurved: true,
                   barWidth: 3,
                   color: const Color(0xFFC35804),
@@ -300,6 +422,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
       ],
     );
   }
+
 
   Widget _buildConditionsSection() {
     return Column(
@@ -364,6 +487,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
 // Dialog untuk menambahkan data baru
 class _NewDataDialog extends StatelessWidget {
+  final String id;
+
+  _NewDataDialog({required this.id});
+
   @override
   Widget build(BuildContext context) {
     TextEditingController controller = TextEditingController();
@@ -372,7 +499,7 @@ class _NewDataDialog extends StatelessWidget {
       title: const Text("SILAHKAN INPUT DATA BARU :"),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(suffixText: "Kg"),
+        decoration: const InputDecoration(suffixText: "Kg/L"),
         keyboardType: TextInputType.number,
       ),
       actions: [
@@ -381,13 +508,19 @@ class _NewDataDialog extends StatelessWidget {
           child: const Text("BATAL"),
         ),
         TextButton(
-          onPressed: () => Navigator.of(context).pop("${controller.text} Kg"),
+          onPressed: () {
+            String data = controller.text;
+            Navigator.of(context)
+                .pop(data); // Mengembalikan data ke _addNewData
+          },
           child: const Text("OK"),
         ),
       ],
     );
   }
 }
+
+
 
 // Dialog untuk riwayat data
 class _HistoryDialog extends StatelessWidget {
