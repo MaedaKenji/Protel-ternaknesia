@@ -28,7 +28,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
     super.dispose();
   }
 
-  void _submitData() {
+  void _submitData() async {
     if (_formKey.currentState!.validate()) {
       // Buat objek data sapi baru
       final newCattleData = {

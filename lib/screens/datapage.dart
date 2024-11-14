@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:ternaknesia/screens/nambahsapi.dart';
 import 'package:ternaknesia/screens/datasapipage.dart';
 
@@ -42,12 +44,19 @@ class _DataPageState extends State<DataPage> {
         centerTitle: true,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
           children: [
             // Search Bar
             TextField(
+              controller: searchController,
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value.toLowerCase();
+                });
+              },
               decoration: InputDecoration(
                 hintText: 'Cari',
                 border: OutlineInputBorder(
@@ -132,7 +141,7 @@ class _DataPageState extends State<DataPage> {
   Widget _buildCattleCard(BuildContext context,
       {required String id,
       required int weight,
-      required String age,
+      required int age,
       required String status,
       required Color statusColor,
       required VoidCallback onTap}) {
@@ -165,7 +174,7 @@ class _DataPageState extends State<DataPage> {
                       ),
                     ),
                     Text('Berat = $weight kg'),
-                    Text('Umur = $age'),
+                    Text('Umur = $age bulan'),
                   ],
                 ),
               ),

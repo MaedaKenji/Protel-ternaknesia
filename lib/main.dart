@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 
-void main() {
+void main() async {
+  await dotenv.load();
   runApp(const MyApp());
 }
 
