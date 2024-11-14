@@ -1,81 +1,117 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
-import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
+import 'package:ternaknesia/config/config.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+// import 'package:fl_chart/fl_chart.dart';
 
-class NfcScreen extends StatefulWidget {
-  const NfcScreen({super.key});
+class DataWidget extends StatefulWidget {
+  const DataWidget({Key? key}) : super(key: key);
 
   @override
-  _NfcScreenState createState() => _NfcScreenState();
+  State<DataWidget> createState() => _DataWidgetState();
 }
 
-class _NfcScreenState extends State<NfcScreen> {
-  String _nfcData = "No NFC tag read yet.";
+class _DataWidgetState extends State<DataWidget> {
+  // Replace these with your actual data fetching logic
+  // Example: Fetching data from a database
+  // Future<Map<String, dynamic>> fetchData() async {
+  //   await Future.delayed(const Duration(seconds: 1)); // Simulate delay
+  //   return {
+  //     'susu': ,
+  //     'sapi_diperah': 18,
+  //     'sapi_pakan': 20,
+  //   };
+  // }
+  Future<Map<String, dynamic>> fetchData() async {
+    const String url = '${AppConfig.serverUrl}/api/cows/today';
+    final response = await http.get(Uri.parse(url));
 
-   // Function to read real NFC tag data
-  Future<void> _readNfcTag() async {
-    setState(() {
-      _nfcData = 'Reading NFC tag...';
-    });
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
 
-      try {
-      // Wait for the NFC tag to be detected
-      final tag = await FlutterNfcKit.poll();
+      int totalMilk = data['totalMilk'] ?? 0;
+      int sapiTelahDiperah = data['sapiTelahDiperah'] ?? 0;
+      int sapiTelahDiberipakan = data['sapiTelahDiberipakan'] ?? 0;
 
-      // Build a tag information string
-      String tagInfo = 'NFC Tag found:\n';
-      tagInfo += 'ID: ${tag.id}\n';
-      tagInfo += 'Type: ${tag.type}\n';
+      List<Map<String, dynamic>> allSusu =
+          List<Map<String, dynamic>>.from(data['allSusu'] ?? []);
 
-      // Check if NDEF is available and not null
-      if (tag.ndefAvailable == true) {
-        final ndef = await FlutterNfcKit.readNDEFRecords();
-        tagInfo += 'NDEF Data: ${ndef.map((e) => e.payload).join(', ')}';
-      } else {
-        tagInfo += 'No NDEF data available';
-      }
+      return {
+        'totalMilk': totalMilk,
+        'sapiTelahDiperah': sapiTelahDiperah,
+        'sapiTelahDiberipakan': sapiTelahDiberipakan,
+        'allSusu': allSusu,
+      };
+    } else {
+      throw Exception('Failed to load cow data');
+      // print(response.body);
 
-      setState(() {
-        _nfcData = tagInfo;
-      });
-
-      // Finish NFC session
-      await FlutterNfcKit.finish();
-    } catch (e) {
-      setState(() {
-        _nfcData = 'Error reading NFC tag: $e';
-      });
+      // return {};
     }
   }
 
-  // Function to simulate NFC reading
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('NFC Reader (Simulation)'),
-      ),
-      body: Padding(
+    return FutureBuilder<Map<String, dynamic>>(
+      future: fetchData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (snapshot.hasData) {
+          final data = snapshot.data!;
+          return Column(
+            children: [
+              // Card for "Perolehan susu hari ini"
+              _dataCard(
+                title: 'Perolehan susu hari ini',
+                value: '${data['totalMilk']} L',
+              ),
+              const SizedBox(height: 16),
+              // Card for "Sapi yang telah diperah"
+              _dataCard(
+                title: 'Sapi yang telah diperah',
+                value: '${data['sapiTelahDiperah']}',
+              ),
+              const SizedBox(height: 16),
+              // Card for "Sapi yang telah diberi pakan"
+              _dataCard(
+                title: 'Sapi yang telah diberi pakan',
+                value: '${data['sapiTelahDiberipakan']}',
+              ),
+            ],
+          );
+        } else {
+          return const Center(child: Text('No data'));
+        }
+      },
+    );
+  }
+
+  Widget _dataCard({
+    required String title,
+    required String value,
+  }) {
+    return Card(
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Tap the button to simulate NFC tag reading:',
-              style: TextStyle(fontSize: 20),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _readNfcTag,
-              child: const Text('Simulate NFC Tag Reading'),
-            ),
-            const SizedBox(height: 20),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              _nfcData,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, color: Colors.blue),
+              title,
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
