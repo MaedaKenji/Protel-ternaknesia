@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ternaknesia/screens/home_screen.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
-import 'package:ternaknesia/screens/inputdata.dart';
 import 'package:ternaknesia/screens/profil.dart';
 import 'package:ternaknesia/screens/datapage.dart';
-import 'package:ternaknesia/screens/datasapipage.dart';// Import the DataPage
 
 void main() {
   runApp(const Navbar());
@@ -15,9 +13,9 @@ class Navbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const NavigationBarPage(), // Main navigation page
+      home: NavigationBarPage(),
     );
   }
 }
@@ -30,13 +28,12 @@ class NavigationBarPage extends StatefulWidget {
 }
 
 class _NavigationBarPageState extends State<NavigationBarPage> {
-  int _currentIndex = 0; // Current page index
+  int _currentIndex = 0;
 
-  // List of pages accessible through navigation
   final List<Widget> _pages = [
     const HomeScreen(),
     const NFCPage(),
-    const DataPage(), // Added DataPage
+    const DataPage(),
     const ProfilePage(),
   ];
 
@@ -44,14 +41,14 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex, // Display page based on index
-        children: _pages, // List of pages
+        index: _currentIndex,
+        children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex, // Current selected index
+        currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // Update page index
+            _currentIndex = index;
           });
         },
         items: const [
@@ -72,10 +69,10 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
             label: 'Profile',
           ),
         ],
-        selectedItemColor: Colors.orange, // Active icon color
-        unselectedItemColor: Colors.grey, // Inactive icon color
-        backgroundColor: Colors.orange, // Background color
-        type: BottomNavigationBarType.fixed, // Show all items
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.black,
+        backgroundColor: const Color(0xFFC35804),
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

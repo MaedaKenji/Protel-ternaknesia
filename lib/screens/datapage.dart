@@ -3,8 +3,32 @@ import 'package:ternaknesia/screens/nambahsapi.dart';
 import 'package:ternaknesia/screens/datasapipage.dart';
 
 // Data Page
-class DataPage extends StatelessWidget {
-  const DataPage({Key? key}) : super(key: key);
+class DataPage extends StatefulWidget {
+  const DataPage({super.key});
+
+  @override
+  State<DataPage> createState() => _DataPageState();
+}
+
+class _DataPageState extends State<DataPage> {
+  final List<Map<String, dynamic>> _cattleData = [
+    {
+      'id': '001',
+      'weight': 100,
+      'age': '2 Bulan',
+      'status': 'SAKIT',
+      'gender': 'Betina',
+      'statusColor': Colors.red,
+    },
+    {
+      'id': '002',
+      'weight': 100,
+      'age': '2 Bulan',
+      'status': 'SEHAT',
+      'gender': 'Jantan',
+      'statusColor': Colors.green,
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +52,11 @@ class DataPage extends StatelessWidget {
                 hintText: 'Cari',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.orange),
+                  borderSide: const BorderSide(color: Color(0xFFC35804)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.orange),
+                  borderSide: const BorderSide(color: Color(0xFFC35804)),
                 ),
               ),
             ),
@@ -40,77 +64,71 @@ class DataPage extends StatelessWidget {
 
             // List of Cattle Cards
             Expanded(
-              child: ListView(
-                children: [
-                  _buildCattleCard(
-                    context,
-                    id: '001',
-                    weight: 100,
-                    age: '2 Bulan',
-                    status: 'SAKIT',
-                    statusColor: Colors.red,
-                    onTap: () {
-                      // Navigate to Data Sapi Page for Sapi 001
-                      Navigator.push(
+              child: ListView.builder(
+                itemCount: _cattleData.length,
+                itemBuilder: (context, index) {
+                  final cattle = _cattleData[index];
+                  return Column(
+                    children: [
+                      _buildCattleCard(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => DataSapiPage(
-                            id: '001',
-                            gender: 'Betina',
-                            age: '2 Bulan',
-                            healthStatus: 'SAKIT',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _buildCattleCard(
-                    context,
-                    id: '002',
-                    weight: 100,
-                    age: '2 Bulan',
-                    status: 'SEHAT',
-                    statusColor: Colors.green,
-                    onTap: () {
-                      // Navigate to Data Sapi Page for Sapi 002
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DataSapiPage(
-                            id: '002',
-                            gender: 'Jantan',
-                            age: '2 Bulan',
-                            healthStatus: 'SEHAT',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        id: cattle['id'],
+                        weight: cattle['weight'],
+                        age: cattle['age'],
+                        status: cattle['status'],
+                        statusColor: cattle['statusColor'],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DataSapiPage(
+                                id: cattle['id'],
+                                gender: cattle['gender'],
+                                age: cattle['age'],
+                                healthStatus: cattle['status'],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
-      // Floating Action Button to Add New Cattle
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to Tambah Sapi Page
-          Navigator.push(
+        onPressed: () async {
+          final newData = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => const TambahSapiPage(),
             ),
           );
+
+          if (newData != null) {
+            setState(() {
+              _cattleData.add({
+                'id': newData['id'],
+                'weight': newData['weight'],
+                'age': '${newData['age']} Bulan',
+                'status': newData['status'],
+                'gender': newData['gender'],
+                'statusColor':
+                    newData['status'] == 'SAKIT' ? Colors.red : Colors.green,
+              });
+            });
+          }
         },
-        backgroundColor: Colors.orange,
+        backgroundColor: const Color(0xFFC35804),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  // Function to build individual cattle card
   Widget _buildCattleCard(BuildContext context,
       {required String id,
       required int weight,
@@ -129,7 +147,7 @@ class DataPage extends StatelessWidget {
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 30,
                 backgroundImage: AssetImage('assets/images/cow.png'),
               ),

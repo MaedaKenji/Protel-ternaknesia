@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class InputDataPage extends StatefulWidget {
-  const InputDataPage({Key? key}) : super(key: key);
+  const InputDataPage({super.key});
 
   @override
   State<InputDataPage> createState() => _InputDataPageState();
@@ -40,10 +40,10 @@ class _InputDataPageState extends State<InputDataPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          content: Column(
+          content: const Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.check_circle, size: 50, color: Colors.orange),
+            children: [
+              Icon(Icons.check_circle, size: 50, color: Color(0xFFC35804)),
               SizedBox(height: 10),
               Text(
                 'INPUT DATA SAPI BERHASIL',
@@ -70,12 +70,11 @@ class _InputDataPageState extends State<InputDataPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error, size: 50, color: Colors.red),
+              const Icon(Icons.error, size: 50, color: Colors.red),
               const SizedBox(height: 10),
-              Text(
+              const Text(
                 'Gagal Input Data',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
@@ -117,7 +116,7 @@ class _InputDataPageState extends State<InputDataPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.orange[100],
+        backgroundColor: const Color(0xFFC35804),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
@@ -140,7 +139,7 @@ class _InputDataPageState extends State<InputDataPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
+              const Center(
                 child: CircleAvatar(
                   radius: 40,
                   backgroundImage: AssetImage('assets/images/cow.png'),
@@ -287,7 +286,7 @@ class _InputDataPageState extends State<InputDataPage> {
       child: ElevatedButton(
         onPressed: _submitData,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange,
+          backgroundColor: const Color(0xFFC35804),
           padding: const EdgeInsets.symmetric(vertical: 15.0),
         ),
         child: const Text(

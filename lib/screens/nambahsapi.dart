@@ -1,11 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+// ignore_for_file: use_build_context_synchronously, unused_element
+
 import 'package:flutter/material.dart';
 
 class TambahSapiPage extends StatefulWidget {
-  const TambahSapiPage({Key? key}) : super(key: key);
+  const TambahSapiPage({super.key});
 
   @override
   State<TambahSapiPage> createState() => _TambahSapiPageState();
@@ -32,40 +30,17 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
 
   void _submitData() async {
     if (_formKey.currentState!.validate()) {
-      final data = {
-        "id": _idController.text,
-        "gender": _gender,
-        "age": int.parse(_ageController.text),
-        "weight": double.parse(_weightController.text),
-        "healthRecord": true // Convert to boolean if needed
+      // Buat objek data sapi baru
+      final newCattleData = {
+        'id': _idController.text,
+        'gender': _gender,
+        'age': _ageController.text,
+        'weight': int.tryParse(_weightController.text) ?? 0,
+        'status': _status?.toUpperCase(),
       };
 
-      try {
-        final response = await http.post(
-          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahsapi'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(data),
-        )
-        .timeout(const Duration(seconds: 10), onTimeout: () => throw TimeoutException('Connection timed out'));
-        
-        if (response.statusCode == 201) {
-          _showSuccessDialog();
-        } else if (response.statusCode == 400) {
-          final responseBody = jsonDecode(response.body);
-          _showErrorDialog(responseBody['message'] ?? 'Error occurred');
-        } else if (response.statusCode == 500) {
-          _showErrorDialog('Internal server error');
-        } 
-        else if (response.statusCode == 404) {
-          _showErrorDialog('Resource not found');
-        }
-        else {
-          _showErrorDialog('An unexpected error occurred');
-        }
-      } catch (error) {
-         print("Error: ${error.toString()}");
-        _showErrorDialog('Failed to submit data. Please try again.');
-      }
+      // Kirim data sapi baru kembali ke DataPage
+      Navigator.pop(context, newCattleData);
     } else {
       _showErrorDialog('Please check your inputs.');
     }
@@ -79,10 +54,10 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          content: Column(
+          content: const Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.check_circle, size: 50, color: Colors.orange),
+            children: [
+              Icon(Icons.check_circle, size: 50, color: Color(0xFFC35804)),
               SizedBox(height: 10),
               Text(
                 'DATA SAPI BERHASIL DITAMBAHKAN',
@@ -109,12 +84,12 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error, size: 50, color: Colors.red),
+              const Icon(Icons.error, size: 50, color: Colors.red),
               const SizedBox(height: 10),
-              Text(
+              const Text(
                 'Gagal Menambah Data',
                 style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
@@ -146,7 +121,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.orange[100],
+        backgroundColor: const Color(0xFFC35804),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
@@ -257,7 +232,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       child: ElevatedButton(
         onPressed: _submitData,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange,
+          backgroundColor: const Color(0xFFC35804),
           padding: const EdgeInsets.symmetric(vertical: 15.0),
         ),
         child: const Text(
