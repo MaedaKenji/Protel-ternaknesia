@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:ternaknesia/screens/mainpage.dart';
 
@@ -88,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
                 Text(
                   'TERNAKNESIA',
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFFC35804),
@@ -140,12 +140,14 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                     ),
-                    child: Text('LOGIN',
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        )),
+                    child: const Text(
+                      'LOGIN',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),

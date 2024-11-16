@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 import 'package:ternaknesia/screens/home_screen.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
 import 'package:ternaknesia/screens/profil.dart';
@@ -60,10 +60,16 @@ class _MainPageState extends State<MainPage> {
         unselectedItemColor: Colors.white30,
         backgroundColor: const Color(0xFFC35804),
         type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: GoogleFonts.inter(
+        selectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.bold,
         ),
-        unselectedLabelStyle: GoogleFonts.inter(),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.normal,
+        ),
+        // selectedLabelStyle: GoogleFonts.(
+        //   fontWeight: FontWeight.bold,
+        // ),
+        // unselectedLabelStyle: GoogleFonts.inter(),
       ),
     );
   }

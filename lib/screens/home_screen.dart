@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 import '../components/summary_cards.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ternaknesia/components/custom_line_chart.dart';
@@ -92,13 +92,13 @@ class HomePage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('SAPYY',
-                                  style: GoogleFonts.inter(
+                                  style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800,
                                     color: const Color(0xFF8F3505),
                                   )),
                               Text('Selamat Bekerja!',
-                                  style: GoogleFonts.inter(
+                                  style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: const Color(0xFF8F3505),
@@ -128,7 +128,7 @@ class HomePage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('Hai, $displayName',
-                                      style: GoogleFonts.inter(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
                                         color: Colors.white,

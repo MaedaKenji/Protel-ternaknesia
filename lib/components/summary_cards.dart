@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class SummaryCards extends StatelessWidget {
   const SummaryCards({super.key});
@@ -43,7 +43,7 @@ class SummaryCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: GoogleFonts.inter(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFFC35804),
@@ -52,7 +52,7 @@ class SummaryCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: GoogleFonts.inter(
+              style: TextStyle(
                   fontSize: 11, color: const Color(0xFF8F3505)),
               textAlign: TextAlign.center,
             ),
