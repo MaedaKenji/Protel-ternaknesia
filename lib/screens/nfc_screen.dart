@@ -1,104 +1,357 @@
 import 'package:flutter/material.dart';
-import 'package:ternaknesia/screens/inputdata.dart';
+import 'package:nfc_manager/nfc_manager.dart';
+import 'package:ternaknesia/main.dart';
 
-void main() {
-  runApp(const NFCPage());
-}
-
-class NFCPage extends StatelessWidget {
+class NFCPage extends StatefulWidget {
   const NFCPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const InputPage(),
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.white,
-      ),
+  State<NFCPage> createState() => _NFCPageState();
+}
+
+class CircleWavePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  CircleWavePainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+
+    final radius = size.width / 2 * progress;
+
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2),
+      radius,
+      paint,
     );
+  }
+
+  @override
+  bool shouldRepaint(covariant CircleWavePainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }
 
-class InputPage extends StatefulWidget {
-  const InputPage({super.key});
+class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
+  String? _nfcResult;
+  bool _isNfcEnabled = true;
+  bool _isScanning = false;
+  bool _isNfcAvailable = false;
+  late AnimationController _animationController;
 
   @override
-  State<InputPage> createState() => _InputPageState();
-}
+  void initState() {
+    super.initState();
+    _checkNfcAvailability();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+  }
 
-class _InputPageState extends State<InputPage> {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Input Data Sapi',
-            style: TextStyle(color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: const Color(0xFFC35804),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                ),
-                labelText: 'ID Sapi',
-              ),
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkNfcAvailability() async {
+    final isAvailable = await NfcManager.instance.isAvailable();
+    setState(() {
+      _isNfcAvailable = isAvailable;
+    });
+  }
+
+  void _startNfcScan() async {
+    setState(() {
+      _isScanning = true;
+      _nfcResult = null;
+    });
+
+    _showNfcDialog();
+
+    try {
+      await NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          final nfcData = tag.data.toString();
+
+          setState(() {
+            _nfcResult = nfcData;
+            _isNfcEnabled = true;
+            _isScanning = false;
+          });
+
+          if (navigatorKey.currentState?.canPop() ?? false) {
+            navigatorKey.currentState?.pop();
+          }
+
+          await NfcManager.instance.stopSession();
+
+          _showNfcResultDialog(nfcData);
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isScanning = false;
+      });
+
+      if (navigatorKey.currentState?.canPop() ?? false) {
+        navigatorKey.currentState?.pop();
+      }
+
+      _showMessage('Terjadi kesalahan: $e');
+    }
+  }
+
+  void _showNfcDialog() {
+    _animationController.repeat();
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return WillPopScope(
+          onWillPop: () async {
+            _cancelNfcScan();
+            return true;
+          },
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const InputDataPage(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFC35804),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Text('OK', style: TextStyle(color: Colors.white)),
-            ),
-            const SizedBox(height: 20),
-            const Row(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(child: Divider(thickness: 1)),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Text('OR'),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          painter: CircleWavePainter(
+                            progress: _animationController.value,
+                            color: Colors.orange
+                                .withOpacity(1 - _animationController.value),
+                          ),
+                          size: const Size(100, 100),
+                        );
+                      },
+                    ),
+                    const Icon(
+                      Icons.nfc,
+                      size: 60,
+                      color: Colors.brown,
+                    ),
+                  ],
                 ),
-                Expanded(child: Divider(thickness: 1)),
+                const SizedBox(height: 20),
+                const Text(
+                  'Tempelkan kartu NFC di dekat perangkat ini',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.nfc),
-              label: const Text('SCAN WITH NFC'),
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.black),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+          ),
+        );
+      },
+    ).then((_) {
+      _cancelNfcScan();
+    });
+  }
+
+  void _cancelNfcScan() async {
+    _animationController.stop();
+    _animationController.reset();
+    setState(() {
+      _isNfcEnabled = true;
+    });
+    try {
+      await NfcManager.instance.stopSession();
+    } catch (e) {}
+  }
+
+  void _showNfcResultDialog(String nfcData) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text(
+            'Data NFC',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Text(
+              nfcData,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Close',
+                style: TextStyle(
+                  color: Color(0xFFC35804),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ],
-        ),
+        );
+      },
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                height: 70,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 20,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: const Text(
+                    'Input Data Sapi',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const TextField(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14)),
+                        ),
+                        labelText: 'ID Sapi',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFFC35804),
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'OK',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider(thickness: 1)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10.0),
+                          child: Text('OR'),
+                        ),
+                        Expanded(child: Divider(thickness: 1)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _isNfcEnabled
+                          ? () {
+                              setState(() {
+                                _isNfcEnabled = false;
+                              });
+                              _startNfcScan();
+                            }
+                          : null,
+                      icon: const Icon(Icons.nfc),
+                      label: const Text(
+                        'SCAN WITH NFC',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        side: const BorderSide(color: Colors.black),
+                        minimumSize: const Size(double.infinity, 50),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

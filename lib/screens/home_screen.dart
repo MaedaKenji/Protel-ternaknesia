@@ -172,7 +172,7 @@ class HomePage extends StatelessWidget {
                     Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD38C31),
+                          color: const Color(0xFFC35804),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: const Color(0xFFF9E2B5),

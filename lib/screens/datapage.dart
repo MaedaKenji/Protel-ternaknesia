@@ -29,10 +29,8 @@ class Cattle {
 
     return Cattle(
       id: json['cow_id']?.toString() ?? 'Unknown ID',
-      weight: int.tryParse(json['weight']?.toString() ?? '0') ??
-          0, // Convert to int if possible, default to 0
-      age: int.tryParse(json['age']?.toString() ?? '0') ??
-          0, // Convert to int if possible, default to 0
+      weight: int.tryParse(json['weight']?.toString() ?? '0') ?? 0,
+      age: int.tryParse(json['age']?.toString() ?? '0') ?? 0,
       gender: json['gender']?.toString() ?? 'Unknown',
       healthStatus: healthStatus,
     );
@@ -70,12 +68,10 @@ class _DataPageState extends State<DataPage> {
       if (response.statusCode == 200) {
         List<dynamic> cattleJson = json.decode(response.body);
 
-        // Map each JSON item to a Cattle instance
         return cattleJson.map((json) {
           try {
             return Cattle.fromJson(json);
           } catch (e) {
-            // Log and handle specific errors for each item
             throw Exception('Error parsing item: ${json['cow_id']} - $e');
           }
         }).toList();
@@ -97,98 +93,134 @@ class _DataPageState extends State<DataPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFFC35804),
-        title: const Text(
-          'DATA PAGE',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
       backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // Search Bar
-            TextField(
-              controller: searchController,
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.toLowerCase();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Cari',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.orange),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.orange),
+      body: Column(
+        children: [
+          // Custom AppBar with Stack
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                height: 70,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            // FutureBuilder for cattle data
-            FutureBuilder<List<Cattle>>(
-              future: cattleData,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  // Menampilkan pesan error dengan detail yang lebih lengkap
-                  return Center(
-                      child: Text('Error loading data: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No data found.'));
-                } else {
-                  // Filter data berdasarkan query
-                  final filteredCattle = snapshot.data!.where((cattle) {
-                    return cattle.id.toLowerCase().contains(searchQuery) ||
-                        cattle.healthStatus.toLowerCase().contains(searchQuery);
-                  }).toList();
-
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: filteredCattle.length,
-                    itemBuilder: (context, index) {
-                      final cattle = filteredCattle[index];
-                      return _buildCattleCard(
-                        context,
-                        id: cattle.id,
-                        weight: cattle.weight,
-                        age: cattle.age,
-                        status: cattle.healthStatus,
-                        statusColor:
-                            cattle.healthStatus.toLowerCase() == 'sehat'
-                                ? Colors.green
-                                : Colors.red,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DataSapiPage(
-                                id: cattle.id,
-                                gender: cattle.gender,
-                                age: cattle.age.toString(),
-                                healthStatus: cattle.healthStatus,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+              Positioned(
+                top: 20, // Atur posisi vertikal teks agar berada di tengah
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: const Text(
+                    'Data Sapi',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshData,
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  // Search Bar
+                  TextField(
+                    controller: searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value.toLowerCase();
+                      });
                     },
-                  );
-                }
-              },
+                    decoration: InputDecoration(
+                      hintText: 'Cari',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Colors.orange),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Colors.orange),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // FutureBuilder for cattle data
+                  FutureBuilder<List<Cattle>>(
+                    future: cattleData,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(
+                            child:
+                                Text('Error loading data: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(child: Text('No data found.'));
+                      } else {
+                        final filteredCattle = snapshot.data!.where((cattle) {
+                          return cattle.id
+                                  .toLowerCase()
+                                  .contains(searchQuery) ||
+                              cattle.healthStatus
+                                  .toLowerCase()
+                                  .contains(searchQuery);
+                        }).toList();
+
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: filteredCattle.length,
+                          itemBuilder: (context, index) {
+                            final cattle = filteredCattle[index];
+                            return _buildCattleCard(
+                              context,
+                              id: cattle.id,
+                              weight: cattle.weight,
+                              age: cattle.age,
+                              status: cattle.healthStatus,
+                              statusColor:
+                                  cattle.healthStatus.toLowerCase() == 'sehat'
+                                      ? Colors.green
+                                      : Colors.red,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DataSapiPage(
+                                      id: cattle.id,
+                                      gender: cattle.gender,
+                                      age: cattle.age.toString(),
+                                      healthStatus: cattle.healthStatus,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -200,7 +232,7 @@ class _DataPageState extends State<DataPage> {
           );
         },
         elevation: 0,
-        backgroundColor: Color(0xFFC35804),
+        backgroundColor: const Color(0xFFC35804),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
