@@ -1,4 +1,6 @@
 // import 'dart:io';
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +27,7 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
 
   // Fungsi untuk mengambil data dari API dan memprosesnya menjadi data grafik
   Future<void> fetchDataAndProcess() async {
-    final String url = '${AppConfig.serverUrl}/cows';
+    const String url = '${AppConfig.serverUrl}/cows';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -75,17 +77,17 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Jumlah sapi yang sehat'),
+        title: const Text('Jumlah sapi yang sehat'),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(show: true),
+                  gridData: const FlGridData(show: true),
                   titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
+                    leftTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: true),
                     ),
                     bottomTitles: AxisTitles(
@@ -95,7 +97,7 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
                           // Menampilkan angka 1 sampai 6 di sumbu X
                           return Text(
                             ' ${value.toInt()}',
-                            style: TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: 10),
                           );
                         },
                       ),
@@ -138,7 +140,7 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     home: CowAnalysisPage(),
   ));
 }

@@ -5,7 +5,7 @@ import 'dart:convert';
 // import 'package:fl_chart/fl_chart.dart';
 
 class DataWidget extends StatefulWidget {
-  const DataWidget({Key? key}) : super(key: key);
+  const DataWidget({super.key});
 
   @override
   State<DataWidget> createState() => _DataWidgetState();
@@ -101,14 +101,14 @@ class _DataWidgetState extends State<DataWidget> {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.bold,
               ),

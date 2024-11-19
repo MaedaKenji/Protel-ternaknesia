@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_string_interpolations
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -159,22 +161,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
   }
 
 
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const AlertDialog(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.orange, size: 40),
-              SizedBox(width: 10),
-              Text("PERUBAHAN DATA SAPI BERHASIL"),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   void _showHistory() async {
     await showDialog(
@@ -489,7 +475,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
 class _NewDataDialog extends StatelessWidget {
   final String id;
 
-  _NewDataDialog({required this.id});
+  const _NewDataDialog({required this.id});
 
   @override
   Widget build(BuildContext context) {

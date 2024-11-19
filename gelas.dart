@@ -15,12 +15,12 @@ class DataSapiPage extends StatelessWidget {
   List<double> pakanSentrat = [];
 
   DataSapiPage({
-    Key? key,
+    super.key,
     required this.id,
     required this.gender,
     required this.age,
     required this.healthStatus,
-  }) : super(key: key);
+  });
 
   // Fetch data from API
   Future<void> fetchData() async {
@@ -64,7 +64,7 @@ class DataSapiPage extends StatelessWidget {
                 padding: const EdgeInsets.all(10.0),
                 child: Row(
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 40,
                       backgroundImage: AssetImage('assets/images/cow.png'),
                     ),
@@ -226,23 +226,23 @@ class DataSapiPage extends StatelessWidget {
                   isCurved: true,
                   barWidth: 3,
                   color: Colors.orange, // Use 'color' instead of 'colors'
-                  dotData: FlDotData(show: true),
+                  dotData: const FlDotData(show: true),
                 ),
               ],
               borderData: FlBorderData(show: false),
-              titlesData: FlTitlesData(show: false),
-              gridData: FlGridData(show: false),
+              titlesData: const FlTitlesData(show: false),
+              gridData: const FlGridData(show: false),
             ),
           ),
         ),
         const SizedBox(height: 10),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Saat ini:'),
+            Text('Saat ini:'),
             Text(
               '0 Kg',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),

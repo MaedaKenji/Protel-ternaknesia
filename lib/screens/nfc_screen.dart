@@ -12,7 +12,7 @@ class NFCPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const InputPage(), // Halaman Input NFC sebagai halaman utama
+      home: const InputPage(),
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
@@ -32,6 +32,12 @@ class _InputPageState extends State<InputPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Input Data Sapi',
+            style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: const Color(0xFFC35804),
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(
@@ -39,14 +45,15 @@ class _InputPageState extends State<InputPage> {
           children: [
             const TextField(
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                ),
                 labelText: 'ID Sapi',
               ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Navigasi ke halaman InputDataPage saat tombol OK ditekan
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -55,10 +62,13 @@ class _InputPageState extends State<InputPage> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.brown,
+                backgroundColor: Color(0xFFC35804),
                 minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
-              child: const Text('OK'),
+              child: Text('OK', style: TextStyle(color: Colors.white)),
             ),
             const SizedBox(height: 20),
             const Row(
@@ -77,10 +87,14 @@ class _InputPageState extends State<InputPage> {
               icon: const Icon(Icons.nfc),
               label: const Text('SCAN WITH NFC'),
               style: ElevatedButton.styleFrom(
+                elevation: 0,
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
                 side: const BorderSide(color: Colors.black),
                 minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             ),
           ],

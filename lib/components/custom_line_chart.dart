@@ -16,7 +16,7 @@ class CustomLineChart extends StatefulWidget {
 }
 
 class _CustomLineChartState extends State<CustomLineChart> {
-  String selectedMonth = 'Oktober'; // Bulan default
+  String selectedMonth = 'Oktober';
   final List<String> months = [
     'Januari',
     'Februari',
@@ -47,7 +47,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
         children: [
           Text(
             widget.title,
-            style: TextStyle(
+            style: const TextStyle(
               color: Color(0xFFC35804),
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -56,7 +56,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
+              const Text(
                 'Bulan : ',
                 style: TextStyle(
                   color: Color(0xFF8F3505),
@@ -91,19 +91,25 @@ class _CustomLineChartState extends State<CustomLineChart> {
             height: 200,
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: true),
+                gridData: const FlGridData(show: true),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 20, // Interval sumbu Y
+                      interval: 20,
+                      reservedSize: 40, // Menambah ruang untuk teks sumbu kiri
                       getTitlesWidget: (value, meta) {
+                        // Pastikan teks tidak membungkus
                         return Text(
                           value.toInt().toString(),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.black,
+                            overflow: TextOverflow
+                                .visible, // Pastikan teks tidak terpotong
                           ),
+                          softWrap: false, // Jangan membungkus teks
+                          maxLines: 1, // Hanya satu baris teks
                         );
                       },
                     ),
@@ -111,7 +117,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 1, // Interval sumbu X untuk menampilkan tanggal
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
                         final day = (value.toInt() + 1).toString();
                         return Text(
@@ -119,18 +125,20 @@ class _CustomLineChartState extends State<CustomLineChart> {
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.black,
+                            overflow: TextOverflow
+                                .visible, // Pastikan teks tidak terpotong
                           ),
+                          softWrap: false, // Jangan membungkus teks
+                          maxLines: 1, // Hanya satu baris teks
                         );
                       },
                     ),
                   ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: false), // Menyembunyikan keterangan atas
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
                   ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: false), // Menyembunyikan keterangan kanan
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
                 borderData: FlBorderData(
@@ -148,7 +156,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                     isCurved: true,
                     color: const Color(0xFFC35804),
                     barWidth: 3,
-                    dotData: FlDotData(show: true),
+                    dotData: const FlDotData(show: true),
                   ),
                 ],
               ),

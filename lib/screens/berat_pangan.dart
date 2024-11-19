@@ -29,7 +29,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
 
   // Fungsi untuk mengambil data dari API dan memprosesnya menjadi data grafik
   Future<void> fetchDataAndProcess() async {
-    final String url = '${AppConfig.serverUrl}/cows';
+    const String url = '${AppConfig.serverUrl}/cows';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

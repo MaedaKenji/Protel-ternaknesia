@@ -45,7 +45,7 @@ class Cattle {
 }
 
 class DataPage extends StatefulWidget {
-  const DataPage({Key? key}) : super(key: key);
+  const DataPage({super.key});
 
   @override
   _DataPageState createState() => _DataPageState();
@@ -98,7 +98,7 @@ class _DataPageState extends State<DataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xFFC35804),
         title: const Text(
           'DATA PAGE',
           style: TextStyle(color: Colors.white),
@@ -106,6 +106,7 @@ class _DataPageState extends State<DataPage> {
         centerTitle: true,
         elevation: 0,
       ),
+      backgroundColor: Colors.white,
       body: RefreshIndicator(
         onRefresh: _refreshData,
         child: ListView(
@@ -198,7 +199,8 @@ class _DataPageState extends State<DataPage> {
             ),
           );
         },
-        backgroundColor: Colors.orange,
+        elevation: 0,
+        backgroundColor: Color(0xFFC35804),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -222,7 +224,7 @@ class _DataPageState extends State<DataPage> {
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 30,
                 backgroundImage: AssetImage('assets/images/cow.png'),
               ),

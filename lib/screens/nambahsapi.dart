@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously, unused_element
-
 import 'package:flutter/material.dart';
 
 class TambahSapiPage extends StatefulWidget {
@@ -12,7 +10,6 @@ class TambahSapiPage extends StatefulWidget {
 class _TambahSapiPageState extends State<TambahSapiPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers for the input fields
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
@@ -30,7 +27,6 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
 
   void _submitData() async {
     if (_formKey.currentState!.validate()) {
-      // Buat objek data sapi baru
       final newCattleData = {
         'id': _idController.text,
         'gender': _gender,
@@ -38,39 +34,10 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
         'weight': int.tryParse(_weightController.text) ?? 0,
         'status': _status?.toUpperCase(),
       };
-
-      // Kirim data sapi baru kembali ke DataPage
       Navigator.pop(context, newCattleData);
     } else {
       _showErrorDialog('Please check your inputs.');
     }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.check_circle, size: 50, color: Color(0xFFC35804)),
-              SizedBox(height: 10),
-              Text(
-                'DATA SAPI BERHASIL DITAMBAHKAN',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        );
-      },
-    ).then((_) {
-      Navigator.pop(context); // Go back after success
-    });
   }
 
   void _showErrorDialog(String message) {
@@ -81,135 +48,192 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error, size: 50, color: Colors.red),
-              const SizedBox(height: 10),
-              const Text(
-                'Gagal Menambah Data',
-                style:
-                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
         );
       },
     );
-  }
-
-  String? _numericValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Harap diisi';
-    }
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Harus berupa angka';
-    }
-    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFFC35804),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Tambah Data Sapi',
-          style: TextStyle(
-            color: Colors.brown,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          // Custom AppBar with Stack
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              _sectionTitle('Data Sapi'),
-              _buildTextInput('ID Sapi', _idController),
-              const SizedBox(height: 10),
-              _buildDropdownInput('Gender', ['Betina', 'Jantan'], (value) {
-                setState(() {
-                  _gender = value;
-                });
-              }),
-              const SizedBox(height: 10),
-              _buildTextInput('Umur (Bulan)', _ageController, isNumeric: true),
-              const SizedBox(height: 10),
-              _buildTextInput('Berat (Kg)', _weightController, isNumeric: true),
-              const SizedBox(height: 10),
-              _buildDropdownInput('Status', ['Sehat', 'Sakit'], (value) {
-                setState(() {
-                  _status = value;
-                });
-              }),
-              const SizedBox(height: 30),
-              _buildSubmitButton(),
+              Container(
+                height: 70,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                top: 10,
+                child: Row(
+                  children: [
+                    // Back Button
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const SizedBox(width: 8),
+                    // Title
+                    const Text(
+                      'Tambah Data Sapi',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
+
+          // Form Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle('ID Sapi'),
+                    _buildCustomTextInput('Masukkan ID Sapi', _idController),
+                    const SizedBox(height: 16),
+                    _sectionTitle('Gender'),
+                    _buildCustomDropdown(['Betina', 'Jantan'], (value) {
+                      setState(() {
+                        _gender = value;
+                      });
+                    }, _gender),
+                    const SizedBox(height: 16),
+                    _sectionTitle('Umur (Bulan)'),
+                    _buildCustomTextInput('Masukkan umur sapi', _ageController,
+                        isNumeric: true),
+                    const SizedBox(height: 16),
+                    _sectionTitle('Berat (Kg)'),
+                    _buildCustomTextInput(
+                        'Masukkan berat sapi', _weightController,
+                        isNumeric: true),
+                    const SizedBox(height: 16),
+                    _sectionTitle('Status'),
+                    _buildCustomDropdown(['Sehat', 'Sakit'], (value) {
+                      setState(() {
+                        _status = value;
+                      });
+                    }, _status),
+                    const SizedBox(height: 32),
+                    _buildSubmitButton(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Colors.brown,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.brown,
+        ),
       ),
     );
   }
 
-  Widget _buildTextInput(String label, TextEditingController controller,
+  Widget _buildCustomTextInput(String hint, TextEditingController controller,
       {bool isNumeric = false}) {
     return TextFormField(
       controller: controller,
       keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.orange.shade50,
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.orange),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.orange),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.brown),
+        ),
       ),
-      validator: isNumeric
-          ? _numericValidator
-          : (value) {
-              if (value == null || value.isEmpty) {
-                return 'Harap diisi';
-              }
-              return null;
-            },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Harap diisi';
+        }
+        if (isNumeric && double.tryParse(value) == null) {
+          return 'Harus berupa angka';
+        }
+        return null;
+      },
     );
   }
 
-  Widget _buildDropdownInput(
-      String label, List<String> items, ValueChanged<String?> onChanged) {
+  Widget _buildCustomDropdown(
+      List<String> items, ValueChanged<String?> onChanged, String? value) {
     return DropdownButtonFormField<String>(
+      hint: const Text('Pilih salah satu'),
+      value: value,
       decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.orange.shade50,
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.orange),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.orange),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.brown),
+        ),
       ),
-      value: label == 'Gender' ? _gender : _status,
       onChanged: onChanged,
       items: items.map((String item) {
         return DropdownMenuItem<String>(
@@ -219,7 +243,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       }).toList(),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Pilih $label';
+          return 'Harap pilih salah satu';
         }
         return null;
       },
@@ -233,7 +257,10 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
         onPressed: _submitData,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFC35804),
-          padding: const EdgeInsets.symmetric(vertical: 15.0),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         child: const Text(
           'TAMBAHKAN DATA SAPI',
