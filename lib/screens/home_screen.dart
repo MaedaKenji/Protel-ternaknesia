@@ -20,38 +20,56 @@ class HomeScreen extends StatelessWidget {
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
-  List<FlSpot> getDataPointsForMilkProduction() {
-    // Data dummy untuk "Hasil Perolehan Susu"
-    return [
+  final Map<String, List<FlSpot>> milkProductionData = {
+    'Oktober': [
       const FlSpot(0, 10),
       const FlSpot(1, 20),
       const FlSpot(2, 30),
       const FlSpot(3, 40),
       const FlSpot(4, 50),
-    ];
-  }
+    ],
+    'November': [
+      const FlSpot(0, 60),
+      const FlSpot(1, 70),
+      const FlSpot(2, 80),
+      const FlSpot(3, 90),
+      const FlSpot(4, 100),
+    ],
+  };
 
-  List<FlSpot> getDataPointsForGreenFodder() {
-    // Data dummy untuk "Berat Pangan Hijauan"
-    return [
+  final Map<String, List<FlSpot>> greenFodderData = {
+    'Oktober': [
       const FlSpot(0, 10),
       const FlSpot(1, 20),
       const FlSpot(2, 70),
       const FlSpot(3, 65),
       const FlSpot(4, 30),
-    ];
-  }
+    ],
+    'November': [
+      const FlSpot(0, 60),
+      const FlSpot(1, 70),
+      const FlSpot(2, 80),
+      const FlSpot(3, 90),
+      const FlSpot(4, 100),
+    ],
+  };
 
-  List<FlSpot> getDataPointsForConcentratedFodder() {
-    // Data dummy untuk "Berat Pangan Sentrat"
-    return [
+  final Map<String, List<FlSpot>> concentratedFodderData = {
+    'Oktober': [
       const FlSpot(0, 15),
       const FlSpot(1, 25),
       const FlSpot(2, 60),
       const FlSpot(3, 55),
       const FlSpot(4, 35),
-    ];
-  }
+    ],
+    'November': [
+      const FlSpot(0, 65),
+      const FlSpot(1, 75),
+      const FlSpot(2, 70),
+      const FlSpot(3, 85),
+      const FlSpot(4, 95),
+    ],
+  };
 
   List<BarChartGroupData> getDataPointsForMilkProductionPerMonth() {
     return [
@@ -228,18 +246,18 @@ class HomePage extends StatelessWidget {
                     const SizedBox(height: 16),
                     CustomLineChart(
                       title: 'Hasil Perolehan Susu',
-                      dataPoints: getDataPointsForMilkProduction(),
+                      datas: milkProductionData,
                     ),
                     CustomLineChart(
                       title: 'Berat Pangan Hijauan',
-                      dataPoints: getDataPointsForGreenFodder(),
+                      datas: greenFodderData,
                     ),
                     CustomLineChart(
                       title: 'Berat Pangan Sentrat',
-                      dataPoints: getDataPointsForConcentratedFodder(),
+                      datas: concentratedFodderData,
                     ),
                     CustomBarChart(
-                      title: 'Hasil Perolehan Susu',
+                      title: 'Produksi Susu per Bulan',
                       data: getDataPointsForMilkProductionPerMonth(),
                     )
                   ],

@@ -3,12 +3,12 @@ import 'package:fl_chart/fl_chart.dart';
 
 class CustomLineChart extends StatefulWidget {
   final String title;
-  final List<FlSpot> dataPoints;
+  final Map<String, List<FlSpot>> datas;
 
   const CustomLineChart({
     super.key,
     required this.title,
-    required this.dataPoints,
+    required this.datas,
   });
 
   @override
@@ -16,21 +16,14 @@ class CustomLineChart extends StatefulWidget {
 }
 
 class _CustomLineChartState extends State<CustomLineChart> {
-  String selectedMonth = 'Oktober';
-  final List<String> months = [
-    'Januari',
-    'Februari',
-    'Maret',
-    'April',
-    'Mei',
-    'Juni',
-    'Juli',
-    'Agustus',
-    'September',
-    'Oktober',
-    'November',
-    'Desember'
-  ];
+  late String selectedMonth; // Bulan yang dipilih saat ini
+
+  @override
+  void initState() {
+    super.initState();
+    // Default ke bulan pertama di data
+    selectedMonth = widget.datas.keys.first;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +62,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                 value: selectedMonth,
                 icon:
                     const Icon(Icons.arrow_drop_down, color: Color(0xFFC35804)),
-                items: months.map((String month) {
+                items: widget.datas.keys.map((String month) {
                   return DropdownMenuItem<String>(
                     value: month,
                     child: Text(
@@ -99,17 +92,12 @@ class _CustomLineChartState extends State<CustomLineChart> {
                       interval: 20,
                       reservedSize: 40, // Menambah ruang untuk teks sumbu kiri
                       getTitlesWidget: (value, meta) {
-                        // Pastikan teks tidak membungkus
                         return Text(
                           value.toInt().toString(),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.black,
-                            overflow: TextOverflow
-                                .visible, // Pastikan teks tidak terpotong
                           ),
-                          softWrap: false, // Jangan membungkus teks
-                          maxLines: 1, // Hanya satu baris teks
                         );
                       },
                     ),
@@ -121,15 +109,11 @@ class _CustomLineChartState extends State<CustomLineChart> {
                       getTitlesWidget: (value, meta) {
                         final day = (value.toInt() + 1).toString();
                         return Text(
-                          '$day Okt',
+                          day,
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.black,
-                            overflow: TextOverflow
-                                .visible, // Pastikan teks tidak terpotong
                           ),
-                          softWrap: false, // Jangan membungkus teks
-                          maxLines: 1, // Hanya satu baris teks
                         );
                       },
                     ),
@@ -149,10 +133,10 @@ class _CustomLineChartState extends State<CustomLineChart> {
                   ),
                 ),
                 minY: 0,
-                maxY: 80,
+                maxY: 100,
                 lineBarsData: [
                   LineChartBarData(
-                    spots: widget.dataPoints,
+                    spots: widget.datas[selectedMonth]!,
                     isCurved: true,
                     color: const Color(0xFFC35804),
                     barWidth: 3,
