@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SummaryCards extends StatelessWidget {
-  const SummaryCards({super.key});
+  final List<Map<String, String>> data;
+
+  const SummaryCards({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
-    return const IntrinsicHeight(
+    return IntrinsicHeight(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          SummaryCard(title: '80,3L', subtitle: 'Perolehan susu hari ini'),
-          SummaryCard(title: '18', subtitle: 'Sapi yang telah diperah'),
-          SummaryCard(title: '20', subtitle: 'Sapi yang telah diberi pakan'),
-        ],
+        children: data.map((item) {
+          return SummaryCard(
+            title: item['title'] ?? 'Loading...',
+            subtitle: item['subtitle'] ?? '',
+          );
+        }).toList(),
       ),
     );
   }
 }
 
-// Komponen SummaryCard
 class SummaryCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -43,17 +44,19 @@ class SummaryCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: GoogleFonts.inter(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFFC35804),
+                color: Color(0xFFC35804),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: GoogleFonts.inter(
-                  fontSize: 11, color: const Color(0xFF8F3505)),
+              style: TextStyle(
+                fontSize: 11,
+                color: const Color(0xFF8F3505),
+              ),
               textAlign: TextAlign.center,
             ),
           ],

@@ -9,6 +9,20 @@
             "name": "ternaknesia",
             "database": "ternaknesia",
             "username": "postgres"
+        },
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "ep-shiny-feather-a1944u6u.ap-southeast-1.aws.neon.tech",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "ternaknesiaVercel",
+            "database": "ternaknesia",
+            "username": "default"
         }
     ]
 }

@@ -37,7 +37,7 @@ dependencies:
   fl_chart: ^0.69.0
   intl: ^0.19.0
   flutter_dotenv: ^5.2.1
-  google_fonts: ^6.2.1
+  # google_fonts: ^6.2.1
   iconify_flutter: ^0.0.7
   iconify_flutter_plus: ^1.0.3
   cupertino_icons: ^1.0.8

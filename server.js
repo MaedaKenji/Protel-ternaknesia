@@ -126,7 +126,63 @@ app.get('/api/cows', async (req, res) => {
   }
 });
 
-app.get('/api/cows/:id', async (req, res) => {
+app.get('/api/cows/sapi_diperah', async (req, res) => {
+  console.log("MASUK");
+  try {
+    const query = `
+      SELECT COUNT(DISTINCT cow_id) AS cows_milked
+      FROM milk_production
+      WHERE date = CURRENT_DATE;
+    `;
+    const result = await pool.query(query);
+    console.log(result.rows[0].cows_milked);
+    res.json({ value: result.rows[0].cows_milked });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/cows/sapi_diberi_pakan', async (req, res) => {
+  console.log("MASUK 2");
+  try {
+    const query = `
+      SELECT COUNT(DISTINCT cow_id) AS cows_fed
+      FROM (
+        SELECT cow_id FROM feed_hijauan WHERE date = CURRENT_DATE
+        UNION
+        SELECT cow_id FROM feed_sentrate WHERE date = CURRENT_DATE
+      ) AS fed_cows;
+    `;
+    const result = await pool.query(query);
+    res.json({ value: result.rows[0].cows_fed });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/cows/susu', async (req, res) => {
+  console.log("MASUK 3");
+  try {
+    const query = `
+      SELECT SUM(production_amount) AS total_milk
+      FROM milk_production
+      WHERE date = CURRENT_DATE;
+    `;
+    const result = await pool.query(query);
+    if (result.rows.length === 0) {
+      return res.json({ value: 0 });
+    }
+    // res.json({ value: result.rows[0].total_milk });
+    res.json({ value: 10});
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/cows/data/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -268,127 +324,51 @@ app.post('/api/cows/tambahdata/:id', async (req, res) => {
   }
 });
 
-app.get('/api/cows/today', async (req, res) => {
+
+
+// ---------------------------------------------------DATA--------------------------------------------------------------------
+app.get('/api/data/chart', async (req, res) => {
+  console.log("Fetching chart data...");
   try {
-    const data = await Cow.find();
-    if (!data) {
-      return res.status(404).json({ message: 'Data not found' });
-    }
-    let totalMilk = 0;
-    let sapiTelahDiperah = 0;
-    let sapiTelahDiberipakan = 0;
-    let beratPakanHijauan = 0;
-    let beratPakanKonsentrat = 0;
-    // const timeNow = new Date();
-    const timeNow = moment.tz("Asia/Bangkok").format
-    console.log(timeNow);
+    const query = `
+      SELECT
+        date,
+        SUM(hijauan_feed) AS hijauan,
+        SUM(sentrate_feed) AS sentrate
+      FROM (
+        SELECT
+          date,
+          COUNT(*) AS hijauan_feed,
+          0 AS sentrate_feed
+        FROM feed_hijauan
+        GROUP BY date
+        UNION ALL
+        SELECT
+          date,
+          0 AS hijauan_feed,
+          COUNT(*) AS sentrate_feed
+        FROM feed_sentrate
+        GROUP BY date
+      ) AS feed_data
+      GROUP BY date
+      ORDER BY date ASC;
+    `;
 
+    const result = await pool.query(query);
 
-    const allSusu = data.map(cow => {
-      const lastEntry = cow.hasilPerahSusu[cow.hasilPerahSusu.length - 1];
-      const lastMilkResult = lastEntry ? lastEntry.hasil : 0;
+    // Format hasil query agar cocok dengan format frontend
+    const formattedResult = result.rows.map(row => ({
+      date: row.date, // Tanggal
+      hijauan: parseInt(row.hijauan, 10), // Jumlah hijauan
+      sentrate: parseInt(row.sentrate, 10), // Jumlah sentrat
+    }));
 
-      // Menambahkan hasil ke total jika timestamp-nya adalah hari ini
-      if (lastEntry && isSameDay(new Date(lastEntry.timestamp), timeNow)) {
-        totalMilk += lastMilkResult;
-        sapiTelahDiperah++;
-      }
-
-      // Mendapatkan berat pakan hijauan terakhir
-      const lastFeedEntry = cow.beratPakanHijauan[cow.beratPakanHijauan.length - 1];
-      let lastFeedWeight = 0;
-
-      // Memeriksa apakah timestamp pakan adalah hari ini
-      if (lastFeedEntry && isSameDay(new Date(lastFeedEntry.timestamp), timeNow)) {
-        lastFeedWeight = lastFeedEntry.berat;
-        sapiTelahDiberipakan++;
-      }
-
-      return {
-        cowId: cow._id,
-        lastMilkResult: lastMilkResult,
-        lastMilkTimestamp: lastEntry ? lastEntry.timestamp : null,
-        lastFeedWeight: lastFeedWeight,
-        lastFeedTimestamp: lastFeedEntry ? lastFeedEntry.timestamp : null
-      };
-    });
-
-    // await axios.post(`${process.env.BASE_URL}/api/milk-records`, { totalMilk });
-
-    res.json({
-      totalMilk: totalMilk,
-      sapiTelahDiberipakan: sapiTelahDiberipakan,
-      sapiTelahDiperah: sapiTelahDiperah
-    });
+    res.json(formattedResult); // Kirimkan data ke frontend
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message, url: process.env.BASE_URL });
+    console.error('Error fetching chart data:', err);
+    res.status(500).send('Server error');
   }
 });
-
-
-
-app.get('/api/cows/data', async (req, res) => {
-  try {
-    const data = await Cow.find();
-    if (!data) {
-      return res.status(404).json({ message: 'Data not found' });
-    }
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-app.get('/api/cows/today/bulanan/susu', async (req, res) => {
-  try {
-    const data = await RecordBulanan.find();
-    if (!data) {
-      return res.status(404).json({ message: 'Data not found' });
-    }
-    let totalMilk = 0;
-    let beratPakanHijauan = 0;
-    let beratPakanKonsentrat = 0;
-    const timeNow = moment.tz("Asia/Bangkok").format
-    console.log(timeNow);
-    console.log(data);
-
-    const monthlyMilkResults = {};
-
-    data.forEach(cow => {
-      console.log(cow);
-      if (cow.totalMilk === undefined) {
-        console.log('Cow has no milk data');
-      }
-      else {
-      cow.totalMilk.forEach(entry => {
-        const milkAmount = entry.hasil || 0; // Ambil hasil perah atau 0 jika tidak ada
-        const entryDate = new Date(entry.timestamp);
-        const monthYear = entryDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-        // Jika bulan tahun belum ada di objek, inisialisasi
-        if (!monthlyMilkResults[monthYear]) {
-          monthlyMilkResults[monthYear] = 0;
-        }
-
-        // Tambahkan hasil perah ke bulan yang sesuai
-        monthlyMilkResults[monthYear] += milkAmount;
-        
-      });
-    }
-    });
-
-    // Format hasil menjadi string
-    const resultString = Object.entries(monthlyMilkResults)
-      .map(([monthYear, total]) => `${monthYear}: ${total}`)
-      .join('; ');
-
-    // Mengembalikan hasil
-    return res.json(resultString);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message, url: process.env.BASE_URL });
-  }
-});
-
 
 
 
@@ -477,14 +457,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Cek nilai dari BASE_URL
-console.log(`Configured BASE_URL: ${process.env.BASE_URL}`);
-console.log(`Please check if BASE_URL is correct`);
-
 // Check if server is running
 app.get('/', (req, res) => {
   res.send('Server is running');
 });
+
+// Cek nilai dari BASE_URL
+console.log(`Emulator go to here: ${process.env.BASE_URL}`);
+console.log(`Please check if BASE_URL is correct`);
+
+
 
 // Start server with full URL
 app.listen(PORT, SERVER_URL, () => console.log(`Server listening on ${SERVER_URL} \nConnecting to database...`));

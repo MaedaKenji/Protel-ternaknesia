@@ -8,9 +8,10 @@
     "test": "test"
   },
   "scripts": {
-    "start": "node server.js",
     "server": "nodemon server.js",
-    "script": "node script.js"
+    "script": "node script.js",
+    "flutter": "flutter run"
+    
   },
   "repository": {
     "type": "git",
