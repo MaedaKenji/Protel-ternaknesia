@@ -129,7 +129,6 @@ class HomePage extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Bagian header yang tetap
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -165,7 +164,7 @@ class HomePage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Column(
+                        const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('SAPYY',
@@ -173,14 +172,14 @@ class HomePage extends StatelessWidget {
                                   fontFamily: 'Inter',
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF8F3505),
+                                  color: Color(0xFF8F3505),
                                 )),
                             Text('Selamat Bekerja!',
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF8F3505),
+                                  color: Color(0xFF8F3505),
                                 )),
                           ],
                         )
@@ -207,7 +206,7 @@ class HomePage extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Hai, $displayName',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontFamily: 'Inter',
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
@@ -233,7 +232,6 @@ class HomePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 60),
-          // Bagian konten yang bisa di-scroll
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(0.0),

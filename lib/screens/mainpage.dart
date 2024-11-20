@@ -60,11 +60,11 @@ class _MainPageState extends State<MainPage> {
         unselectedItemColor: Colors.white30,
         backgroundColor: const Color(0xFFC35804),
         type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: TextStyle(
+        selectedLabelStyle: const TextStyle(
           fontFamily: 'Inter',
           fontWeight: FontWeight.bold,
         ),
-        unselectedLabelStyle: TextStyle(
+        unselectedLabelStyle: const TextStyle(
           fontFamily: 'Inter',
           fontWeight: FontWeight.normal,
         ),

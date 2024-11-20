@@ -1,6 +1,9 @@
-// ignore_for_file: unnecessary_string_interpolations
-
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ternaknesia/components/custom_pop_up_dialog.dart';
+import 'package:ternaknesia/components/multi_chart_container.dart';
+import 'package:ternaknesia/components/sections.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
@@ -21,13 +24,10 @@ class DataSapiPage extends StatefulWidget {
   });
 
   @override
-  // ignore: library_private_types_in_public_api
   _DataSapiPageState createState() => _DataSapiPageState();
 }
 
 class _DataSapiPageState extends State<DataSapiPage> {
-  int _currentChartIndex = 0;
-  List<String> historyData = ['70 Kg', '65 Kg', '72 Kg', '68 Kg'];
   List<double> beratBadan = [];
   List<double> susu = [];
   List<double> pakanHijau = [];
@@ -36,13 +36,66 @@ class _DataSapiPageState extends State<DataSapiPage> {
   bool isLoading = false;
   String errorMessage = '';
 
+  final Map<String, Map<String, List<FlSpot>>> feedData = {
+    'Pakan Hijau': {
+      'Januari': [
+        const FlSpot(0, 30),
+        const FlSpot(1, 35),
+        const FlSpot(2, 40)
+      ],
+      'Februari': [
+        const FlSpot(0, 32),
+        const FlSpot(1, 33),
+        const FlSpot(2, 36)
+      ],
+    },
+    'Pakan Sentrat': {
+      'Januari': [
+        const FlSpot(0, 20),
+        const FlSpot(1, 25),
+        const FlSpot(2, 30)
+      ],
+      'Februari': [
+        const FlSpot(0, 22),
+        const FlSpot(1, 23),
+        const FlSpot(2, 26)
+      ],
+    },
+  };
+
+  final Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
+    'Produksi Susu': {
+      'Januari': [
+        const FlSpot(0, 50),
+        const FlSpot(1, 55),
+        const FlSpot(2, 60)
+      ],
+      'Februari': [
+        const FlSpot(0, 52),
+        const FlSpot(1, 53),
+        const FlSpot(2, 56)
+      ],
+    },
+    'Berat Badan': {
+      'Januari': [
+        const FlSpot(0, 70),
+        const FlSpot(1, 72),
+        const FlSpot(2, 75)
+      ],
+      'Februari': [
+        const FlSpot(0, 68),
+        const FlSpot(1, 69),
+        const FlSpot(2, 71)
+      ],
+    },
+  };
+
   @override
   void initState() {
     super.initState();
     fetchData();
   }
 
-  // Fetch data from API
   Future<void> fetchData() async {
     setState(() {
       isLoading = true;
@@ -56,15 +109,12 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print(data);
 
         setState(() {
-          // Mengisi list beratBadan dengan konversi String ke double
           beratBadan = List<double>.from(data['recent_weights']
                   ?.map((item) => double.parse(item['weight'] ?? '0')) ??
               []);
 
-          // Kosongkan list lainnya jika tidak diperlukan
           susu = List<double>.from(data['recent_milk_production']?.map(
                   (item) => double.parse(item['production_amount'] ?? '0')) ??
               []);
@@ -92,468 +142,343 @@ class _DataSapiPageState extends State<DataSapiPage> {
     }
   }
 
-  void _nextChart() {
-    setState(() {
-      _currentChartIndex = (_currentChartIndex + 1) % 4;
-    });
+  Widget _buildHeader(
+      {required String id,
+      required String gender,
+      required String age,
+      required String healthStatus}) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          height: 110,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          top: 12,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ID SAPI: $id',
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9E2B5),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFC35804),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 36,
+                      backgroundImage: AssetImage('assets/images/cow_alt.png'),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return CustomPopUpDialog(
+                                          title: 'ID SAPI',
+                                          content: id,
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: Text(
+                                    id,
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF8F3505),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              _buildCowIndicator(
+                                isHealthy:
+                                    healthStatus.toUpperCase() == 'SEHAT',
+                                isMale: gender.toUpperCase() == 'JANTAN',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildCowInfo(
+                                'Berat',
+                                '350 Kg',
+                                MaterialSymbols.weight,
+                              ),
+                              _buildCowInfo(
+                                  'Umur', age, MaterialSymbols.calendar_month),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
-  void _previousChart() {
-    setState(() {
-      _currentChartIndex = (_currentChartIndex - 1) % 4;
-      if (_currentChartIndex < 0) {
-        _currentChartIndex = 3;
-      }
-    });
+  Widget _buildCowInfo(String label, String value, String icon) {
+    return Expanded(
+      child: Row(children: [
+        Iconify(
+          icon,
+          size: 32,
+          color: const Color(0xFF8F3505),
+        ),
+        const SizedBox(width: 4),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF8F3505),
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ]),
+    );
   }
 
-  
-  void _addNewData() {
-    String key;
-    if (_currentChartIndex == 0) {
-      key = 'produksiSusu';
-    } else if (_currentChartIndex == 1) {
-      key = 'beratBadan';
-    } else if (_currentChartIndex == 2) {
-      key = 'pakanHijau';
-    } 
-    else {
-      key = 'pakanSentrat';
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) =>
-          _NewDataDialog(id: '${widget.id}'), // Ganti dengan ID yang sesuai
-    ).then((data) {
-      if (data != null && data.isNotEmpty) {
-        final Map<String, String> dictionary = {key: data};
-        _sendDataToServer(dictionary);
-      }
-    });
-  }
-
-  Future<void> _sendDataToServer(Map<String, String> data) async {
-    try {
-      final url = Uri.parse(
-          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahdata/${widget.id}');
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(data),
-      );
-      print(response.body);
-
-      if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Data berhasil dikirim ke server")),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal mengirim data ke server")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
-  }
-
-
-
-  void _showHistory() async {
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return _HistoryDialog(
-          data: historyData,
-          onDelete: (index) {
-            setState(() {
-              historyData.removeAt(index);
-            });
-          },
-        );
-      },
+  Widget _buildCowIndicator({required bool isHealthy, required bool isMale}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              isHealthy ? Colors.green.shade300 : Colors.red.shade300,
+              isHealthy ? Colors.green.shade600 : Colors.red.shade600,
+            ]),
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isHealthy ? Icons.check : Icons.error,
+                color: Colors.white,
+                size: 12,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                isHealthy ? 'SEHAT' : 'SAKIT',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              isMale ? Colors.blue.shade300 : Colors.pink.shade300,
+              isMale ? Colors.blue.shade600 : Colors.pink.shade600,
+            ]),
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isMale ? Icons.male : Icons.female,
+                color: Colors.white,
+                size: 17,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFC35804),
-        title: Text('ID SAPI: ${widget.id}'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeaderCard(),
-            const SizedBox(height: 20),
-
-            const Text(
-              'PRODUKSI SUSU & BERAT BADAN',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.brown,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(
+                top: 200, left: 16, right: 16, bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: _previousChart,
+                const Text(
+                  'PRODUKSI SUSU & BERAT BADAN',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF8F3505),
+                  ),
                 ),
-                Expanded(child: _buildChart()),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward),
-                  onPressed: _nextChart,
+                const SizedBox(height: 10),
+                MultiChartContainer(chartsData: milkAndWeightData),
+                const SizedBox(height: 25),
+                const Divider(
+                  color: Colors.black12,
+                  thickness: 1,
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.orange),
-                  onPressed: _addNewData,
+                const SizedBox(height: 25),
+                const Text(
+                  'PAKAN YANG DIBERIKAN',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF8F3505),
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.history, color: Colors.orange),
-                  onPressed: _showHistory,
+                const SizedBox(height: 10),
+                MultiChartContainer(chartsData: feedData),
+                const SizedBox(height: 25),
+                const Divider(
+                  color: Colors.black12,
+                  thickness: 1,
                 ),
-              ],
-            ),
-
-            _buildConditionsSection(),
-            const SizedBox(height: 20),
-            _buildPopulationStructureSection(),
-            const SizedBox(height: 20),
-
-            const Text(
-              'CATATAN :',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.brown,
-              ),
-            ),
-            const TextField(
-              maxLines: 4,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Masukkan catatan',
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Add logic to handle cow removal
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  padding: const EdgeInsets.symmetric(vertical: 15.0),
+                const SizedBox(height: 25),
+                ConditionsSection(healthStatus: widget.healthStatus),
+                const SizedBox(height: 20),
+                const PopulationStructureSection(),
+                const SizedBox(height: 20),
+                const Text(
+                  'CATATAN :',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.brown,
+                  ),
                 ),
-                child: const Text(
-                  'KELUARKAN SAPI DARI KANDANG',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderCard() {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 40,
-              backgroundImage: AssetImage('assets/images/cow.png'),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ID SAPI = ${widget.id}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.brown,
+                TextField(
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF8F3505),
                     ),
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF8F3505),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF8F3505)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF8F3505)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF8F3505)),
+                    ),
+                    hintText: 'Masukkan catatan',
                   ),
-                  Text('Kelamin = ${widget.gender}'),
-                  Text('Umur = ${widget.age}'),
-                  Text('Tanggal = ${DateTime.now().toString().split(" ")[0]}'),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: widget.healthStatus.toUpperCase() == 'SEHAT' ? Colors.green : Colors.red,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                widget.healthStatus,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChart() {
-    return IndexedStack(
-      index: _currentChartIndex,
-      children: [
-        _buildLineChart('PRODUKSI SUSU', susu),
-        _buildLineChart('BERAT BADAN', beratBadan),
-        _buildLineChart('PAKAN HIJAU', pakanHijau),
-        _buildLineChart('PAKAN SENTRAT', pakanSentrat),
-      ],
-    );
-  }
-
-  Widget _buildLineChart(String title, List<double> values) {
-    if (values.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            height: 150,
-            alignment: Alignment.center,
-            child: const Text('Data tidak tersedia'),
-          ),
-          const SizedBox(height: 10),
-        ],
-      );
-    }
-
-    // Convert values to FlSpot list for dynamic chart data
-    List<FlSpot> spots = values.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble() + 1, entry.value);
-    }).toList();
-
-    double currentValue = values.last;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        AspectRatio(
-          aspectRatio: 1.6,
-          child: LineChart(
-            LineChartData(
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  barWidth: 3,
-                  color: const Color(0xFFC35804),
-                  dotData: const FlDotData(show: true),
                 ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: const Color(0xFFFFECEC),
+                      minimumSize: const Size(double.infinity, 50),
+                      side: const BorderSide(color: Color(0xFFFF3939)),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text(
+                      'KELUARKAN SAPI DARI KANDANG',
+                      style: TextStyle(
+                        color: Color(0xFFE33629),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ))
               ],
-              borderData: FlBorderData(show: false),
-              titlesData: const FlTitlesData(show: false),
-              gridData: const FlGridData(show: false),
             ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Saat ini:'),
-            Text(
-              '$currentValue Kg',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-      ],
-    );
-  }
-
-
-  Widget _buildConditionsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'KONDISI HEWAN :',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.brown,
-          ),
-        ),
-        _buildEditableField('Stress Level', 'Normal'),
-        _buildEditableField('Kesehatan', widget.healthStatus),
-      ],
-    );
-  }
-
-  Widget _buildPopulationStructureSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'STRUKTUR POPULASI :',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.brown,
-          ),
-        ),
-        _buildEditableField('Birahi', 'Tidak'),
-        _buildEditableField('Status', 'Aktif'),
-      ],
-    );
-  }
-
-  Widget _buildEditableField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              initialValue: value,
-              decoration: InputDecoration(
-                labelText: label,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          IconButton(
-            icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
-            onPressed: () {},
-          ),
+          _buildHeader(
+            id: widget.id,
+            gender: widget.gender,
+            age: widget.age,
+            healthStatus: widget.healthStatus,
+          )
         ],
       ),
-    );
-  }
-}
-
-// Dialog untuk menambahkan data baru
-class _NewDataDialog extends StatelessWidget {
-  final String id;
-
-  const _NewDataDialog({required this.id});
-
-  @override
-  Widget build(BuildContext context) {
-    TextEditingController controller = TextEditingController();
-
-    return AlertDialog(
-      title: const Text("SILAHKAN INPUT DATA BARU :"),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(suffixText: "Kg/L"),
-        keyboardType: TextInputType.number,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text("BATAL"),
-        ),
-        TextButton(
-          onPressed: () {
-            String data = controller.text;
-            Navigator.of(context)
-                .pop(data); // Mengembalikan data ke _addNewData
-          },
-          child: const Text("OK"),
-        ),
-      ],
-    );
-  }
-}
-
-
-
-// Dialog untuk riwayat data
-class _HistoryDialog extends StatelessWidget {
-  final List<String> data;
-  final Function(int) onDelete;
-
-  const _HistoryDialog({required this.data, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text("RIWAYAT PAKAN"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: data.asMap().entries.map((entry) {
-          int index = entry.key;
-          String value = entry.value;
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(value),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.orange),
-                    onPressed: () {}, // Logika untuk edit data
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.orange),
-                    onPressed: () => onDelete(index),
-                  ),
-                ],
-              ),
-            ],
-          );
-        }).toList(),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text("BATAL"),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text("OK"),
-        ),
-      ],
     );
   }
 }

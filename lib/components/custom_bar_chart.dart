@@ -43,19 +43,17 @@ class CustomBarChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       interval: 250,
-                      reservedSize: 40, // Menambah ruang untuk label
+                      reservedSize: 40,
                       getTitlesWidget: (value, meta) {
-                        // Pastikan teks tidak membungkus
                         return Text(
                           value.toInt().toString(),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.black,
-                            overflow: TextOverflow
-                                .ellipsis, // Jangan biarkan membungkus
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          softWrap: false, // Pastikan tidak membungkus
-                          maxLines: 1, // Hanya satu baris
+                          softWrap: false,
+                          maxLines: 1,
                         );
                       },
                     ),

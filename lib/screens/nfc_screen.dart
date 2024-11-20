@@ -1,6 +1,9 @@
+// ignore_for_file: deprecated_member_use, empty_catches
+
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:ternaknesia/main.dart';
+import 'package:ternaknesia/screens/inputdata.dart';
 
 class NFCPage extends StatefulWidget {
   const NFCPage({super.key});
@@ -38,11 +41,9 @@ class CircleWavePainter extends CustomPainter {
 }
 
 class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
-  String? _nfcResult;
   bool _isNfcEnabled = true;
-  bool _isScanning = false;
-  bool _isNfcAvailable = false;
   late AnimationController _animationController;
+  final TextEditingController _cowIdController = TextEditingController();
 
   @override
   void initState() {
@@ -57,21 +58,16 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     _animationController.dispose();
+    _cowIdController.dispose();
     super.dispose();
   }
 
   Future<void> _checkNfcAvailability() async {
-    final isAvailable = await NfcManager.instance.isAvailable();
-    setState(() {
-      _isNfcAvailable = isAvailable;
-    });
+    setState(() {});
   }
 
   void _startNfcScan() async {
-    setState(() {
-      _isScanning = true;
-      _nfcResult = null;
-    });
+    setState(() {});
 
     _showNfcDialog();
 
@@ -81,9 +77,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
           final nfcData = tag.data.toString();
 
           setState(() {
-            _nfcResult = nfcData;
             _isNfcEnabled = true;
-            _isScanning = false;
           });
 
           if (navigatorKey.currentState?.canPop() ?? false) {
@@ -96,9 +90,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
         },
       );
     } catch (e) {
-      setState(() {
-        _isScanning = false;
-      });
+      setState(() {});
 
       if (navigatorKey.currentState?.canPop() ?? false) {
         navigatorKey.currentState?.pop();
@@ -225,6 +217,24 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
     );
   }
 
+  void _navigateToInputDataPage() {
+    if (_cowIdController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ID Sapi tidak boleh kosong!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => InputDataPage(cowId: _cowIdController.text),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -248,12 +258,12 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 top: 20,
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: const Text(
+                  child: Text(
                     'Input Data Sapi',
                     style: TextStyle(
                       fontFamily: 'Inter',
@@ -273,8 +283,9 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _cowIdController,
+                      decoration: const InputDecoration(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(14)),
                         ),
@@ -283,7 +294,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _navigateToInputDataPage,
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         backgroundColor: const Color(0xFFC35804),

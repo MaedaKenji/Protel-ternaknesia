@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// ignore: must_be_immutable
 class DataSapiPage extends StatelessWidget {
   final String id;
   final String gender;
@@ -74,7 +75,7 @@ class DataSapiPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'ID SAPI = $id',
+                            'ID SAPI: $id',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

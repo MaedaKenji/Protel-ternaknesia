@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:ternaknesia/screens/nambahsapi.dart';
-import 'package:ternaknesia/screens/datasapipage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ternaknesia/components/custom_pop_up_dialog.dart';
+import 'package:ternaknesia/screens/datasapipage.dart';
+import 'package:ternaknesia/screens/nambahsapi.dart';
 
-// Model Data Sapi
 class Cattle {
   final String id;
   final int weight;
@@ -54,6 +56,27 @@ class _DataPageState extends State<DataPage> {
   String searchQuery = '';
   Future<List<Cattle>>? cattleData;
 
+  bool useStaticData = true;
+
+  final List<Map<String, dynamic>> _staticCattleData = [
+    {
+      'id': '001',
+      'weight': 100,
+      'age': '2 Bulan',
+      'status': 'SAKIT',
+      'gender': 'Betina',
+      'statusColor': Colors.red,
+    },
+    {
+      'id': '002',
+      'weight': 100,
+      'age': '2 Bulan',
+      'status': 'SEHAT',
+      'gender': 'Jantan',
+      'statusColor': Colors.green,
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -69,11 +92,7 @@ class _DataPageState extends State<DataPage> {
         List<dynamic> cattleJson = json.decode(response.body);
 
         return cattleJson.map((json) {
-          try {
-            return Cattle.fromJson(json);
-          } catch (e) {
-            throw Exception('Error parsing item: ${json['cow_id']} - $e');
-          }
+          return Cattle.fromJson(json);
         }).toList();
       } else {
         throw Exception(
@@ -96,7 +115,6 @@ class _DataPageState extends State<DataPage> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Custom AppBar with Stack
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -115,110 +133,78 @@ class _DataPageState extends State<DataPage> {
                 ),
               ),
               Positioned(
-                top: 20, // Atur posisi vertikal teks agar berada di tengah
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: const Text(
-                    'Data Sapi',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                top: 12,
+                left: 20,
+                right: 20,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Data Sapi',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
+                    Row(
+                      children: [
+                        const Text(
+                          'Fetch',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(
+                          width: 4,
+                        ),
+                        Switch(
+                          value: useStaticData,
+                          onChanged: (value) {
+                            setState(() {
+                              useStaticData = value;
+                            });
+                          },
+                          activeColor: Colors.white,
+                        ),
+                        const SizedBox(
+                          width: 4,
+                        ),
+                        const Text(
+                          'Data Statis',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refreshData,
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  // Search Bar
-                  TextField(
-                    controller: searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        searchQuery = value.toLowerCase();
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Cari',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.orange),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.orange),
-                      ),
+            child: useStaticData
+                ? _buildStaticDataList()
+                : RefreshIndicator(
+                    onRefresh: _refreshData,
+                    child: FutureBuilder<List<Cattle>>(
+                      future: cattleData,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(
+                              child: Text(
+                                  'Error loading data: ${snapshot.error}'));
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return const Center(child: Text('No data found.'));
+                        } else {
+                          return _buildFetchedDataList(snapshot.data!);
+                        }
+                      },
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // FutureBuilder for cattle data
-                  FutureBuilder<List<Cattle>>(
-                    future: cattleData,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(
-                            child:
-                                Text('Error loading data: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(child: Text('No data found.'));
-                      } else {
-                        final filteredCattle = snapshot.data!.where((cattle) {
-                          return cattle.id
-                                  .toLowerCase()
-                                  .contains(searchQuery) ||
-                              cattle.healthStatus
-                                  .toLowerCase()
-                                  .contains(searchQuery);
-                        }).toList();
-
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: filteredCattle.length,
-                          itemBuilder: (context, index) {
-                            final cattle = filteredCattle[index];
-                            return _buildCattleCard(
-                              context,
-                              id: cattle.id,
-                              weight: cattle.weight,
-                              age: cattle.age,
-                              status: cattle.healthStatus,
-                              statusColor:
-                                  cattle.healthStatus.toLowerCase() == 'sehat'
-                                      ? Colors.green
-                                      : Colors.red,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => DataSapiPage(
-                                      id: cattle.id,
-                                      gender: cattle.gender,
-                                      age: cattle.age.toString(),
-                                      healthStatus: cattle.healthStatus,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -238,61 +224,231 @@ class _DataPageState extends State<DataPage> {
     );
   }
 
+  Widget _buildStaticDataList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: _staticCattleData.length,
+      itemBuilder: (context, index) {
+        final cattle = _staticCattleData[index];
+        return _buildCattleCard(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DataSapiPage(
+                  id: cattle['id'],
+                  gender: cattle['gender'],
+                  age: cattle['age'],
+                  healthStatus: cattle['status'],
+                ),
+              ),
+            );
+          },
+          context,
+          id: cattle['id'],
+          weight: cattle['weight'],
+          gender: cattle['gender'],
+          age: cattle['age'],
+          status: cattle['status'],
+          statusColor: cattle['statusColor'],
+        );
+      },
+    );
+  }
+
+  Widget _buildFetchedDataList(List<Cattle> cattleData) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: cattleData.length,
+      itemBuilder: (context, index) {
+        final cattle = cattleData[index];
+        return _buildCattleCard(
+          onPressed: () {},
+          context,
+          id: cattle.id,
+          weight: cattle.weight,
+          gender: cattle.gender,
+          age: '${cattle.age} Bulan',
+          status: cattle.healthStatus,
+          statusColor: cattle.healthStatus.toLowerCase() == 'sehat'
+              ? Colors.green
+              : Colors.red,
+        );
+      },
+    );
+  }
+
   Widget _buildCattleCard(BuildContext context,
       {required String id,
       required int weight,
-      required int age,
+      required String age,
       required String status,
+      required String gender,
       required Color statusColor,
-      required VoidCallback onTap}) {
+      required VoidCallback onPressed}) {
     return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(
+      onTap: onPressed,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9E2B5),
           borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: const Color(0xFFC35804),
+            width: 1,
+          ),
         ),
-        elevation: 3,
+        margin: const EdgeInsets.symmetric(vertical: 8),
         child: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding: const EdgeInsets.all(14.0),
           child: Row(
             children: [
               const CircleAvatar(
                 radius: 30,
-                backgroundImage: AssetImage('assets/images/cow.png'),
+                backgroundImage: AssetImage('assets/images/cow_alt.png'),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'ID SAPI = $id',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.brown,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return CustomPopUpDialog(
+                                        title: 'ID SAPI',
+                                        content: 'ID SAPI: $id');
+                                  });
+                            },
+                            child: Text(
+                              'ID SAPI: $id',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF8F3505),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildCowIndicator(
+                            isHealthy: status.toLowerCase() == 'sehat',
+                            isMale: gender.toLowerCase() == 'jantan'),
+                      ],
                     ),
-                    Text('Berat = $weight kg'),
-                    Text('Umur = $age bulan'),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _buildCowInfo(
+                            'Berat', '$weight Kg', MaterialSymbols.weight),
+                        _buildCowInfo(
+                            'Umur', age, MaterialSymbols.calendar_month),
+                      ],
+                    )
                   ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  status,
-                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCowIndicator({required bool isHealthy, required bool isMale}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              isHealthy ? Colors.green.shade300 : Colors.red.shade300,
+              isHealthy ? Colors.green.shade600 : Colors.red.shade600,
+            ]),
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isHealthy ? Icons.check : Icons.error,
+                color: Colors.white,
+                size: 12,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                isHealthy ? 'SEHAT' : 'SAKIT',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              isMale ? Colors.blue.shade300 : Colors.pink.shade300,
+              isMale ? Colors.blue.shade600 : Colors.pink.shade600,
+            ]),
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isMale ? Icons.male : Icons.female,
+                color: Colors.white,
+                size: 17,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCowInfo(String label, String value, String icon) {
+    return Expanded(
+      child: Row(children: [
+        Iconify(
+          icon,
+          size: 32,
+          color: const Color(0xFF8F3505),
+        ),
+        const SizedBox(width: 4),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF8F3505),
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ]),
     );
   }
 }

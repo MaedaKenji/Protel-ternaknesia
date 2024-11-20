@@ -18,7 +18,6 @@ class SummaryCards extends StatelessWidget {
   }
 }
 
-// Komponen SummaryCard
 class SummaryCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -42,20 +41,20 @@ class SummaryCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFFC35804),
+                color: Color(0xFFC35804),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: TextStyle(
+              style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11,
-                  color: const Color(0xFF8F3505)),
+                  color: Color(0xFF8F3505)),
               textAlign: TextAlign.center,
             ),
           ],

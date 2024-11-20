@@ -1,10 +1,6 @@
-// import 'dart:io';
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-// import 'package:intl/intl.dart';
 import 'package:ternaknesia/config/config.dart';
 import 'dart:convert';
 
@@ -25,20 +21,18 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
     fetchDataAndProcess();
   }
 
-  // Fungsi untuk mengambil data dari API dan memprosesnya menjadi data grafik
   Future<void> fetchDataAndProcess() async {
     const String url = '${AppConfig.serverUrl}/cows';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
 
-      // Kelompokkan data menjadi 6 data terakhir
       final Map<int, int> healthyPerWeek = groupLast6Data(data);
 
-      // Convert the grouped data into FlSpot for plotting on the chart
       setState(() {
         healthCowwww = healthyPerWeek.entries
-            .map((entry) => FlSpot(entry.key.toDouble(), entry.value.toDouble()))
+            .map(
+                (entry) => FlSpot(entry.key.toDouble(), entry.value.toDouble()))
             .toList();
         isLoading = false;
       });
@@ -47,7 +41,6 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
     }
   }
 
-  // Fungsi untuk mengambil 6 data terakhir dari setiap sapi
   Map<int, int> groupLast6Data(List<dynamic> data) {
     Map<int, int> healthyPerWeek = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0};
 
@@ -55,12 +48,10 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
       if (cow['health'] != null && cow['health'] is List) {
         List<dynamic> healthRecords = cow['health'];
 
-        // Ambil 6 data terakhir, jika ada lebih dari 6
         if (healthRecords.length > 6) {
           healthRecords = healthRecords.sublist(healthRecords.length - 6);
         }
 
-        // Proses data, dan tambahkan ke kelompok berdasarkan urutan 1 sampai 6
         for (int i = 0; i < healthRecords.length; i++) {
           var healthRecord = healthRecords[i];
           if (healthRecord['sehat'] == true) {
@@ -94,7 +85,6 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          // Menampilkan angka 1 sampai 6 di sumbu X
                           return Text(
                             ' ${value.toInt()}',
                             style: const TextStyle(fontSize: 10),
@@ -108,27 +98,27 @@ class _CowAnalysisPageState extends State<CowAnalysisPage> {
                     border: Border.all(color: Colors.black, width: 1),
                   ),
                   minX: 1,
-                  maxX: 6, // Menampilkan data 6 terakhir
+                  maxX: 6,
                   minY: 0,
-                  maxY: 80, // Sesuaikan jumlah maksimal sapi sehat
+                  maxY: 80,
                   lineBarsData: [
                     LineChartBarData(
                       spots: healthCowwww,
-                      isCurved: true, // Membuat garis lebih halus
+                      isCurved: true,
                       barWidth: 4,
-                      color: Colors.orange, // Sesuaikan warna garis
+                      color: Colors.orange,
                       dotData: FlDotData(
                         show: true,
                         getDotPainter: (spot, percent, barData, index) =>
                             FlDotCirclePainter(
-                              radius: 4, // Ukuran titik
-                              color: Colors.orange,
-                              strokeWidth: 2,
-                              strokeColor: Colors.orangeAccent,
-                            ),
+                          radius: 4,
+                          color: Colors.orange,
+                          strokeWidth: 2,
+                          strokeColor: Colors.orangeAccent,
+                        ),
                       ),
                       belowBarData: BarAreaData(
-                        show: false, // Tidak menampilkan area di bawah grafik
+                        show: false,
                       ),
                     ),
                   ],

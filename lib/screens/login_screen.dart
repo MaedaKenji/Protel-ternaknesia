@@ -86,13 +86,13 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(
+                const Text(
                   'TERNAKNESIA',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFC35804),
+                    color: Color(0xFFC35804),
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -128,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 30),
                 SizedBox(
-                  width: double.infinity, // Membuat button selebar layar
+                  width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _login,
                     style: ElevatedButton.styleFrom(
@@ -176,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
-                  width: double.infinity, // Membuat button selebar layar
+                  width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {},
                     icon: Iconify(

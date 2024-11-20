@@ -169,7 +169,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: Colors.brown,
+          color: Color(0xFFC35804),
         ),
       ),
     );
@@ -182,21 +182,19 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         hintText: hint,
-        filled: true,
-        fillColor: Colors.orange.shade50,
         contentPadding:
             const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.orange),
+          borderSide: const BorderSide(color: Color(0xFFC35804)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.orange),
+          borderSide: const BorderSide(color: Color(0xFFC35804)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.brown),
+          borderSide: const BorderSide(color: Color(0xFFC35804)),
         ),
       ),
       validator: (value) {
@@ -217,21 +215,19 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       hint: const Text('Pilih salah satu'),
       value: value,
       decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.orange.shade50,
         contentPadding:
             const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.orange),
+          borderSide: const BorderSide(color: Color(0xFFC35804)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.orange),
+          borderSide: const BorderSide(color: Color(0xFFC35804)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.brown),
+          borderSide: const BorderSide(color: Color(0xFFC35804)),
         ),
       ),
       onChanged: onChanged,
@@ -256,6 +252,7 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
       child: ElevatedButton(
         onPressed: _submitData,
         style: ElevatedButton.styleFrom(
+          elevation: 0,
           backgroundColor: const Color(0xFFC35804),
           padding: const EdgeInsets.symmetric(vertical: 15),
           shape: RoundedRectangleBorder(

@@ -17,7 +17,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Set default values
     _nameController.text = 'ATHA RAFIFI';
     _emailController.text = 'athahahaha@gmail.com';
     _phoneController.text = '081 2123 5567';
@@ -41,7 +40,6 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Header
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -59,11 +57,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 top: 20,
                 left: 0,
                 right: 0,
-                child: const Center(
+                child: Center(
                   child: Text(
                     'User Profile',
                     style: TextStyle(
@@ -83,14 +81,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
               child: Column(
                 children: [
-                  // Gambar Profil
                   const CircleAvatar(
                     radius: 60,
                     backgroundImage: NetworkImage(
                         'https://cdn-icons-png.flaticon.com/512/1998/1998627.png'),
                   ),
                   const SizedBox(height: 10),
-                  // Nama Pengguna
                   Text(
                     _nameController.text,
                     style: const TextStyle(
@@ -99,35 +95,30 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  // Kolom Input Email
                   _buildInfoRow(
                     icon: Icons.email,
                     label: 'Email',
                     controller: _emailController,
                   ),
                   const SizedBox(height: 20),
-                  // Kolom Input Telepon
                   _buildInfoRow(
                     icon: Icons.phone,
                     label: 'Phone',
                     controller: _phoneController,
                   ),
                   const SizedBox(height: 20),
-                  // Kolom Input Role
                   _buildInfoRow(
                     icon: Icons.work,
                     label: 'Role',
                     controller: _roleController,
                   ),
                   const SizedBox(height: 20),
-                  // Kolom Input Lokasi
                   _buildInfoRow(
                     icon: Icons.location_on,
                     label: 'Lokasi Kandang',
                     controller: _locationController,
                   ),
                   const SizedBox(height: 20),
-                  // Kolom Input Email (Tambahan)
                   _buildInfoRow(
                     icon: Icons.email,
                     label: 'Email',
@@ -165,7 +156,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Fungsi untuk membuat baris informasi
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -174,15 +164,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Ikon di sisi kiri
-        Icon(icon, color: Color(0xFFC35804), size: 28),
+        Icon(icon, color: const Color(0xFFC35804), size: 28),
         const SizedBox(width: 10),
-        // Kolom untuk Label dan Input
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Label
               Text(
                 label,
                 style: const TextStyle(
@@ -192,7 +179,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 2),
-              // Input Field
               TextField(
                 controller: controller,
                 style: const TextStyle(fontSize: 16),
