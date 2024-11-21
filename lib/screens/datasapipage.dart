@@ -32,11 +32,13 @@ class _DataSapiPageState extends State<DataSapiPage> {
   List<double> susu = [];
   List<double> pakanHijau = [];
   List<double> pakanSentrat = [];
+  List<String> historyData = ['70 Kg', '65 Kg', '72 Kg', '68 Kg'];
+  int _currentChartIndex = 0;
 
   bool isLoading = false;
   String errorMessage = '';
 
-  final Map<String, Map<String, List<FlSpot>>> feedData = {
+  Map<String, Map<String, List<FlSpot>>> feedData = {
     'Pakan Hijau': {
       'Januari': [
         const FlSpot(0, 30),
@@ -63,7 +65,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
     },
   };
 
-  final Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
+  Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
     'Produksi Susu': {
       'Januari': [
         const FlSpot(0, 50),
@@ -93,53 +95,107 @@ class _DataSapiPageState extends State<DataSapiPage> {
   @override
   void initState() {
     super.initState();
-    fetchData();
+    _refreshData();
   }
 
-  Future<void> fetchData() async {
+ 
+  void _nextChart() {
     setState(() {
-      isLoading = true;
-      errorMessage = '';
+      _currentChartIndex = (_currentChartIndex + 1) % 4;
     });
+  }
 
+  void _previousChart() {
+    setState(() {
+      _currentChartIndex = (_currentChartIndex - 1) % 4;
+      if (_currentChartIndex < 0) {
+        _currentChartIndex = 3;
+      }
+    });
+  }
+
+  void _addNewData() {
+    String key;
+    if (_currentChartIndex == 0) {
+      key = 'produksiSusu';
+    } else if (_currentChartIndex == 1) {
+      key = 'beratBadan';
+    } else if (_currentChartIndex == 2) {
+      key = 'pakanHijau';
+    } else {
+      key = 'pakanSentrat';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) =>
+          _NewDataDialog(id: '${widget.id}'), // Ganti dengan ID yang sesuai
+    ).then((data) {
+      if (data != null && data.isNotEmpty) {
+        final Map<String, String> dictionary = {key: data};
+        _sendDataToServer(dictionary);
+      }
+    });
+  }
+
+  Future<void> _sendDataToServer(Map<String, String> data) async {
     try {
       final url = Uri.parse(
-          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
-      final response = await http.get(url);
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahdata/${widget.id}');
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print(response.body);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        setState(() {
-          beratBadan = List<double>.from(data['recent_weights']
-                  ?.map((item) => double.parse(item['weight'] ?? '0')) ??
-              []);
-
-          susu = List<double>.from(data['recent_milk_production']?.map(
-                  (item) => double.parse(item['production_amount'] ?? '0')) ??
-              []);
-          pakanHijau = List<double>.from(data['recent_feed_hijauan']
-                  ?.map((item) => double.parse(item['amount'] ?? '0')) ??
-              []);
-          pakanSentrat = List<double>.from(data['recent_feed_sentrate']
-                  ?.map((item) => double.parse(item['amount'] ?? '0')) ??
-              []);
-        });
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data berhasil dikirim ke server")),
+        );
       } else {
-        setState(() {
-          errorMessage =
-              'Gagal memuat data. Status code: ${response.statusCode}';
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal mengirim data ke server")),
+        );
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'Terjadi kesalahan: $e';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return const AlertDialog(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.orange, size: 40),
+              SizedBox(width: 10),
+              Text("PERUBAHAN DATA SAPI BERHASIL"),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showHistory() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return _HistoryDialog(
+          data: historyData,
+          onDelete: (index) {
+            setState(() {
+              historyData.removeAt(index);
+            });
+          },
+        );
+      },
+    );
   }
 
   Widget _buildHeader(
@@ -366,119 +422,507 @@ class _DataSapiPageState extends State<DataSapiPage> {
     );
   }
 
+ 
+  // Fetch data from API
+ Future<http.Response> fetchData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+    print("Fetching data...");
+
+    try {
+      final url = Uri.parse(
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
+      final response = await http.get(url);
+      print("Response status code: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return response; // Tambahkan return di sini
+      } else {
+        setState(() {
+          errorMessage =
+              'Gagal memuat data. Status code: ${response.statusCode}';
+        });
+        throw Exception(
+            'Failed to fetch data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Terjadi kesalahan: $e';
+      });
+      rethrow; // Jangan swallow error, lempar ulang error
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+Map<String, Map<String, List<FlSpot>>> processFeedData(
+      List<Map<String, dynamic>> feedHijauan,
+      List<Map<String, dynamic>> feedSentrate) {
+    Map<String, Map<String, List<FlSpot>>> feedData = {
+      'Pakan Hijau': {},
+      'Pakan Sentrat': {},
+    };
+
+    // Proses data Pakan Hijauan
+    feedHijauan.sort((a, b) {
+      DateTime dateA = DateTime.parse(a['date']);
+      DateTime dateB = DateTime.parse(b['date']);
+      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+    });
+
+    for (var feed in feedHijauan) {
+      DateTime date = DateTime.parse(feed['date']);
+      double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
+      String monthWithYear = _getMonthWithYear(date);
+
+      feedData['Pakan Hijau'] ??= {};
+      feedData['Pakan Hijau']?[monthWithYear] ??= [];
+      feedData['Pakan Hijau']?[monthWithYear]!
+          .add(FlSpot(date.day.toDouble(), amount));
+    }
+
+    // Proses data Pakan Sentrate
+    feedSentrate.sort((a, b) {
+      DateTime dateA = DateTime.parse(a['date']);
+      DateTime dateB = DateTime.parse(b['date']);
+      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+    });
+
+    for (var feed in feedSentrate) {
+      DateTime date = DateTime.parse(feed['date']);
+      double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
+      String monthWithYear = _getMonthWithYear(date);
+
+      feedData['Pakan Sentrat'] ??= {};
+      feedData['Pakan Sentrat']?[monthWithYear] ??= [];
+      feedData['Pakan Sentrat']?[monthWithYear]!
+          .add(FlSpot(date.day.toDouble(), amount));
+    }
+
+    return feedData;
+  }
+
+Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
+      List<Map<String, dynamic>> milkProduction,
+      List<Map<String, dynamic>> weights) {
+    Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
+      'Produksi Susu': {},
+      'Berat Badan': {},
+    };
+
+    // Proses data Produksi Susu
+    milkProduction.sort((a, b) {
+      DateTime dateA = DateTime.parse(a['date']);
+      DateTime dateB = DateTime.parse(b['date']);
+      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+    });
+
+    for (var milk in milkProduction) {
+      DateTime date = DateTime.parse(milk['date']);
+      double productionAmount =
+          double.tryParse(milk['production_amount']?.toString() ?? '0') ?? 0;
+      String monthWithYear = _getMonthWithYear(date);
+
+      milkAndWeightData['Produksi Susu'] ??= {};
+      milkAndWeightData['Produksi Susu']?[monthWithYear] ??= [];
+      milkAndWeightData['Produksi Susu']?[monthWithYear]!
+          .add(FlSpot(date.day.toDouble(), productionAmount));
+    }
+
+    // Proses data Berat Badan
+    weights.sort((a, b) {
+      DateTime dateA = DateTime.parse(a['date']);
+      DateTime dateB = DateTime.parse(b['date']);
+      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+    });
+
+    for (var weight in weights) {
+      DateTime date = DateTime.parse(weight['date']);
+      double weightValue =
+          double.tryParse(weight['weight']?.toString() ?? '0') ?? 0;
+      String monthWithYear = _getMonthWithYear(date);
+
+      milkAndWeightData['Berat Badan'] ??= {};
+      milkAndWeightData['Berat Badan']?[monthWithYear] ??= [];
+      milkAndWeightData['Berat Badan']?[monthWithYear]!
+          .add(FlSpot(date.day.toDouble(), weightValue));
+    }
+
+    return milkAndWeightData;
+  }
+
+
+  // Map<String, Map<String, List<FlSpot>>> processFeedData(
+  //     List<Map<String, dynamic>> feedHijauan,
+  //     List<Map<String, dynamic>> feedSentrate) {
+  //   Map<String, Map<String, List<FlSpot>>> feedData = {
+  //     'Pakan Hijau': {},
+  //     'Pakan Sentrat': {},
+  //   };
+
+  //   // Proses data Pakan Hijauan
+  //   for (var feed in feedHijauan) {
+  //     DateTime date = DateTime.parse(feed['date']);
+  //     double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
+  //     String monthWithYear = _getMonthWithYear(date);
+
+  //     feedData['Pakan Hijau'] ??= {};
+  //     feedData['Pakan Hijau']?[monthWithYear] ??= [];
+  //     feedData['Pakan Hijau']?[monthWithYear]!
+  //         .add(FlSpot(date.day.toDouble(), amount));
+  //   }
+
+  //   // Proses data Pakan Sentrate
+  //   for (var feed in feedSentrate) {
+  //     DateTime date = DateTime.parse(feed['date']);
+  //     double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
+  //     String monthWithYear = _getMonthWithYear(date);
+
+  //     feedData['Pakan Sentrat'] ??= {};
+  //     feedData['Pakan Sentrat']?[monthWithYear] ??= [];
+  //     feedData['Pakan Sentrat']?[monthWithYear]!
+  //         .add(FlSpot(date.day.toDouble(), amount));
+  //   }
+
+  //   return feedData;
+  // }
+
+  // Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
+  //     List<Map<String, dynamic>> milkProduction,
+  //     List<Map<String, dynamic>> weights) {
+  //   Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
+  //     'Produksi Susu': {},
+  //     'Berat Badan': {},
+  //   };
+
+  //   // Proses data Produksi Susu
+  //   for (var milk in milkProduction) {
+  //     DateTime date = DateTime.parse(milk['date']);
+  //     double productionAmount =
+  //         double.tryParse(milk['production_amount']?.toString() ?? '0') ?? 0;
+  //     String monthWithYear = _getMonthWithYear(date);
+
+  //     milkAndWeightData['Produksi Susu'] ??= {};
+  //     milkAndWeightData['Produksi Susu']?[monthWithYear] ??= [];
+  //     milkAndWeightData['Produksi Susu']?[monthWithYear]!
+  //         .add(FlSpot(date.day.toDouble(), productionAmount));
+  //   }
+
+  //   // Proses data Berat Badan
+  //   for (var weight in weights) {
+  //     DateTime date = DateTime.parse(weight['date']);
+  //     double weightValue =
+  //         double.tryParse(weight['weight']?.toString() ?? '0') ?? 0;
+  //     String monthWithYear = _getMonthWithYear(date);
+
+  //     milkAndWeightData['Berat Badan'] ??= {};
+  //     milkAndWeightData['Berat Badan']?[monthWithYear] ??= [];
+  //     milkAndWeightData['Berat Badan']?[monthWithYear]!
+  //         .add(FlSpot(date.day.toDouble(), weightValue));
+  //   }
+
+  //   return milkAndWeightData;
+  // }
+
+  String _getMonthWithYear(DateTime date) {
+    const monthNames = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember'
+    ];
+    return '${monthNames[date.month - 1]} ${date.year}';
+  }
+
+  void updateChartData(Map<String, dynamic> apiResponse) {
+    List<Map<String, dynamic>> recentFeedHijauan =
+        List<Map<String, dynamic>>.from(apiResponse['recent_feed_hijauan']);
+    List<Map<String, dynamic>> recentFeedSentrate =
+        List<Map<String, dynamic>>.from(apiResponse['recent_feed_sentrate']);
+    List<Map<String, dynamic>> recentMilkProduction =
+        List<Map<String, dynamic>>.from(apiResponse['recent_milk_production']);
+    List<Map<String, dynamic>> recentWeights =
+        List<Map<String, dynamic>>.from(apiResponse['recent_weights']);
+
+    final feedData = processFeedData(recentFeedHijauan, recentFeedSentrate);
+    final milkAndWeightData =
+        processMilkAndWeightData(recentMilkProduction, recentWeights);
+
+    // Gunakan feedData dan milkAndWeightData untuk widget MultiChartContainer
+    setState(() {
+      this.feedData = feedData;
+      this.milkAndWeightData = milkAndWeightData;
+    });
+  }
+
+  Future<void> _refreshData() async {
+    try {
+      // Fetch data from API
+      final response = await fetchData(); // Sesuaikan dengan fungsi fetch Anda
+      print("Berat Badan: $beratBadan");
+      print("response body: ${response.body}");
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+
+        // Proses data dengan pengecekan null
+        final recentWeights = List<Map<String, dynamic>>.from(
+            responseBody['recent_weights'] ?? []);
+        final recentMilkProduction = List<Map<String, dynamic>>.from(
+            responseBody['recent_milk_production'] ?? []);
+        final recentFeedHijauan = List<Map<String, dynamic>>.from(
+            responseBody['recent_feed_hijauan'] ?? []);
+        final recentFeedSentrate = List<Map<String, dynamic>>.from(
+            responseBody['recent_feed_sentrate'] ?? []);
+
+        // Update state with processed data
+        setState(() {
+          feedData = processFeedData(recentFeedHijauan, recentFeedSentrate);
+          milkAndWeightData =
+              processMilkAndWeightData(recentMilkProduction, recentWeights);
+        });
+      } else {
+        throw Exception(
+            'Failed to fetch data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching data: $e');
+      // Handle error (e.g., show a message to the user)
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(
-                top: 200, left: 16, right: 16, bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'PRODUKSI SUSU & BERAT BADAN',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF8F3505),
-                  ),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics:
+              const AlwaysScrollableScrollPhysics(), // Agar tetap bisa di-scroll
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cattle Card (Header bagian atas)
+              Container(
+                // padding: const EdgeInsets.all(16.0),
+                color: Colors.white,
+                child: _buildHeader(
+                  id: widget.id,
+                  gender: widget.gender,
+                  age: widget.age,
+                  healthStatus: widget.healthStatus,
                 ),
-                const SizedBox(height: 10),
-                MultiChartContainer(chartsData: milkAndWeightData),
-                const SizedBox(height: 25),
-                const Divider(
-                  color: Colors.black12,
-                  thickness: 1,
-                ),
-                const SizedBox(height: 25),
-                const Text(
-                  'PAKAN YANG DIBERIKAN',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF8F3505),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                MultiChartContainer(chartsData: feedData),
-                const SizedBox(height: 25),
-                const Divider(
-                  color: Colors.black12,
-                  thickness: 1,
-                ),
-                const SizedBox(height: 25),
-                ConditionsSection(healthStatus: widget.healthStatus),
-                const SizedBox(height: 20),
-                const PopulationStructureSection(),
-                const SizedBox(height: 20),
-                const Text(
-                  'CATATAN :',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown,
-                  ),
-                ),
-                TextField(
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelStyle: const TextStyle(
-                      color: Color(0xFF8F3505),
-                    ),
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF8F3505),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF8F3505)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF8F3505)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF8F3505)),
-                    ),
-                    hintText: 'Masukkan catatan',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: const Color(0xFFFFECEC),
-                      minimumSize: const Size(double.infinity, 50),
-                      side: const BorderSide(color: Color(0xFFFF3939)),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 15, horizontal: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text(
-                      'KELUARKAN SAPI DARI KANDANG',
+              ),
+              const SizedBox(height: 80),
+
+              // Konten utama setelah header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'PRODUKSI SUSU & BERAT BADAN',
                       style: TextStyle(
-                        color: Color(0xFFE33629),
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF8F3505),
                       ),
-                    ))
-              ],
-            ),
+                    ),
+                    const SizedBox(height: 10),
+                    MultiChartContainer(chartsData: milkAndWeightData),
+                    const SizedBox(height: 25),
+                    const Divider(
+                      color: Colors.black12,
+                      thickness: 1,
+                    ),
+                    const SizedBox(height: 25),
+                    const Text(
+                      'PAKAN YANG DIBERIKAN',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF8F3505),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    MultiChartContainer(chartsData: feedData),
+                    const SizedBox(height: 25),
+                    const Divider(
+                      color: Colors.black12,
+                      thickness: 1,
+                    ),
+                    const SizedBox(height: 25),
+                    ConditionsSection(healthStatus: widget.healthStatus),
+                    const SizedBox(height: 20),
+                    const PopulationStructureSection(),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'CATATAN :',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelStyle: const TextStyle(
+                          color: Color(0xFF8F3505),
+                        ),
+                        hintStyle: const TextStyle(
+                          color: Color(0xFF8F3505),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF8F3505)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF8F3505)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF8F3505)),
+                        ),
+                        hintText: 'Masukkan catatan',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFFFFECEC),
+                        minimumSize: const Size(double.infinity, 50),
+                        side: const BorderSide(color: Color(0xFFFF3939)),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 15, horizontal: 20),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'KELUARKAN SAPI DARI KANDANG',
+                        style: TextStyle(
+                          color: Color(0xFFE33629),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          _buildHeader(
-            id: widget.id,
-            gender: widget.gender,
-            age: widget.age,
-            healthStatus: widget.healthStatus,
-          )
-        ],
+        ),
       ),
+    );
+  }
+} // end of class
+
+// Dialog untuk menambahkan data baru
+class _NewDataDialog extends StatelessWidget {
+  final String id;
+
+  _NewDataDialog({required this.id});
+
+  @override
+  Widget build(BuildContext context) {
+    TextEditingController controller = TextEditingController();
+
+    return AlertDialog(
+      title: const Text("SILAHKAN INPUT DATA BARU :"),
+      content: TextField(
+        controller: controller,
+        decoration: const InputDecoration(suffixText: "Kg/L"),
+        keyboardType: TextInputType.number,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text("BATAL"),
+        ),
+        TextButton(
+          onPressed: () {
+            String data = controller.text;
+            Navigator.of(context)
+                .pop(data); // Mengembalikan data ke _addNewData
+          },
+          child: const Text("OK"),
+        ),
+      ],
+    );
+  }
+}
+
+// Dialog untuk riwayat data
+class _HistoryDialog extends StatelessWidget {
+  final List<String> data;
+  final Function(int) onDelete;
+
+  const _HistoryDialog({required this.data, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("RIWAYAT PAKAN"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: data.asMap().entries.map((entry) {
+          int index = entry.key;
+          String value = entry.value;
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(value),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.orange),
+                    onPressed: () {}, // Logika untuk edit data
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.orange),
+                    onPressed: () => onDelete(index),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text("BATAL"),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text("OK"),
+        ),
+      ],
     );
   }
 }

@@ -113,89 +113,88 @@ class _DataPageState extends State<DataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                height: 70,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: Column(
+          children: [
+            // Existing content from your original code
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 70,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                top: 12,
-                left: 20,
-                right: 20,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Data Sapi',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                Positioned(
+                  top: 12,
+                  left: 20,
+                  right: 20,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Data Sapi',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          'Fetch',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(
-                          width: 4,
-                        ),
-                        Switch(
-                          value: useStaticData,
-                          onChanged: (value) {
-                            setState(() {
-                              useStaticData = value;
-                            });
-                          },
-                          activeColor: Colors.white,
-                        ),
-                        const SizedBox(
-                          width: 4,
-                        ),
-                        const Text(
-                          'Data Statis',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ],
+                      Row(
+                        children: [
+                          const Text(
+                            'Fetch',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          const SizedBox(width: 4),
+                          Switch(
+                            value: useStaticData,
+                            onChanged: (value) {
+                              setState(() {
+                                useStaticData = value;
+                              });
+                            },
+                            activeColor: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'Data Statis',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Expanded(
-            child: useStaticData
-                ? _buildStaticDataList()
-                : RefreshIndicator(
-                    onRefresh: _refreshData,
-                    child: FutureBuilder<List<Cattle>>(
+              ],
+            ),
+            Expanded(
+              child: useStaticData
+                  ? _buildStaticDataList()
+                  : FutureBuilder<List<Cattle>>(
                       future: cattleData,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
                           return const Center(
-                              child: CircularProgressIndicator());
+                            child: CircularProgressIndicator(),
+                          );
                         } else if (snapshot.hasError) {
                           return Center(
-                              child: Text(
-                                  'Error loading data: ${snapshot.error}'));
+                            child:
+                                Text('Error loading data: ${snapshot.error}'),
+                          );
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
                           return const Center(child: Text('No data found.'));
@@ -204,9 +203,9 @@ class _DataPageState extends State<DataPage> {
                         }
                       },
                     ),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -223,6 +222,7 @@ class _DataPageState extends State<DataPage> {
       ),
     );
   }
+
 
   Widget _buildStaticDataList() {
     return ListView.builder(
@@ -263,7 +263,19 @@ class _DataPageState extends State<DataPage> {
       itemBuilder: (context, index) {
         final cattle = cattleData[index];
         return _buildCattleCard(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DataSapiPage(
+                  id: cattle.id,
+                  gender: cattle.gender,
+                  age: cattle.age.toString(),
+                  healthStatus: cattle.healthStatus,
+                ),
+              ),
+            );
+          },
           context,
           id: cattle.id,
           weight: cattle.weight,

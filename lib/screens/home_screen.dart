@@ -51,13 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
     ],
   };
 
-
   @override
   void initState() {
     super.initState();
-    // _futureChartData = _fetchChartData();
-    // _futureSummaryData = _fetchSummaryData();
-    // assignFetchedData();
     _refreshData();
   }
 
@@ -108,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
- Future<Map<String, Map<String, List<FlSpot>>>> _fetchChartData() async {
+  Future<Map<String, Map<String, List<FlSpot>>>> _fetchChartData() async {
     final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
     final port = dotenv.env['PORT'] ?? '8080';
     final url = '$baseUrl:$port/api/data/chart'; // API endpoint for chart data
@@ -135,7 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
         for (var entry in rawData) {
           final date = DateTime.parse(entry['date']); // Parse the date
           final monthYear = _monthYear(date); // Convert to "Month Year" format
-          final day = date.day.toDouble() - 1; // Use the day of the month as x-axis
+          final day =
+              date.day.toDouble() - 1; // Use the day of the month as x-axis
 
           // Initialize month-year data if it doesn't exist
           chartData['Hijauan']?[monthYear] ??= [];
@@ -221,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
   Future<String> _fetchWithTimeout(String url) async {
     try {
       final response = await http
@@ -257,145 +253,159 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  @override
   Widget build(BuildContext context) {
     String displayName = 'Atha Rafifi Azmi';
     displayName = displayName.toUpperCase();
     return Scaffold(
         backgroundColor: Colors.white,
-        body: Column(children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                height: 140,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFE6B87D), Color(0xFFF9E2B5)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 16,
-                right: 16,
-                top: 16,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.asset(
-                            'assets/images/LogoTernaknesia.png',
-                            width: 50,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('SAPYY',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF8F3505),
-                                )),
-                            Text('Selamat Bekerja!',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF8F3505),
-                                )),
-                          ],
-                        )
-                      ],
+        body: RefreshIndicator(
+            onRefresh: _refreshData,
+            child: Column(children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    height: 140,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFE6B87D), Color(0xFFF9E2B5)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(20),
+                        bottomRight: Radius.circular(20),
+                      ),
                     ),
-                    const SizedBox(height: 15),
-                    Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC35804),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFF9E2B5),
-                          ),
-                        ),
-                        child: Row(
+                  ),
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            const Image(
-                                image:
-                                    AssetImage('assets/images/profileHome.png'),
-                                width: 65),
-                            const SizedBox(width: 16),
-                            Column(
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: Image.asset(
+                                'assets/images/LogoTernaknesia.png',
+                                width: 50,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Hai, $displayName',
-                                    style: const TextStyle(
+                                Text('SAPYY',
+                                    style: TextStyle(
                                       fontFamily: 'Inter',
-                                      fontSize: 16,
+                                      fontSize: 24,
                                       fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                      color: Color(0xFF8F3505),
                                     )),
-                                const Text(
-                                  'Peternak',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.white),
-                                ),
-                                const Text(
-                                  'Sabtu, 26 Oktober 2024',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.white),
+                                Text('Selamat Bekerja!',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF8F3505),
+                                    )),
+                              ],
+                            )
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+                        Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC35804),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFF9E2B5),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Image(
+                                    image: AssetImage(
+                                        'assets/images/profileHome.png'),
+                                    width: 65),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Hai, $displayName',
+                                        style: const TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        )),
+                                    const Text(
+                                      'Peternak',
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.white),
+                                    ),
+                                    const Text(
+                                      'Sabtu, 26 Oktober 2024',
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.white),
+                                    ),
+                                  ],
                                 ),
                               ],
-                            ),
-                          ],
-                        )),
-                  ],
-                ),
+                            )),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 60),
-          Expanded(
-              child: RefreshIndicator(
-                  onRefresh: _refreshData,
-                  child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(0.0),
-                      children: [
-                        const SummaryCards(),
-                        const SizedBox(height: 16),
-                        // Kalo mau pake data statis pake ini
-                        // CustomLineChart(title: 'Hasil Perolehan Susu', datas: milkProductionData),
-                        CustomLineChart(
-                          title: 'Hasil Perolehan Susu ',
-                          datas: milkProductionData
-                        ),
-                        CustomLineChart(
-                          title: 'Berat Pangan Hijauan',
-                          datas: greenFodderData
-                        ),
-                        CustomLineChart(
-                          title: 'Berat Pangan Sentrat',
-                          datas: concentratedFodderData
-                        ),
-                        CustomLineChart(
-                          title: 'Contoh Data dari Server',
-                          datas:
-                              exampleServerData, // Data statis menyerupai hasil server
-                        ),
-                      ])))
-        ]));
+              const SizedBox(height: 60),
+              Expanded(
+                child: ListView(
+                  children: [
+                  const SummaryCards(),
+                  const SizedBox(height: 16),
+                  // Kalo mau pake data statis pake ini
+                  // CustomLineChart(title: 'Hasil Perolehan Susu', datas: milkProductionData),
+                  CustomLineChart(
+                      title: 'Hasil Perolehan Susu ',
+                      datas: milkProductionData),
+                  CustomLineChart(
+                      title: 'Berat Pangan Hijauan', datas: greenFodderData),
+                  CustomLineChart(
+                      title: 'Berat Pangan Sentrat',
+                      datas: concentratedFodderData),
+                  CustomLineChart(
+                    title: 'Contoh Data dari Server',
+                    datas:
+                        exampleServerData, // Data statis menyerupai hasil server
+                  ),
+                ]
+                ),
+                
+                
+
+                // RefreshIndicator(
+                //     onRefresh: _refreshData,
+                //     child: ListView(
+                //         physics: const AlwaysScrollableScrollPhysics(),
+                //         padding: const EdgeInsets.all(0.0),
+                //         children: []))
+              )
+            ])));
   }
 }
+//   @override
+//   Widget build(BuildContext context) {
+//     String displayName = 'Atha Rafifi Azmi';
+//     displayName = displayName.toUpperCase();
+//     return Scaffold(
+//         backgroundColor: Colors.white,
+//         body: Column(children: [
+//          ]));
+//   }
+// }
