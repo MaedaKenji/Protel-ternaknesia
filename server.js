@@ -32,14 +32,6 @@ function isSameDay(date1, date2) {
 }
 
 
-// mongoose.connect(process.env.MONGODB_URI)
-//   .then(() => {
-//     console.log('Connected to MongoDB');
-//     console.log('Database Name:', mongoose.connection.name);
-//     console.log('Server & Database Up and Running');
-//   })
-//   .catch(err => console.error('MongoDB connection error:', err));
-
 // PostgreSQL connection setup 
 const pool = new Pool({ host: process.env.PGHOST, user: process.env.PGUSER, password: process.env.PGPASSWORD, database: process.env.PGDATABASE, port: process.env.PGPORT, });
 // console.log("host:", process.env.PGHOST , "user:", process.env.PGUSER, "password:", process.env.PGPASSWORD, "database:", process.env.PGDATABASE, "port:", process.env.PGPORT, );
@@ -268,14 +260,119 @@ app.post('/api/cows/tambahdata/:id', async (req, res) => {
   }
 });
 
+app.get('/api/cows/sapi_diperah', async (req, res) => {
+  console.log("MASUK");
+  try {
+    const query = `
+      SELECT COUNT(DISTINCT cow_id) AS cows_milked
+      FROM milk_production
+      WHERE date = CURRENT_DATE;
+    `;
+    const result = await pool.query(query);
+    console.log(result.rows[0].cows_milked);
+    res.json({ value: result.rows[0].cows_milked });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/cows/sapi_diberi_pakan', async (req, res) => {
+  console.log("MASUK 2");
+  try {
+    const query = `
+      SELECT COUNT(DISTINCT cow_id) AS cows_fed
+      FROM (
+        SELECT cow_id FROM feed_hijauan WHERE date = CURRENT_DATE
+        UNION
+        SELECT cow_id FROM feed_sentrate WHERE date = CURRENT_DATE
+      ) AS fed_cows;
+    `;
+    const result = await pool.query(query);
+    res.json({ value: result.rows[0].cows_fed });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/cows/susu', async (req, res) => {
+  console.log("MASUK 3");
+  try {
+    const query = `
+      SELECT SUM(production_amount) AS total_milk
+      FROM milk_production
+      WHERE date = CURRENT_DATE;
+    `;
+    const result = await pool.query(query);
+    if (result.rows.length === 0) {
+      return res.json({ value: 0 });
+    }
+    // res.json({ value: result.rows[0].total_milk });
+    res.json({ value: 10 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 
 
+//-----------------------------------------------CHART-------------------------
+app.get('/api/data/chart', async (req, res) => {
+  console.log("Fetching chart data...");
+  try {
+    const query = `
+      SELECT
+        date,
+        COALESCE(SUM(hijauan_amount), 0) AS hijauan,
+        COALESCE(SUM(sentrate_amount), 0) AS sentrate,
+        COALESCE(SUM(milk_amount), 0) AS milk
+      FROM (
+        SELECT
+          date,
+          SUM(amount) AS hijauan_amount,
+          0 AS sentrate_amount,
+          0 AS milk_amount
+        FROM feed_hijauan
+        GROUP BY date
+        UNION ALL
+        SELECT
+          date,
+          0 AS hijauan_amount,
+          SUM(amount) AS sentrate_amount,
+          0 AS milk_amount
+        FROM feed_sentrate
+        GROUP BY date
+        UNION ALL
+        SELECT
+          date,
+          0 AS hijauan_amount,
+          0 AS sentrate_amount,
+          SUM(production_amount) AS milk_amount
+        FROM milk_production
+        GROUP BY date
+      ) AS aggregated_data
+      GROUP BY date
+      ORDER BY date ASC;
+    `;
 
+    const result = await pool.query(query);
+    console.log(result.rows);
 
+    // Format hasil query agar cocok dengan format frontend
+    const formattedResult = result.rows.map(row => ({
+      date: row.date, // Tanggal
+      hijauan: parseFloat(row.hijauan), // Total hijauan
+      sentrate: parseFloat(row.sentrate), // Total sentrat
+      milk: parseFloat(row.milk), // Total susu
+    }));
 
-
-
-
+    res.json(formattedResult); // Kirimkan data ke frontend
+  } catch (err) {
+    console.error('Error fetching chart data:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 
 
