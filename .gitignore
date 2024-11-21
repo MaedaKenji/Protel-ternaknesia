@@ -12,6 +12,7 @@ migrate_working_dir/
 node_modules/
 .env
 
+
 # IntelliJ related
 *.iml
 *.ipr
@@ -32,6 +33,7 @@ node_modules/
 .pub-cache/
 .pub/
 /build/
+tes.dart
 
 # Symbolication related
 app.*.symbols
@@ -43,3 +45,5 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+.env
+temp.dart

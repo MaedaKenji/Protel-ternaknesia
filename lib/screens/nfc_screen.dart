@@ -1,120 +1,368 @@
-import 'package:flutter/material.dart';
-import 'package:ternaknesia/config/config.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-// import 'package:fl_chart/fl_chart.dart';
+// ignore_for_file: deprecated_member_use, empty_catches
 
-class DataWidget extends StatefulWidget {
-  const DataWidget({Key? key}) : super(key: key);
+import 'package:flutter/material.dart';
+import 'package:nfc_manager/nfc_manager.dart';
+import 'package:ternaknesia/main.dart';
+import 'package:ternaknesia/screens/inputdata.dart';
+
+class NFCPage extends StatefulWidget {
+  const NFCPage({super.key});
 
   @override
-  State<DataWidget> createState() => _DataWidgetState();
+  State<NFCPage> createState() => _NFCPageState();
 }
 
-class _DataWidgetState extends State<DataWidget> {
-  // Replace these with your actual data fetching logic
-  // Example: Fetching data from a database
-  // Future<Map<String, dynamic>> fetchData() async {
-  //   await Future.delayed(const Duration(seconds: 1)); // Simulate delay
-  //   return {
-  //     'susu': ,
-  //     'sapi_diperah': 18,
-  //     'sapi_pakan': 20,
-  //   };
-  // }
-  Future<Map<String, dynamic>> fetchData() async {
-    const String url = '${AppConfig.serverUrl}/api/cows/today';
-    final response = await http.get(Uri.parse(url));
+class CircleWavePainter extends CustomPainter {
+  final double progress;
+  final Color color;
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+  CircleWavePainter({required this.progress, required this.color});
 
-      int totalMilk = data['totalMilk'] ?? 0;
-      int sapiTelahDiperah = data['sapiTelahDiperah'] ?? 0;
-      int sapiTelahDiberipakan = data['sapiTelahDiberipakan'] ?? 0;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
 
-      List<Map<String, dynamic>> allSusu =
-          List<Map<String, dynamic>>.from(data['allSusu'] ?? []);
+    final radius = size.width / 2 * progress;
 
-      return {
-        'totalMilk': totalMilk,
-        'sapiTelahDiperah': sapiTelahDiperah,
-        'sapiTelahDiberipakan': sapiTelahDiberipakan,
-        'allSusu': allSusu,
-      };
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2),
+      radius,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CircleWavePainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
+  }
+}
+
+class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
+  bool _isNfcEnabled = true;
+  late AnimationController _animationController;
+  final TextEditingController _cowIdController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkNfcAvailability();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _cowIdController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkNfcAvailability() async {
+    setState(() {});
+  }
+
+  void _startNfcScan() async {
+    setState(() {});
+
+    _showNfcDialog();
+
+    try {
+      await NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          final nfcData = tag.data.toString();
+
+          setState(() {
+            _isNfcEnabled = true;
+          });
+
+          if (navigatorKey.currentState?.canPop() ?? false) {
+            navigatorKey.currentState?.pop();
+          }
+
+          await NfcManager.instance.stopSession();
+
+          _showNfcResultDialog(nfcData);
+        },
+      );
+    } catch (e) {
+      setState(() {});
+
+      if (navigatorKey.currentState?.canPop() ?? false) {
+        navigatorKey.currentState?.pop();
+      }
+
+      _showMessage('Terjadi kesalahan: $e');
+    }
+  }
+
+  void _showNfcDialog() {
+    _animationController.repeat();
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return WillPopScope(
+          onWillPop: () async {
+            _cancelNfcScan();
+            return true;
+          },
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          painter: CircleWavePainter(
+                            progress: _animationController.value,
+                            color: Colors.orange
+                                .withOpacity(1 - _animationController.value),
+                          ),
+                          size: const Size(100, 100),
+                        );
+                      },
+                    ),
+                    const Icon(
+                      Icons.nfc,
+                      size: 60,
+                      color: Colors.brown,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Tempelkan kartu NFC di dekat perangkat ini',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).then((_) {
+      _cancelNfcScan();
+    });
+  }
+
+  void _cancelNfcScan() async {
+    _animationController.stop();
+    _animationController.reset();
+    setState(() {
+      _isNfcEnabled = true;
+    });
+    try {
+      await NfcManager.instance.stopSession();
+    } catch (e) {}
+  }
+
+  void _showNfcResultDialog(String nfcData) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text(
+            'Data NFC',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Text(
+              nfcData,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Close',
+                style: TextStyle(
+                  color: Color(0xFFC35804),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _navigateToInputDataPage() {
+    if (_cowIdController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ID Sapi tidak boleh kosong!'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } else {
-      throw Exception('Failed to load cow data');
-      // print(response.body);
-
-      // return {};
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => InputDataPage(cowId: _cowIdController.text),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: fetchData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (snapshot.hasData) {
-          final data = snapshot.data!;
-          return Column(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              // Card for "Perolehan susu hari ini"
-              _dataCard(
-                title: 'Perolehan susu hari ini',
-                value: '${data['totalMilk']} L',
+              Container(
+                height: 70,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
               ),
-              const SizedBox(height: 16),
-              // Card for "Sapi yang telah diperah"
-              _dataCard(
-                title: 'Sapi yang telah diperah',
-                value: '${data['sapiTelahDiperah']}',
-              ),
-              const SizedBox(height: 16),
-              // Card for "Sapi yang telah diberi pakan"
-              _dataCard(
-                title: 'Sapi yang telah diberi pakan',
-                value: '${data['sapiTelahDiberipakan']}',
+              const Positioned(
+                top: 20,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    'Input Data Sapi',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ],
-          );
-        } else {
-          return const Center(child: Text('No data'));
-        }
-      },
-    );
-  }
-
-  Widget _dataCard({
-    required String title,
-    required String value,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
+          ),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _cowIdController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14)),
+                        ),
+                        labelText: 'ID Sapi',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _navigateToInputDataPage,
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFFC35804),
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'OK',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider(thickness: 1)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10.0),
+                          child: Text('OR'),
+                        ),
+                        Expanded(child: Divider(thickness: 1)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _isNfcEnabled
+                          ? () {
+                              setState(() {
+                                _isNfcEnabled = false;
+                              });
+                              _startNfcScan();
+                            }
+                          : null,
+                      icon: const Icon(Icons.nfc),
+                      label: const Text(
+                        'SCAN WITH NFC',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        side: const BorderSide(color: Colors.black),
+                        minimumSize: const Size(double.infinity, 50),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

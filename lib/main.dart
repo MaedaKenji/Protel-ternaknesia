@@ -1,23 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:ternaknesia/screens/cow_analysis_page.dart';
-import 'package:ternaknesia/screens/login_screen.dart';
-import 'package:ternaknesia/screens/nfc_screen.dart';
-import 'package:ternaknesia/screens/dashboard.dart';
+import 'screens/login_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
+
+  // Mengatur mode UI ke immersiveSticky
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
   runApp(const MyApp());
 }
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
       title: 'Login App',
       theme: ThemeData(
+        fontFamily: 'Inter',
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
       ),
-      home:  LoginScreen(), // Set LoginScreen sebagai halaman utama
+      home: const MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(1.0)),
+        child: LoginScreen(),
+      ),
     );
   }
 }

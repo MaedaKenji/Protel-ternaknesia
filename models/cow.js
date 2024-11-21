@@ -1,21 +1,11 @@
+const { tr } = require('faker/lib/locales');
 const mongoose = require('mongoose');
 
-const recordSchema = new mongoose.Schema({
-  hasil: {
-    type: Number,
-    required: true
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now
-  }
-});
 
 const stressRecordSchema = new mongoose.Schema({
   stress: {
     type: String,
-    enum: ['Rendah', 'Sedang', 'Tinggi'],
-    required: true
+    enum: ['Rendah', 'Sedang', 'Tinggi']
   },
   timestamp: {
     type: Date,
@@ -25,8 +15,7 @@ const stressRecordSchema = new mongoose.Schema({
 
 const noteRecordSchema = new mongoose.Schema({
   note: {
-    type: String,
-    required: true
+    type: String
   },
   timestamp: {
     type: Date,
@@ -36,14 +25,14 @@ const noteRecordSchema = new mongoose.Schema({
 
 const birahiRecordSchema = new mongoose.Schema({
   birahi: {
-    type: Boolean,
-    required: true
+    type: Boolean
   },
   timestamp: {
     type: Date,
     default: Date.now
   }
 });
+
 
 const healthRecordSchema = new mongoose.Schema({
   sehat: {
@@ -56,16 +45,16 @@ const healthRecordSchema = new mongoose.Schema({
   }
 });
 
-
-
 const pakanRecordSchema = new mongoose.Schema({
   beratPakanHijauan: {
-    type: Number,
-    required: true
+    type: Number
   },
   beratPakanKonsentrat: {
     type: Number,
-    required: true
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
   },
   timestamp: {
     type: Date,
@@ -73,16 +62,54 @@ const pakanRecordSchema = new mongoose.Schema({
   }
 });
 
-const cowSchema = new mongoose.Schema({
-  health: [healthRecordSchema],
-  birahi: [birahiRecordSchema],
-  hasilPerolehanSusu: [recordSchema],
-  beratPakanHijauan: [pakanRecordSchema],
-  beratPakanKonsentrat: [pakanRecordSchema],
-  hasilPerahSusu: [recordSchema],
-  tingkatStress: [stressRecordSchema],
-  catatanTambahan: [noteRecordSchema]
+
+const beratAndSusuSchema = new mongoose.Schema({
+  weight: {
+    type: Number,
+    required: true
+
+  },
+  perah: {
+    type: Number,
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  }
 });
+
+
+const cowSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  gender: {
+    type: String,
+    enum: ['Jantan', 'Betina'],
+    required: true
+  },
+  age: {
+    type: Number,
+    required: true
+  },
+  isKandang: {
+    type: Boolean,
+    required: true,
+    default: true
+  },
+  beratAndSusu: [beratAndSusuSchema],
+  stressRecord: [stressRecordSchema],
+  birahiRecord: [birahiRecordSchema],
+  healthRecord: [healthRecordSchema],
+  pakanRecord: [pakanRecordSchema],
+  noteRecord: [noteRecordSchema],
+});
+
 
 const Cow = mongoose.model('Cow', cowSchema);
 

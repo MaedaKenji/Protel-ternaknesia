@@ -16,7 +16,7 @@ const recordSchema = new mongoose.Schema({
   beratSentrat: [{
     nilai: Number,
     timestamp: { type: Date, default: Date.now }
-  }]
+  }],
 });
 
 module.exports = mongoose.model('Record', recordSchema);
