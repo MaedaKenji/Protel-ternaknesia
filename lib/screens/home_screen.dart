@@ -18,10 +18,39 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Map<String, String>>> _futureSummaryData;
-  Future<Map<String, List<FlSpot>>> _futureChartData = Future.value({});
   Map<String, List<FlSpot>> milkProductionData = {};
   Map<String, List<FlSpot>> greenFodderData = {};
   Map<String, List<FlSpot>> concentratedFodderData = {};
+  final Map<String, List<FlSpot>> exampleServerData = {
+    'September 2023': [
+      FlSpot(29.0, 15.0),
+    ],
+    'Oktober 2023': [
+      FlSpot(0.0, 32.0),
+      FlSpot(1.0, 30.0),
+      FlSpot(2.0, 34.0),
+      FlSpot(3.0, 28.0),
+      FlSpot(4.0, 26.0),
+      FlSpot(5.0, 30.0),
+      FlSpot(6.0, 28.0),
+      FlSpot(7.0, 32.0),
+      FlSpot(8.0, 30.0),
+      FlSpot(9.0, 25.0),
+      FlSpot(10.0, 0.0),
+      FlSpot(11.0, 0.0),
+      FlSpot(12.0, 0.0),
+      FlSpot(13.0, 0.0),
+      FlSpot(14.0, 0.0),
+      FlSpot(15.0, 0.0),
+      FlSpot(16.0, 0.0),
+      FlSpot(17.0, 0.0),
+      FlSpot(18.0, 0.0),
+    ],
+    'November 2024': [
+      FlSpot(14.0, 0.0),
+    ],
+  };
+
 
   @override
   void initState() {
@@ -347,25 +376,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         const SummaryCards(),
                         const SizedBox(height: 16),
+                        // Kalo mau pake data statis pake ini
+                        // CustomLineChart(title: 'Hasil Perolehan Susu', datas: milkProductionData),
                         CustomLineChart(
                           title: 'Hasil Perolehan Susu ',
                           datas: milkProductionData
                         ),
                         CustomLineChart(
                           title: 'Berat Pangan Hijauan',
-                          datas: greenFodderData.isNotEmpty
-                              ? greenFodderData
-                              : {
-                                  'Default': [const FlSpot(0, 0)]
-                                },
+                          datas: greenFodderData
                         ),
                         CustomLineChart(
                           title: 'Berat Pangan Sentrat',
-                          datas: concentratedFodderData.isNotEmpty
-                              ? concentratedFodderData
-                              : {
-                                  'Default': [const FlSpot(0, 0)]
-                                },
+                          datas: concentratedFodderData
+                        ),
+                        CustomLineChart(
+                          title: 'Contoh Data dari Server',
+                          datas:
+                              exampleServerData, // Data statis menyerupai hasil server
                         ),
                       ])))
         ]));
