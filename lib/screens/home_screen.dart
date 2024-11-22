@@ -112,8 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final response =
           await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
-      print("body dari fetchchart = ${response.body}");
-      print("statusCode dari fetchchart = ${response.statusCode}");
+      // print("body dari fetchchart = ${response.body}");
+      // print("statusCode dari fetchchart = ${response.statusCode}");
 
       if (response.statusCode == 200) {
         // Parse the JSON response
@@ -148,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ?.add(FlSpot(day, (entry['milk'] as num).toDouble()));
         }
 
-        print("Response dari fetchchart = $chartData");
+        // print("Response dari fetchchart = $chartData");
         return chartData;
       } else {
         print('Error: Status code ${response.statusCode}');
@@ -191,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       // Fetch chart data from the API
       final fetchedData = await _fetchChartData();
-      print("Fetched data: $fetchedData");
+      // print("Fetched data: $fetchedData");
 
       // Assign the fetched data to respective variables
       setState(() {
@@ -200,12 +200,12 @@ class _HomeScreenState extends State<HomeScreen> {
         concentratedFodderData = fetchedData['Sentrate'] ?? {};
       });
 
-      print("\n");
-      print("Milk Production Data: $milkProductionData");
-      print("\n");
-      print("Green Fodder Data: $greenFodderData");
-      print("\n");
-      print("Concentrated Fodder Data: $concentratedFodderData");
+      // print("\n");
+      // print("Milk Production Data: $milkProductionData");
+      // print("\n");
+      // print("Green Fodder Data: $greenFodderData");
+      // print("\n");
+      // print("Concentrated Fodder Data: $concentratedFodderData");
     } catch (e) {
       print('Error assigning fetched data: $e');
 
@@ -236,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refreshData() async {
-    print("Refreshing data...");
+    // print("Refreshing data...");
     try {
       // Fetch and assign the summary and chart data
       final summaryData = await _fetchSummaryData();
@@ -247,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Assign fetched chart data to specific variables
       await assignFetchedData();
-      print("Chart data refreshed successfully.");
+      // print("Chart data refreshed successfully.");
     } catch (e) {
       print("Error during refresh: $e");
     }

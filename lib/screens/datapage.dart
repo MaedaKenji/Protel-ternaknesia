@@ -85,8 +85,11 @@ class _DataPageState extends State<DataPage> {
 
   Future<List<Cattle>> fetchCattleData() async {
     try {
-      final response = await http.get(Uri.parse(
-          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows'));
+      final url = Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
+      
+      final response = await http.get(url).timeout(const Duration(seconds: 5), onTimeout: () {
+        throw Exception('Request timed out');
+      }); 
 
       if (response.statusCode == 200) {
         List<dynamic> cattleJson = json.decode(response.body);
@@ -191,20 +194,41 @@ class _DataPageState extends State<DataPage> {
                             child: CircularProgressIndicator(),
                           );
                         } else if (snapshot.hasError) {
-                          return Center(
-                            child:
-                                Text('Error loading data: ${snapshot.error}'),
+                          return SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  'Error loading data: ${snapshot.error}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
                           );
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          return const Center(child: Text('No data found.'));
+                          return const SingleChildScrollView(
+                            physics: AlwaysScrollableScrollPhysics(),
+                            child: Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Text(
+                                  'No data found.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
+                          );
                         } else {
                           return _buildFetchedDataList(snapshot.data!);
                         }
                       },
                     ),
             ),
-          ],
+],
         ),
       ),
       floatingActionButton: FloatingActionButton(

@@ -1,12 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ternaknesia/components/custom_line_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ternaknesia/components/dialogs.dart';
 
 class MultiChartContainer extends StatefulWidget {
   final Map<String, Map<String, List<FlSpot>>> chartsData;
+  final String id;
 
-  const MultiChartContainer({super.key, required this.chartsData});
+  const MultiChartContainer({super.key, required this.chartsData, required this.id});
 
   @override
   State<MultiChartContainer> createState() => _MultiChartContainerState();
@@ -16,6 +19,9 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
   late List<String> chartTitles;
   int currentIndex = 0;
   late Map<String, TextEditingController> inputControllers;
+
+  
+  get http => null;
 
   @override
   void initState() {
@@ -33,6 +39,35 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _sendDataToServer(Map<String, String> data) async {
+    // print("Data adalah: $data akan mulai mengirim ke server");
+    try {
+      final url = Uri.parse(
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahdata/${widget.id}');
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      // print(response.body);
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data berhasil dikirim ke server")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal mengirim data ke server")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+      print(e);
+    }
   }
 
   void _nextChart() {
@@ -59,7 +94,9 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
         setState(() {
           inputControllers[chartTitles[currentIndex]]!.text = data;
         });
-        print("Data baru: $data");
+        print("Data baru: $data akan mulai mengirim ke server");
+        _sendDataToServer({chartTitles[currentIndex]: data});
+
       }
     });
   }
@@ -86,6 +123,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
     final String currentTitle = chartTitles[currentIndex];
     final Map<String, List<FlSpot>> currentData =
         widget.chartsData[currentTitle]!;
+        print("$currentTitle adalah: $currentData");
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

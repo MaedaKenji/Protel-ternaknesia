@@ -39,7 +39,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
   String errorMessage = '';
 
   Map<String, Map<String, List<FlSpot>>> feedData = {
-    'Pakan Hijau': {
+    'pakanHijau': {
       'Januari': [
         const FlSpot(0, 30),
         const FlSpot(1, 35),
@@ -51,7 +51,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
         const FlSpot(2, 36)
       ],
     },
-    'Pakan Sentrat': {
+    'pakanSentrat': {
       'Januari': [
         const FlSpot(0, 20),
         const FlSpot(1, 25),
@@ -66,7 +66,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
   };
 
   Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
-    'Produksi Susu': {
+    'produksiSusu': {
       'Januari': [
         const FlSpot(0, 50),
         const FlSpot(1, 55),
@@ -78,7 +78,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
         const FlSpot(2, 56)
       ],
     },
-    'Berat Badan': {
+    'beratBadan': {
       'Januari': [
         const FlSpot(0, 70),
         const FlSpot(1, 72),
@@ -147,7 +147,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print(response.body);
+
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -429,14 +429,13 @@ class _DataSapiPageState extends State<DataSapiPage> {
       isLoading = true;
       errorMessage = '';
     });
-    print("Fetching data...");
 
     try {
       final url = Uri.parse(
           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
       final response = await http.get(url);
-      print("Response status code: ${response.statusCode}");
-      print("Response body: ${response.body}");
+      // print(response.body);
+
 
       if (response.statusCode == 200) {
         return response; // Tambahkan return di sini
@@ -464,11 +463,11 @@ Map<String, Map<String, List<FlSpot>>> processFeedData(
       List<Map<String, dynamic>> feedHijauan,
       List<Map<String, dynamic>> feedSentrate) {
     Map<String, Map<String, List<FlSpot>>> feedData = {
-      'Pakan Hijau': {},
-      'Pakan Sentrat': {},
+      'pakanHijau': {},
+      'pakanSentrat': {},
     };
 
-    // Proses data Pakan Hijauan
+    // Proses data pakanHijauan
     feedHijauan.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
@@ -480,13 +479,13 @@ Map<String, Map<String, List<FlSpot>>> processFeedData(
       double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
-      feedData['Pakan Hijau'] ??= {};
-      feedData['Pakan Hijau']?[monthWithYear] ??= [];
-      feedData['Pakan Hijau']?[monthWithYear]!
+      feedData['pakanHijau'] ??= {};
+      feedData['pakanHijau']?[monthWithYear] ??= [];
+      feedData['pakanHijau']?[monthWithYear]!
           .add(FlSpot(date.day.toDouble(), amount));
     }
 
-    // Proses data Pakan Sentrate
+    // Proses data pakanSentrate
     feedSentrate.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
@@ -498,9 +497,9 @@ Map<String, Map<String, List<FlSpot>>> processFeedData(
       double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
-      feedData['Pakan Sentrat'] ??= {};
-      feedData['Pakan Sentrat']?[monthWithYear] ??= [];
-      feedData['Pakan Sentrat']?[monthWithYear]!
+      feedData['pakanSentrat'] ??= {};
+      feedData['pakanSentrat']?[monthWithYear] ??= [];
+      feedData['pakanSentrat']?[monthWithYear]!
           .add(FlSpot(date.day.toDouble(), amount));
     }
 
@@ -511,11 +510,11 @@ Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
       List<Map<String, dynamic>> milkProduction,
       List<Map<String, dynamic>> weights) {
     Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
-      'Produksi Susu': {},
-      'Berat Badan': {},
+      'produksiSusu': {},
+      'beratBadan': {},
     };
 
-    // Proses data Produksi Susu
+    // Proses data produksiSusu
     milkProduction.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
@@ -528,13 +527,13 @@ Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
           double.tryParse(milk['production_amount']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
-      milkAndWeightData['Produksi Susu'] ??= {};
-      milkAndWeightData['Produksi Susu']?[monthWithYear] ??= [];
-      milkAndWeightData['Produksi Susu']?[monthWithYear]!
+      milkAndWeightData['produksiSusu'] ??= {};
+      milkAndWeightData['produksiSusu']?[monthWithYear] ??= [];
+      milkAndWeightData['produksiSusu']?[monthWithYear]!
           .add(FlSpot(date.day.toDouble(), productionAmount));
     }
 
-    // Proses data Berat Badan
+    // Proses data beratBadan
     weights.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
@@ -547,87 +546,15 @@ Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
           double.tryParse(weight['weight']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
-      milkAndWeightData['Berat Badan'] ??= {};
-      milkAndWeightData['Berat Badan']?[monthWithYear] ??= [];
-      milkAndWeightData['Berat Badan']?[monthWithYear]!
+      milkAndWeightData['beratBadan'] ??= {};
+      milkAndWeightData['beratBadan']?[monthWithYear] ??= [];
+      milkAndWeightData['beratBadan']?[monthWithYear]!
           .add(FlSpot(date.day.toDouble(), weightValue));
     }
 
     return milkAndWeightData;
   }
 
-
-  // Map<String, Map<String, List<FlSpot>>> processFeedData(
-  //     List<Map<String, dynamic>> feedHijauan,
-  //     List<Map<String, dynamic>> feedSentrate) {
-  //   Map<String, Map<String, List<FlSpot>>> feedData = {
-  //     'Pakan Hijau': {},
-  //     'Pakan Sentrat': {},
-  //   };
-
-  //   // Proses data Pakan Hijauan
-  //   for (var feed in feedHijauan) {
-  //     DateTime date = DateTime.parse(feed['date']);
-  //     double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
-  //     String monthWithYear = _getMonthWithYear(date);
-
-  //     feedData['Pakan Hijau'] ??= {};
-  //     feedData['Pakan Hijau']?[monthWithYear] ??= [];
-  //     feedData['Pakan Hijau']?[monthWithYear]!
-  //         .add(FlSpot(date.day.toDouble(), amount));
-  //   }
-
-  //   // Proses data Pakan Sentrate
-  //   for (var feed in feedSentrate) {
-  //     DateTime date = DateTime.parse(feed['date']);
-  //     double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
-  //     String monthWithYear = _getMonthWithYear(date);
-
-  //     feedData['Pakan Sentrat'] ??= {};
-  //     feedData['Pakan Sentrat']?[monthWithYear] ??= [];
-  //     feedData['Pakan Sentrat']?[monthWithYear]!
-  //         .add(FlSpot(date.day.toDouble(), amount));
-  //   }
-
-  //   return feedData;
-  // }
-
-  // Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
-  //     List<Map<String, dynamic>> milkProduction,
-  //     List<Map<String, dynamic>> weights) {
-  //   Map<String, Map<String, List<FlSpot>>> milkAndWeightData = {
-  //     'Produksi Susu': {},
-  //     'Berat Badan': {},
-  //   };
-
-  //   // Proses data Produksi Susu
-  //   for (var milk in milkProduction) {
-  //     DateTime date = DateTime.parse(milk['date']);
-  //     double productionAmount =
-  //         double.tryParse(milk['production_amount']?.toString() ?? '0') ?? 0;
-  //     String monthWithYear = _getMonthWithYear(date);
-
-  //     milkAndWeightData['Produksi Susu'] ??= {};
-  //     milkAndWeightData['Produksi Susu']?[monthWithYear] ??= [];
-  //     milkAndWeightData['Produksi Susu']?[monthWithYear]!
-  //         .add(FlSpot(date.day.toDouble(), productionAmount));
-  //   }
-
-  //   // Proses data Berat Badan
-  //   for (var weight in weights) {
-  //     DateTime date = DateTime.parse(weight['date']);
-  //     double weightValue =
-  //         double.tryParse(weight['weight']?.toString() ?? '0') ?? 0;
-  //     String monthWithYear = _getMonthWithYear(date);
-
-  //     milkAndWeightData['Berat Badan'] ??= {};
-  //     milkAndWeightData['Berat Badan']?[monthWithYear] ??= [];
-  //     milkAndWeightData['Berat Badan']?[monthWithYear]!
-  //         .add(FlSpot(date.day.toDouble(), weightValue));
-  //   }
-
-  //   return milkAndWeightData;
-  // }
 
   String _getMonthWithYear(DateTime date) {
     const monthNames = [
@@ -672,8 +599,6 @@ Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
     try {
       // Fetch data from API
       final response = await fetchData(); // Sesuaikan dengan fungsi fetch Anda
-      print("Berat Badan: $beratBadan");
-      print("response body: ${response.body}");
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -737,7 +662,7 @@ Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
                   children: [
                     const SizedBox(height: 16),
                     const Text(
-                      'PRODUKSI SUSU & BERAT BADAN',
+                      'produksiSusu & beratBadan',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -745,7 +670,7 @@ Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
                       ),
                     ),
                     const SizedBox(height: 10),
-                    MultiChartContainer(chartsData: milkAndWeightData),
+                    MultiChartContainer(chartsData: milkAndWeightData, id: widget.id),
                     const SizedBox(height: 25),
                     const Divider(
                       color: Colors.black12,
@@ -761,7 +686,7 @@ Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData(
                       ),
                     ),
                     const SizedBox(height: 10),
-                    MultiChartContainer(chartsData: feedData),
+                    MultiChartContainer(chartsData: feedData, id: widget.id),
                     const SizedBox(height: 25),
                     const Divider(
                       color: Colors.black12,

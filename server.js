@@ -187,7 +187,7 @@ app.get('/api/cows/:id', async (req, res) => {
 
 app.post('/api/cows/tambahsapi', async (req, res) => {
   const { id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
-  console.log("Request Body:", req.body); // Log to check incoming data
+  // console.log("Request Body:", req.body); // Log to check incoming data
 
   if (!id) {
     return res.status(400).json({ message: 'cow_id (id) is required' });
@@ -378,15 +378,6 @@ app.get('/api/data/chart', async (req, res) => {
 
 
 // ---------------------------------------------------RECORDS--------------------------------------------------------------------
-app.get('/api/records', async (req, res) => {
-  try {
-    const records = await Record.find();
-    res.json(records);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
 app.post('/api/records', async (req, res) => {
   try {
     const { hasilPerah, jumlahSapiSehat, beratHijauan, beratSentrat } = req.body;

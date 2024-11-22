@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 
 class TambahSapiPage extends StatefulWidget {
   const TambahSapiPage({super.key});
@@ -25,20 +30,92 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
     super.dispose();
   }
 
+  // void _submitData() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     final newCattleData = {
+  //       'id': _idController.text,
+  //       'gender': _gender,
+  //       'age': _ageController.text,
+  //       'weight': int.tryParse(_weightController.text) ?? 0,
+  //       'status': _status?.toUpperCase(),
+  //     };
+  //     Navigator.pop(context, newCattleData);
+  //   } else {
+  //     _showErrorDialog('Please check your inputs.');
+  //   }
+  // }
+
+
   void _submitData() async {
     if (_formKey.currentState!.validate()) {
-      final newCattleData = {
-        'id': _idController.text,
-        'gender': _gender,
-        'age': _ageController.text,
-        'weight': int.tryParse(_weightController.text) ?? 0,
-        'status': _status?.toUpperCase(),
+      final data = {
+        "id": _idController.text,
+        "gender": _gender,
+        "age": int.parse(_ageController.text),
+        "weight": double.parse(_weightController.text),
+        "healthRecord": true // Convert to boolean if needed
       };
-      Navigator.pop(context, newCattleData);
+
+      try {
+        final response = await http
+            .post(
+              Uri.parse(
+                  '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahsapi'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(data),
+            )
+            .timeout(const Duration(seconds: 10),
+                onTimeout: () =>
+                    throw TimeoutException('Connection timed out'));
+
+        if (response.statusCode == 201) {
+          _showSuccessDialog();
+        } else if (response.statusCode == 400) {
+          final responseBody = jsonDecode(response.body);
+          _showErrorDialog(responseBody['message'] ?? 'Error occurred');
+        } else if (response.statusCode == 500) {
+          _showErrorDialog('Server error: ${response.body}');
+        } else if (response.statusCode == 404) {
+          _showErrorDialog('Resource not found');
+        } else {
+          _showErrorDialog('An unexpected error occurred');
+        }
+      } catch (error) {
+        print("Error: ${error.toString()}");
+        _showErrorDialog('Failed to submit data. Please try again.');
+      }
     } else {
       _showErrorDialog('Please check your inputs.');
     }
   }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.check_circle, size: 50, color: Colors.orange),
+              SizedBox(height: 10),
+              Text(
+                'DATA SAPI BERHASIL DITAMBAHKAN',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      },
+    ).then((_) {
+      Navigator.pop(context); // Go back after success
+    });
+  }
+
 
   void _showErrorDialog(String message) {
     showDialog(
