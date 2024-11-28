@@ -229,7 +229,9 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => InputDataPage(cowId: _cowIdController.text),
+          builder: (context) {
+            return InputDataPage(cowId: _cowIdController.text);
+          },
         ),
       );
     }

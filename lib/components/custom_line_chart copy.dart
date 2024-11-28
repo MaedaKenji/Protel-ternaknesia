@@ -16,7 +16,7 @@ class CustomLineChart extends StatefulWidget {
 }
 
 class _CustomLineChartState extends State<CustomLineChart> {
-  String selectedMonth = 'Oktober'; // Bulan default
+  String selectedMonth = 'Oktober';
   final List<String> months = [
     'Januari',
     'Februari',
@@ -96,7 +96,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 20, // Interval sumbu Y
+                      interval: 20,
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
@@ -111,7 +111,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 1, // Interval sumbu X untuk menampilkan tanggal
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
                         final day = (value.toInt() + 1).toString();
                         return Text(
@@ -125,12 +125,10 @@ class _CustomLineChartState extends State<CustomLineChart> {
                     ),
                   ),
                   topTitles: const AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: false), // Menyembunyikan keterangan atas
+                    sideTitles: SideTitles(showTitles: false),
                   ),
                   rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: false), // Menyembunyikan keterangan kanan
+                    sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
                 borderData: FlBorderData(

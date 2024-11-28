@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ternaknesia/screens/home_screen.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
-import 'package:ternaknesia/screens/profil.dart';
+import 'package:ternaknesia/screens/profile.dart';
 import 'package:ternaknesia/screens/datapage.dart';
 
 void main() {

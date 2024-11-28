@@ -1,18 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ternaknesia/provider/user_role.dart';
 
 class SummaryCards extends StatelessWidget {
   const SummaryCards({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const IntrinsicHeight(
+    // Access the user role from the provider
+    final userRole = Provider.of<UserRole>(context);
+
+    // Define a map of summary cards for each role
+    final Map<String, List<SummaryCard>> summaryCardRole = {
+      'user': [
+        const SummaryCard(title: '80,3L', subtitle: 'Perolehan susu hari ini'),
+        const SummaryCard(title: '18', subtitle: 'Sapi yang telah diperah'),
+        const SummaryCard(
+            title: '20', subtitle: 'Sapi yang telah diberi pakan'),
+      ],
+      'doctor': [
+        const SummaryCard(title: '35', subtitle: 'Sapi sehat'),
+        const SummaryCard(title: '8', subtitle: 'Sapi terindikasi sakit'),
+        const SummaryCard(
+            title: '5', subtitle: 'Sapi dalam pengobatan'),
+      ],
+      'admin': [
+        const SummaryCard(title: '80,3L', subtitle: 'Perolehan susu hari ini'),
+        const SummaryCard(title: '18', subtitle: 'Sapi yang telah diperah'),
+        const SummaryCard(
+            title: '20', subtitle: 'Sapi yang telah diberi pakan'),
+      ],
+    };
+
+    // Get the correct summary cards for the current role
+    List<SummaryCard> cards = summaryCardRole[userRole.role] ?? [];
+
+    return IntrinsicHeight(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          SummaryCard(title: '80,3L', subtitle: 'Perolehan susu hari ini'),
-          SummaryCard(title: '18', subtitle: 'Sapi yang telah diperah'),
-          SummaryCard(title: '20', subtitle: 'Sapi yang telah diberi pakan'),
-        ],
+        children: cards,
       ),
     );
   }
@@ -52,9 +78,7 @@ class SummaryCard extends StatelessWidget {
             Text(
               subtitle,
               style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11,
-                  color: Color(0xFF8F3505)),
+                  fontFamily: 'Inter', fontSize: 11, color: Color(0xFF8F3505)),
               textAlign: TextAlign.center,
             ),
           ],

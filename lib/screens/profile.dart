@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ternaknesia/components/logout_dialog.dart';
+import 'package:ternaknesia/provider/user_role.dart';
+import 'package:ternaknesia/screens/login_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -15,16 +19,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _locationController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _nameController.text = 'ATHA RAFIFI';
-    _emailController.text = 'athahahaha@gmail.com';
-    _phoneController.text = '081 2123 5567';
-    _roleController.text = 'Peternak';
-    _locationController.text = 'Jl. Sawah Mangga 5 / Y-2';
-  }
-
-  @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
@@ -36,6 +30,30 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Ambil userRole di dalam build() karena context sudah tersedia
+    final userRole = Provider.of<UserRole>(context);
+
+    // Set nilai default controller hanya jika belum ada nilai sebelumnya
+    if (_nameController.text.isEmpty && userRole.name.isNotEmpty) {
+      _nameController.text = userRole.name;
+    }
+    if (_emailController.text.isEmpty && userRole.email.isNotEmpty) {
+      _emailController.text = userRole.email;
+    }
+    if (_phoneController.text.isEmpty && userRole.phoneNumber.isNotEmpty) {
+      _phoneController.text = userRole.phoneNumber;
+    }
+    if (_roleController.text.isEmpty && userRole.role.isNotEmpty) {
+      _roleController.text = userRole.role == 'user'
+          ? 'Peternak'
+          : userRole.role == 'admin'
+              ? 'Admin'
+              : 'Dokter Hewan';
+    }
+    if (_locationController.text.isEmpty && userRole.cageLocation.isNotEmpty) {
+      _locationController.text = userRole.cageLocation;
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -70,6 +88,34 @@ class _ProfilePageState extends State<ProfilePage> {
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 20,
+                left: 20,
+                child: GestureDetector(
+                  onTap: () {
+                    _saveProfile();
+                  },
+                  child: const Icon(
+                    Icons.edit,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 20,
+                right: 20,
+                child: GestureDetector(
+                  onTap: () {
+                    _showLogoutDialog(context);
+                  },
+                  child: const Icon(
+                    Icons.logout,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
               ),
@@ -112,47 +158,47 @@ class _ProfilePageState extends State<ProfilePage> {
                     label: 'Role',
                     controller: _roleController,
                   ),
-                  const SizedBox(height: 20),
-                  _buildInfoRow(
-                    icon: Icons.location_on,
-                    label: 'Lokasi Kandang',
-                    controller: _locationController,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildInfoRow(
-                    icon: Icons.email,
-                    label: 'Email',
-                    controller: _emailController,
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      _saveProfile();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: const Color(0xFFF9E2B5),
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      side: const BorderSide(color: Color(0xFFC35804)),
+                  if (userRole.role != 'doctor') ...[
+                    const SizedBox(height: 20),
+                    _buildInfoRow(
+                      icon: Icons.location_on,
+                      label: 'Lokasi Kandang',
+                      controller: _locationController,
                     ),
-                    child: const Text(
-                      'EDIT PROFIL',
-                      style: TextStyle(
-                        color: Color(0xFFC35804),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return LogoutDialog(
+          title: 'Logout',
+          content: 'Are you sure you want to logout?',
+          onConfirm: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.noScaling,
+                    ),
+                    child: const LoginScreen(),
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

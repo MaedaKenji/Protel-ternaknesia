@@ -85,11 +85,13 @@ class _DataPageState extends State<DataPage> {
 
   Future<List<Cattle>> fetchCattleData() async {
     try {
-      final url = Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
-      
-      final response = await http.get(url).timeout(const Duration(seconds: 5), onTimeout: () {
+      final url =
+          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 5),
+          onTimeout: () {
         throw Exception('Request timed out');
-      }); 
+      });
 
       if (response.statusCode == 200) {
         List<dynamic> cattleJson = json.decode(response.body);
@@ -228,7 +230,7 @@ class _DataPageState extends State<DataPage> {
                       },
                     ),
             ),
-],
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -236,7 +238,14 @@ class _DataPageState extends State<DataPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const TambahSapiPage(),
+              builder: (context) {
+                return MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.noScaling,
+                  ),
+                  child: const TambahSapiPage(),
+                );
+              },
             ),
           );
         },
@@ -246,7 +255,6 @@ class _DataPageState extends State<DataPage> {
       ),
     );
   }
-
 
   Widget _buildStaticDataList() {
     return ListView.builder(
@@ -258,14 +266,14 @@ class _DataPageState extends State<DataPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => DataSapiPage(
+              MaterialPageRoute(builder: (context) {
+                return DataSapiPage(
                   id: cattle['id'],
                   gender: cattle['gender'],
                   age: cattle['age'],
                   healthStatus: cattle['status'],
-                ),
-              ),
+                );
+              }),
             );
           },
           context,
@@ -290,14 +298,14 @@ class _DataPageState extends State<DataPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => DataSapiPage(
+              MaterialPageRoute(builder: (context) {
+                return DataSapiPage(
                   id: cattle.id,
                   gender: cattle.gender,
                   age: cattle.age.toString(),
                   healthStatus: cattle.healthStatus,
-                ),
-              ),
+                );
+              }),
             );
           },
           context,

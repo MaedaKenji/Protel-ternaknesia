@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ternaknesia/components/successful_dialog.dart';
+import 'package:ternaknesia/provider/user_role.dart';
 
 class ConditionsSection extends StatelessWidget {
   final String healthStatus;
@@ -28,6 +30,7 @@ class ConditionsSection extends StatelessWidget {
   }
 
   Widget _buildEditableField(BuildContext context, String label, String value) {
+    final userRole = Provider.of<UserRole>(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -58,32 +61,62 @@ class ConditionsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return const SuccessfulDialog(
-                  content: 'Data berhasil diubah!',
+        if (userRole.role == 'user')
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return const SuccessfulDialog(
+                        content: 'Data berhasil diubah!',
+                      );
+                    },
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.message, color: Color(0xFFC35804)),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return const SuccessfulDialog(
+                        content: 'Catatan berhasil disimpan!',
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          )
+        else
+          ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return const SuccessfulDialog(
+                      content: 'Riwayat berhasil ditampilkan!',
+                    );
+                  },
                 );
               },
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.message, color: Color(0xFFC35804)),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return const SuccessfulDialog(
-                  content: 'Catatan berhasil disimpan!',
-                );
-              },
-            );
-          },
-        ),
+              style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 17,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    side: const BorderSide(color: Color(0xFFC35804)),
+                  )),
+              child:
+                  const Text('Riwayat', style: TextStyle(color: Color(0xFFC35804)))),
       ],
     );
   }
@@ -114,6 +147,7 @@ class PopulationStructureSection extends StatelessWidget {
   }
 
   Widget _buildEditableField(BuildContext context, String label, String value) {
+    final userRole = Provider.of<UserRole>(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -144,32 +178,62 @@ class PopulationStructureSection extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return const SuccessfulDialog(
-                  content: 'Data berhasil diubah!',
+        if (userRole.role == 'user')
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return const SuccessfulDialog(
+                        content: 'Data berhasil diubah!',
+                      );
+                    },
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.message, color: Color(0xFFC35804)),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return const SuccessfulDialog(
+                        content: 'Catatan berhasil disimpan!',
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          )
+        else
+          ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return const SuccessfulDialog(
+                      content: 'Riwayat berhasil ditampilkan!',
+                    );
+                  },
                 );
               },
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.message, color: Color(0xFFC35804)),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return const SuccessfulDialog(
-                  content: 'Catatan berhasil disimpan!',
-                );
-              },
-            );
-          },
-        ),
+              style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 17,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    side: const BorderSide(color: Color(0xFFC35804)),
+                  )),
+              child:
+                  const Text('Riwayat', style: TextStyle(color: Color(0xFFC35804)))),
       ],
     );
   }

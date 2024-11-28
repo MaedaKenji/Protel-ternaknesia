@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ternaknesia/provider/user_role.dart';
 
 class NewDataDialog extends StatelessWidget {
   final String id;
@@ -116,13 +118,19 @@ class NewDataDialog extends StatelessWidget {
 }
 
 class HistoryDialog extends StatelessWidget {
-  final List<String> data;
+  final String title;
+  final List<Map<String, dynamic>> data;
   final Function(int) onDelete;
 
-  const HistoryDialog({super.key, required this.data, required this.onDelete});
+  const HistoryDialog(
+      {super.key,
+      required this.title,
+      required this.data,
+      required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<UserRole>(context);
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
@@ -144,14 +152,14 @@ class HistoryDialog extends StatelessWidget {
                   topRight: Radius.circular(20),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.history, color: Colors.white),
-                  SizedBox(width: 8),
+                  const Icon(Icons.history, color: Colors.white),
+                  const SizedBox(width: 8),
                   Text(
-                    "Riwayat Pakan",
-                    style: TextStyle(
+                    title,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -166,28 +174,52 @@ class HistoryDialog extends StatelessWidget {
               child: Column(
                 children: data.asMap().entries.map((entry) {
                   int index = entry.key;
-                  String value = entry.value;
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Map<String, dynamic> value = entry.value;
+                  DateTime date = value['date'];
+                  String formattedDate =
+                      MaterialLocalizations.of(context).formatShortDate(date);
+
+                  return Column(
                     children: [
-                      Text(
-                        value,
-                        style: const TextStyle(fontSize: 16),
-                      ),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit,
-                                color: Color(0xFFC35804)),
-                            onPressed: () {},
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                formattedDate,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFFC35804),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                "${value['data']}",
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ],
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close,
-                                color: Color(0xFFC35804)),
-                            onPressed: () => onDelete(index),
-                          ),
+                          if (userRole.role == 'user')
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Color(0xFFC35804)),
+                                  onPressed: () {},
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close,
+                                      color: Color(0xFFC35804)),
+                                  onPressed: () => onDelete(index),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
+                      const SizedBox(height: 20),
                     ],
                   );
                 }).toList(),
@@ -195,23 +227,54 @@ class HistoryDialog extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Align(
-              alignment: Alignment.center,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC35804),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              alignment: Alignment.bottomCenter,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (userRole.role == 'user')
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 24),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: BorderSide(
+                                color: const Color(0xFFC35804),
+                              )),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style:
+                              TextStyle(color: Color(0xFFC35804), fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: const Color(0xFFC35804),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Close',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                ],
               ),
             ),
           ],

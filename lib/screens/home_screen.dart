@@ -4,6 +4,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:ternaknesia/components/custom_pop_up_dialog.dart';
+import 'package:ternaknesia/provider/user_role.dart';
+import 'package:ternaknesia/screens/datasapipage.dart';
 import '../components/summary_cards.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ternaknesia/components/custom_line_chart.dart';
@@ -23,31 +27,23 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, List<FlSpot>> concentratedFodderData = {};
   final Map<String, List<FlSpot>> exampleServerData = {
     'September 2023': [
-      FlSpot(29.0, 15.0),
+      const FlSpot(29.0, 15.0),
     ],
     'Oktober 2023': [
-      FlSpot(0.0, 32.0),
-      FlSpot(1.0, 30.0),
-      FlSpot(2.0, 34.0),
-      FlSpot(3.0, 28.0),
-      FlSpot(4.0, 26.0),
-      FlSpot(5.0, 30.0),
-      FlSpot(6.0, 28.0),
-      FlSpot(7.0, 32.0),
-      FlSpot(8.0, 30.0),
-      FlSpot(9.0, 25.0),
-      FlSpot(10.0, 0.0),
-      FlSpot(11.0, 0.0),
-      FlSpot(12.0, 0.0),
-      FlSpot(13.0, 0.0),
-      FlSpot(14.0, 0.0),
-      FlSpot(15.0, 0.0),
-      FlSpot(16.0, 0.0),
-      FlSpot(17.0, 0.0),
-      FlSpot(18.0, 0.0),
+      const FlSpot(0.0, 32.0),
+      const FlSpot(1.0, 30.0),
+      const FlSpot(2.0, 34.0),
+      const FlSpot(3.0, 28.0),
+      const FlSpot(4.0, 26.0),
+      const FlSpot(5.0, 30.0),
+      const FlSpot(6.0, 28.0),
+      const FlSpot(7.0, 32.0),
+      const FlSpot(8.0, 30.0),
+      const FlSpot(9.0, 25.0),
+      const FlSpot(10.0, 0.0),
     ],
     'November 2024': [
-      FlSpot(14.0, 0.0),
+      const FlSpot(14.0, 0.0),
     ],
   };
 
@@ -73,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _fetchWithTimeout('$baseUrl:$port${endpoints['sapi_diberi_pakan']}'),
       ]);
 
-      // Tentukan subtitle berdasarkan nilai yang dikembalikan
       return [
         {
           'title': responses[0],
@@ -85,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
           'title': responses[1],
           'subtitle': responses[1] == '' || responses[1] == 'Error'
               ? 'Tidak ada data dari server'
-              : 'Sapi yang telah diperah',
+              : 'Sapi yang telah dipe',
         },
         {
           'title': responses[2],
@@ -95,7 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ];
     } catch (e) {
-      // Jika terjadi error global
       return [
         {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
         {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
@@ -107,39 +101,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<Map<String, Map<String, List<FlSpot>>>> _fetchChartData() async {
     final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
     final port = dotenv.env['PORT'] ?? '8080';
-    final url = '$baseUrl:$port/api/data/chart'; // API endpoint for chart data
+    final url = '$baseUrl:$port/api/data/chart';
 
     try {
       final response =
           await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
-      // print("body dari fetchchart = ${response.body}");
-      // print("statusCode dari fetchchart = ${response.statusCode}");
 
       if (response.statusCode == 200) {
-        // Parse the JSON response
         final rawData =
             List<Map<String, dynamic>>.from(json.decode(response.body));
 
-        // Initialize the chart data structure
         Map<String, Map<String, List<FlSpot>>> chartData = {
           'Hijauan': {},
           'Sentrate': {},
-          'Milk': {}, // Add milk data
+          'Milk': {},
         };
 
-        // Transform the raw data
         for (var entry in rawData) {
-          final date = DateTime.parse(entry['date']); // Parse the date
-          final monthYear = _monthYear(date); // Convert to "Month Year" format
-          final day =
-              date.day.toDouble() - 1; // Use the day of the month as x-axis
+          final date = DateTime.parse(entry['date']);
+          final monthYear = _monthYear(date);
+          final day = date.day.toDouble() - 1;
 
-          // Initialize month-year data if it doesn't exist
           chartData['Hijauan']?[monthYear] ??= [];
           chartData['Sentrate']?[monthYear] ??= [];
           chartData['Milk']?[monthYear] ??= [];
 
-          // Add data points for hijauan, sentrate, and milk
           chartData['Hijauan']?[monthYear]
               ?.add(FlSpot(day, (entry['hijauan'] as num).toDouble()));
           chartData['Sentrate']?[monthYear]
@@ -148,27 +134,25 @@ class _HomeScreenState extends State<HomeScreen> {
               ?.add(FlSpot(day, (entry['milk'] as num).toDouble()));
         }
 
-        // print("Response dari fetchchart = $chartData");
         return chartData;
       } else {
         print('Error: Status code ${response.statusCode}');
         return {
           'Error': {
-            'Error': [FlSpot(0, 0)]
-          } // Default value for error
+            'Error': [const FlSpot(0, 0)]
+          }
         };
       }
     } catch (e) {
       print('Error fetching chart data: $e');
       return {
         'Error': {
-          'Error': [FlSpot(0, 0)]
-        } // Default value for error
+          'Error': [const FlSpot(0, 0)]
+        }
       };
     }
   }
 
-// Helper to format "Month Year"
   String _monthYear(DateTime date) {
     const monthNames = [
       'Januari',
@@ -189,27 +173,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> assignFetchedData() async {
     try {
-      // Fetch chart data from the API
       final fetchedData = await _fetchChartData();
-      // print("Fetched data: $fetchedData");
 
-      // Assign the fetched data to respective variables
       setState(() {
         milkProductionData = fetchedData['Milk'] ?? {};
         greenFodderData = fetchedData['Hijauan'] ?? {};
         concentratedFodderData = fetchedData['Sentrate'] ?? {};
       });
-
-      // print("\n");
-      // print("Milk Production Data: $milkProductionData");
-      // print("\n");
-      // print("Green Fodder Data: $greenFodderData");
-      // print("\n");
-      // print("Concentrated Fodder Data: $concentratedFodderData");
     } catch (e) {
       print('Error assigning fetched data: $e');
 
-      // Assign empty data in case of an error
       setState(() {
         milkProductionData = {};
         greenFodderData = {};
@@ -220,42 +193,157 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<String> _fetchWithTimeout(String url) async {
     try {
-      final response = await http
-          .get(Uri.parse(url))
-          .timeout(const Duration(seconds: 5)); // Timeout 5 detik
+      final response =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
       final value = json.decode(response.body)['value'].toString();
       return value;
     } catch (e) {
       if (e is TimeoutException) {
         print('Timeout while fetching $url');
-        return '0'; // Return '0' if timeout
+        return '0';
       }
       print('Error while fetching $url: $e');
-      return 'Error'; // Return 'Error' for other exceptions
+      return 'Error';
     }
   }
 
   Future<void> _refreshData() async {
-    // print("Refreshing data...");
     try {
-      // Fetch and assign the summary and chart data
       final summaryData = await _fetchSummaryData();
-      // Update state with the fetched data
+
       setState(() {
         _futureSummaryData = Future.value(summaryData);
       });
 
-      // Assign fetched chart data to specific variables
       await assignFetchedData();
-      // print("Chart data refreshed successfully.");
     } catch (e) {
       print("Error during refresh: $e");
     }
   }
 
+  final List<Map<String, dynamic>> sickIndicated = [
+    {
+      'id': '001',
+      'gender': 'Betina',
+      'info': 'Tidak nafsu makan dan mata merah',
+      'checked': true,
+      'age': '2 Tahun',
+    },
+    {
+      'id': '002',
+      'gender': 'Jantan',
+      'info': 'Diare',
+      'checked': false,
+      'age': '3 Tahun',
+    },
+    {
+      'id': '003',
+      'gender': 'Betina',
+      'info': 'Luka di mulut dan demam',
+      'checked': false,
+      'age': '1 Tahun',
+    },
+    {
+      'id': '004',
+      'gender': 'Betina',
+      'info': 'Kaki pincang',
+      'checked': false,
+      'age': '2 Tahun',
+    },
+  ];
+
+  final List<Map<String, dynamic>> sickCowAndTreatment = [
+    {
+      'id': '005',
+      'gender': 'Betina',
+      'info': 'Bovine Viral Diarrhea (BVD)',
+      'checked': false,
+      'age': '2 Tahun',
+    },
+    {
+      'id': '006',
+      'gender': 'Jantan',
+      'info': 'Tidak nafsu makan dan mata merah',
+      'checked': false,
+      'age': '3 Tahun',
+    },
+    {
+      'id': '007',
+      'gender': 'Betina',
+      'info': 'Tidak nafsu makan dan mata merah',
+      'checked': false,
+      'age': '1 Tahun',
+    },
+    {
+      'id': '008',
+      'gender': 'Betina',
+      'info': 'Tidak nafsu makan dan mata merah',
+      'checked': false,
+      'age': '2 Tahun',
+    },
+  ];
+
+  List<BarChartGroupData> sickCowPerMonthData() {
+    return [
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 500,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 250,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 900,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 3,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 100,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+    ];
+  }
+
+  @override
   Widget build(BuildContext context) {
-    String displayName = 'Atha Rafifi Azmi';
-    displayName = displayName.toUpperCase();
+    final userRole = Provider.of<UserRole>(context);
+    final displayName = userRole.name;
+    final role = userRole.role == 'user'
+        ? 'Peternak'
+        : userRole.role == 'admin'
+            ? 'Admin'
+            : 'Dokter Hewan';
+    DateTime now = DateTime.now();
+    String formattedDate =
+        MaterialLocalizations.of(context).formatFullDate(now);
     return Scaffold(
         backgroundColor: Colors.white,
         body: RefreshIndicator(
@@ -296,18 +384,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            const Column(
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('SAPYY',
+                                const Text('SAPYY',
                                     style: TextStyle(
                                       fontFamily: 'Inter',
                                       fontSize: 24,
                                       fontWeight: FontWeight.w800,
                                       color: Color(0xFF8F3505),
                                     )),
-                                Text('Selamat Bekerja!',
-                                    style: TextStyle(
+                                Text(formattedDate,
+                                    style: const TextStyle(
                                       fontFamily: 'Inter',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -337,21 +425,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Hai, $displayName',
+                                    Text('Hai, $displayName!',
                                         style: const TextStyle(
                                           fontFamily: 'Inter',
                                           fontSize: 16,
                                           fontWeight: FontWeight.w800,
                                           color: Colors.white,
                                         )),
-                                    const Text(
-                                      'Peternak',
-                                      style: TextStyle(
-                                          fontSize: 14, color: Colors.white),
-                                    ),
-                                    const Text(
-                                      'Sabtu, 26 Oktober 2024',
-                                      style: TextStyle(
+                                    Text(
+                                      '$role',
+                                      style: const TextStyle(
                                           fontSize: 14, color: Colors.white),
                                     ),
                                   ],
@@ -363,49 +446,243 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 60),
-              Expanded(
-                child: ListView(
-                  children: [
-                  const SummaryCards(),
-                  const SizedBox(height: 16),
-                  // Kalo mau pake data statis pake ini
-                  // CustomLineChart(title: 'Hasil Perolehan Susu', datas: milkProductionData),
-                  CustomLineChart(
-                      title: 'Hasil Perolehan Susu ',
-                      datas: milkProductionData),
-                  CustomLineChart(
-                      title: 'Berat Pangan Hijauan', datas: greenFodderData),
-                  CustomLineChart(
-                      title: 'Berat Pangan Sentrat',
-                      datas: concentratedFodderData),
-                  CustomLineChart(
-                    title: 'Contoh Data dari Server',
-                    datas:
-                        exampleServerData, // Data statis menyerupai hasil server
-                  ),
-                ]
+              const SizedBox(height: 35),
+              if (userRole.role == 'user' || userRole.role == 'admin')
+                Expanded(
+                  child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: ListView(children: [
+                        const SummaryCards(),
+                        const SizedBox(height: 8),
+                        CustomLineChart(
+                            title: 'Hasil Perolehan Susu ',
+                            datas: milkProductionData),
+                        CustomLineChart(
+                            title: 'Berat Pangan Hijauan',
+                            datas: greenFodderData,
+                            otherInfo: 'Pakan Hijauan Terbaik saat ini :',
+                            valueInfo: 25,
+                            ),
+                        CustomLineChart(
+                            title: 'Berat Pangan Sentrat',
+                            datas: concentratedFodderData,
+                            otherInfo: 'Pakan Sentrat Terbaik saat ini :',
+                            valueInfo: 25,
+                            ),
+                        CustomLineChart(
+                          title: 'Contoh Data dari Server',
+                          datas: exampleServerData,
+                        ),
+                      ])),
                 ),
-                
-                
-
-                // RefreshIndicator(
-                //     onRefresh: _refreshData,
-                //     child: ListView(
-                //         physics: const AlwaysScrollableScrollPhysics(),
-                //         padding: const EdgeInsets.all(0.0),
-                //         children: []))
-              )
+              if (userRole.role == 'doctor')
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: ListView(
+                      children: [
+                        const SummaryCards(),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Sapi Terindikasi Sakit :',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF8F3505),
+                          ),
+                        ),
+                        for (var cattle in sickIndicated)
+                          _buildCattleCard(
+                            context,
+                            id: cattle['id'],
+                            gender: cattle['gender'],
+                            info: cattle['info'],
+                            checked: cattle['checked'] ?? false,
+                            onPressed: () {
+                              return DataSapiPage(
+                                id: cattle['id'],
+                                gender: cattle['gender'],
+                                age: cattle['age'],
+                                healthStatus: 'SAKIT',
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Sapi Sakit & Dalam Pengobatan :',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF8F3505),
+                          ),
+                        ),
+                        for (var cattle in sickCowAndTreatment)
+                          _buildCattleCard(
+                            context,
+                            id: cattle['id'],
+                            gender: cattle['gender'],
+                            info: cattle['info'],
+                            checked: cattle['checked'] ?? false,
+                            onPressed: () {
+                              return DataSapiPage(
+                                id: cattle['id'],
+                                gender: cattle['gender'],
+                                age: cattle['age'],
+                                healthStatus: 'SAKIT',
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 20),
+                        CustomBarChart(
+                            title: 'Jumlah Sapi Sakit per Bulan',
+                            data: sickCowPerMonthData()),
+                      ],
+                    ),
+                  ),
+                ),
             ])));
   }
+
+  Widget _buildCattleCard(
+    BuildContext context, {
+    required String id,
+    required String gender,
+    required String info,
+    required bool checked,
+    required onPressed,
+  }) {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9E2B5),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: const Color(0xFFC35804),
+            width: 1,
+          ),
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(14.0),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 30,
+                backgroundImage: AssetImage('assets/images/cow_alt.png'),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return CustomPopUpDialog(
+                                    title: 'ID SAPI',
+                                    content: 'ID SAPI: $id',
+                                  );
+                                },
+                              );
+                            },
+                            child: Text(
+                              'ID SAPI: $id',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF8F3505),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      info,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF8F3505),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+              _buildPeriksaButton(
+                  onPressed: onPressed, checked: checked, context: context)
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriksaButton({
+    required BuildContext context,
+    required onPressed,
+    required bool checked,
+  }) {
+    return ElevatedButton(
+      onPressed: checked
+          ? () {}
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => onPressed(),
+                ),
+              );
+            },
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        backgroundColor: checked ? Colors.green : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: checked ? Colors.green : const Color(0xFFC35804),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
+      child: checked
+          ? const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check, color: Colors.white),
+                SizedBox(width: 8),
+                Text(
+                  'Selesai',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            )
+          : const Text(
+              'Periksa',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFC35804),
+              ),
+            ),
+    );
+  }
 }
-//   @override
-//   Widget build(BuildContext context) {
-//     String displayName = 'Atha Rafifi Azmi';
-//     displayName = displayName.toUpperCase();
-//     return Scaffold(
-//         backgroundColor: Colors.white,
-//         body: Column(children: [
-//          ]));
-//   }
-// }

@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:ternaknesia/provider/user_role.dart';
 import 'screens/login_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await dotenv.load();
 
-  // Mengatur mode UI ke immersiveSticky
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+    create: (context) => UserRole(),
+    child: const MyApp(),
+  ));
 }
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -21,6 +27,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('id', 'ID'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Login App',
@@ -29,9 +44,15 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const MediaQuery(
-        data: MediaQueryData(textScaler: TextScaler.linear(1.0)),
-        child: LoginScreen(),
+      home: Builder(
+        builder: (context) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: const TextScaler.linear(1.0),
+            ),
+            child: const LoginScreen(),
+          );
+        },
       ),
     );
   }

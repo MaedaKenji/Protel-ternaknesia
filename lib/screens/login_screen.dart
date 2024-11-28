@@ -1,48 +1,15 @@
 import 'package:flutter/material.dart';
-
 import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:ternaknesia/provider/user_role.dart';
 import 'package:ternaknesia/screens/mainpage.dart';
-
-void main() {
-  runApp(const LoginScreen());
-}
-
-MaterialColor createMaterialColor(Color color) {
-  List strengths = <double>[.05];
-  Map<int, Color> swatch = {};
-  final int r = color.red, g = color.green, b = color.blue;
-
-  for (int i = 1; i < 10; i++) {
-    strengths.add(0.1 * i);
-  }
-  for (var strength in strengths) {
-    final double ds = 0.5 - strength;
-    swatch[(strength * 1000).round()] = Color.fromRGBO(
-      r + ((ds < 0 ? r : (255 - r)) * ds).round(),
-      g + ((ds < 0 ? g : (255 - g)) * ds).round(),
-      b + ((ds < 0 ? b : (255 - b)) * ds).round(),
-      1,
-    );
-  }
-  return MaterialColor(color.value, swatch);
-}
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ternaknesia Login',
-      theme: ThemeData(
-        primarySwatch: createMaterialColor(const Color(0xFFC35804)),
-      ),
-      debugShowCheckedModeBanner: false,
-      home: const LoginPage(),
-      routes: {
-        '/home': (context) => const HomeScreen(),
-      },
-    );
+    return const LoginPage();
   }
 }
 
@@ -58,10 +25,31 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   void _login() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const MainPage()),
-    );
+    String email = _usernameController.text.trim();
+    final userRole = Provider.of<UserRole>(context, listen: false);
+
+    if (email == 'user@gmail.com') {
+      userRole.login(email, 'user', 'Atha Rafifi Azmi', '081234567890',
+          'Jl. Raya Kediri - Nganjuk KM 10');
+    } else if (email == 'doctor@gmail.com') {
+      userRole.login(
+          email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
+    } else if (email == 'admin@gmail.com') {
+      userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email tidak terdaftar')),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+      return MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: const TextScaler.linear(1.0)),
+        child: const MainPage(),
+      );
+    }));
   }
 
   String svgGoogleIcon =
@@ -99,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                    labelText: 'Username',
+                    labelText: 'Username (Email)',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
                       borderSide: const BorderSide(color: Colors.black),
@@ -206,55 +194,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.input),
-            label: 'Input',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.data_usage),
-            label: 'Data',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        selectedItemColor: Colors.brown,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
       ),
     );
   }

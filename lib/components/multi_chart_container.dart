@@ -1,15 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import 'package:ternaknesia/components/custom_line_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ternaknesia/components/dialogs.dart';
+import 'package:ternaknesia/provider/user_role.dart';
 
 class MultiChartContainer extends StatefulWidget {
   final Map<String, Map<String, List<FlSpot>>> chartsData;
   final String id;
 
-  const MultiChartContainer({super.key, required this.chartsData, required this.id});
+  const MultiChartContainer(
+      {super.key, required this.chartsData, required this.id});
 
   @override
   State<MultiChartContainer> createState() => _MultiChartContainerState();
@@ -20,7 +23,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
   int currentIndex = 0;
   late Map<String, TextEditingController> inputControllers;
 
-  
   get http => null;
 
   @override
@@ -96,17 +98,22 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
         });
         print("Data baru: $data akan mulai mengirim ke server");
         _sendDataToServer({chartTitles[currentIndex]: data});
-
       }
     });
   }
 
   void _showHistory() async {
-    List<String> historyData = ['70 Kg', '65 Kg', '72 Kg', '68 Kg'];
+    final List<Map<String, dynamic>> historyData = [
+      {'date': DateTime(2024, 11, 28), 'data': '70 kg/L'},
+      {'date': DateTime(2024, 11, 29), 'data': '65 kg/L'},
+      {'date': DateTime(2024, 11, 30), 'data': '72 kg/L'},
+      {'date': DateTime(2024, 12, 1), 'data': '68 kg/L'},
+    ];
     await showDialog(
       context: context,
       builder: (context) {
         return HistoryDialog(
+          title: 'Riwayat Pakan',
           data: historyData,
           onDelete: (index) {
             setState(() {
@@ -120,10 +127,11 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<UserRole>(context);
     final String currentTitle = chartTitles[currentIndex];
     final Map<String, List<FlSpot>> currentData =
         widget.chartsData[currentTitle]!;
-        print("$currentTitle adalah: $currentData");
+    print("$currentTitle adalah: $currentData");
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,19 +199,44 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                 ),
               ],
             ),
-            Row(
-              children: [
-                _buildIconButton(
-                  icon: Icons.add,
-                  onPressed: _addNewData,
-                ),
-                const SizedBox(width: 10),
-                _buildIconButton(
-                  icon: Icons.history,
+            if (userRole.role == 'user')
+              Row(
+                children: [
+                  _buildIconButton(
+                    icon: Icons.add,
+                    onPressed: _addNewData,
+                  ),
+                  const SizedBox(width: 10),
+                  _buildIconButton(
+                    icon: Icons.history,
+                    onPressed: _showHistory,
+                  ),
+                ],
+              ),
+            if (userRole.role == 'admin' || userRole.role == 'doctor')
+              ElevatedButton(
                   onPressed: _showHistory,
-                ),
-              ],
-            ),
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.history,
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: 5),
+                      Text('Riwayat', style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: const Color(0xFFC35804),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ))
           ],
         ),
         const SizedBox(height: 10),

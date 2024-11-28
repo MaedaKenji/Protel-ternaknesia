@@ -97,9 +97,9 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          content: Column(
+          content: const Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(Icons.check_circle, size: 50, color: Colors.orange),
               SizedBox(height: 10),
               Text(

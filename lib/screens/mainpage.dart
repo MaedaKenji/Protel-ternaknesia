@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ternaknesia/provider/user_role.dart';
 
 import 'package:ternaknesia/screens/home_screen.dart';
 import 'package:ternaknesia/screens/nfc_screen.dart';
-import 'package:ternaknesia/screens/profil.dart';
+import 'package:ternaknesia/screens/profile.dart';
 import 'package:ternaknesia/screens/datapage.dart';
 
 class MainPage extends StatefulWidget {
@@ -15,13 +17,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const HomeScreen(),
-    const NFCPage(),
-    const DataPage(),
-    const ProfilePage(),
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -30,28 +25,38 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<UserRole>(context);
+
+    final List<Widget> pages = [
+      const HomeScreen(),
+      if (userRole.role == 'user') const NFCPage(),
+      const DataPage(),
+      const ProfilePage(),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.nfc),
-            label: 'Input',
-          ),
-          BottomNavigationBarItem(
+          if (userRole.role == 'user')
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.nfc),
+              label: 'Input',
+            ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: 'Data',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
           ),

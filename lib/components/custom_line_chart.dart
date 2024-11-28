@@ -3,11 +3,15 @@ import 'package:fl_chart/fl_chart.dart';
 
 class CustomLineChart extends StatefulWidget {
   final String title;
+  String? otherInfo;
+  int? valueInfo;
   final Map<String, List<FlSpot>> datas;
 
-  const CustomLineChart({
+  CustomLineChart({
     super.key,
     required this.title,
+    this.otherInfo,
+    this.valueInfo,
     required this.datas,
   });
 
@@ -16,18 +20,18 @@ class CustomLineChart extends StatefulWidget {
 }
 
 class _CustomLineChartState extends State<CustomLineChart> {
-  late String selectedMonth; // Bulan yang dipilih saat ini
+  late String selectedMonth;
+
   @override
   void initState() {
     super.initState();
-    // Tetapkan nilai default ke bulan pertama atau gunakan fallback jika datas kosong
+
     selectedMonth =
         widget.datas.isNotEmpty ? widget.datas.keys.first : 'Default';
   }
 
   @override
   Widget build(BuildContext context) {
-    // Hitung nilai maksimum dari datas dan tambahkan 20%
     double maxYValue = widget.datas.values
         .expand((spots) => spots.map((spot) => spot.y))
         .fold<double>(
@@ -35,8 +39,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
             (previousValue, element) =>
                 element > previousValue ? element : previousValue);
 
-    double maxY =
-        maxYValue + (maxYValue * 0.2);
+    double maxY = maxYValue + (maxYValue * 0.2);
     double interval = maxY / 5;
 
     return Container(
@@ -73,8 +76,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
               DropdownButton<String>(
                 value: widget.datas.containsKey(selectedMonth)
                     ? selectedMonth
-                    : widget.datas.keys.firstOrNull ??
-                        'Default', // Gunakan fallback
+                    : widget.datas.keys.firstOrNull ?? 'Default',
                 icon:
                     const Icon(Icons.arrow_drop_down, color: Color(0xFFC35804)),
                 items: widget.datas.keys.map((String month) {
@@ -164,16 +166,47 @@ class _CustomLineChartState extends State<CustomLineChart> {
                       ],
                     ),
                   )
-                : Center(
+                : const Center(
                     child: Text(
                       'No data available',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         color: Colors.red,
                       ),
                     ),
                   ),
           ),
+          if (widget.otherInfo?.isNotEmpty ?? false || widget.valueInfo != null)
+            const SizedBox(height: 16),
+          if (widget.otherInfo?.isNotEmpty ?? false || widget.valueInfo != null)
+            const SizedBox(height: 16),
+          if (widget.otherInfo?.isNotEmpty ?? false || widget.valueInfo != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (widget.otherInfo?.isNotEmpty ?? false)
+                    Text(
+                      widget.otherInfo ?? '',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF8F3505),
+                      ),
+                    ),
+                  if (widget.valueInfo != null)
+                    Text(
+                      '${widget.valueInfo} Kg',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF8F3505),
+                      ),
+                    ),
+                ],
+              ),
+            ),
         ],
       ),
     );
