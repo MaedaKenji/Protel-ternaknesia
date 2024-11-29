@@ -433,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           color: Colors.white,
                                         )),
                                     Text(
-                                      '$role',
+                                      role,
                                       style: const TextStyle(
                                           fontSize: 14, color: Colors.white),
                                     ),
@@ -458,17 +458,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             title: 'Hasil Perolehan Susu ',
                             datas: milkProductionData),
                         CustomLineChart(
-                            title: 'Berat Pangan Hijauan',
-                            datas: greenFodderData,
-                            otherInfo: 'Pakan Hijauan Terbaik saat ini :',
-                            valueInfo: 25,
-                            ),
+                          title: 'Berat Pangan Hijauan',
+                          datas: greenFodderData,
+                          otherInfo: 'Pakan Hijauan Terbaik saat ini :',
+                          valueInfo: 25,
+                        ),
                         CustomLineChart(
-                            title: 'Berat Pangan Sentrat',
-                            datas: concentratedFodderData,
-                            otherInfo: 'Pakan Sentrat Terbaik saat ini :',
-                            valueInfo: 25,
-                            ),
+                          title: 'Berat Pangan Sentrat',
+                          datas: concentratedFodderData,
+                          otherInfo: 'Pakan Sentrat Terbaik saat ini :',
+                          valueInfo: 25,
+                        ),
                         CustomLineChart(
                           title: 'Contoh Data dari Server',
                           datas: exampleServerData,
@@ -587,13 +587,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 builder: (context) {
                                   return CustomPopUpDialog(
                                     title: 'ID SAPI',
-                                    content: 'ID SAPI: $id',
+                                    content: id,
                                   );
                                 },
                               );
                             },
                             child: Text(
-                              'ID SAPI: $id',
+                              id,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,

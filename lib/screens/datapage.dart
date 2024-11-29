@@ -364,12 +364,11 @@ class _DataPageState extends State<DataPage> {
                                   context: context,
                                   builder: (context) {
                                     return CustomPopUpDialog(
-                                        title: 'ID SAPI',
-                                        content: 'ID SAPI: $id');
+                                        title: 'ID SAPI', content: id);
                                   });
                             },
                             child: Text(
-                              'ID SAPI: $id',
+                              id,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,

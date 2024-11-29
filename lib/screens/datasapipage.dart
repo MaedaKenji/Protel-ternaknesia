@@ -239,7 +239,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'ID SAPI: $id',
+                    'Detail Sapi $id',
                     style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 20,
@@ -672,6 +672,65 @@ class _DataSapiPageState extends State<DataSapiPage> {
     );
   }
 
+  final List<Map<String, dynamic>> stressLevelHistory = [
+    {'date': DateTime(2024, 11, 28), 'data': 'Stress'},
+    {'date': DateTime(2024, 11, 29), 'data': 'Stress'},
+    {'date': DateTime(2024, 11, 30), 'data': 'Stress'},
+    {'date': DateTime(2024, 12, 1), 'data': 'Stress'},
+  ];
+
+  final List<Map<String, dynamic>> healthStatusHistory = [
+    {'date': DateTime(2024, 11, 28), 'data': 'Sehat'},
+    {'date': DateTime(2024, 11, 29), 'data': 'Sakit'},
+    {'date': DateTime(2024, 11, 30), 'data': 'Sehat'},
+    {'date': DateTime(2024, 12, 1), 'data': 'Sakit'},
+  ];
+
+  final List<Map<String, dynamic>> birahiHistory = [
+    {'date': DateTime(2024, 11, 28), 'data': 'Birahi'},
+    {'date': DateTime(2024, 11, 29), 'data': 'Birahi'},
+    {'date': DateTime(2024, 11, 30), 'data': 'Birahi'},
+    {'date': DateTime(2024, 12, 1), 'data': 'Birahi'},
+  ];
+
+  final List<Map<String, dynamic>> statusHistory = [
+    {'date': DateTime(2024, 11, 28), 'data': 'Aktif'},
+    {'date': DateTime(2024, 11, 29), 'data': 'Aktif'},
+    {'date': DateTime(2024, 11, 30), 'data': 'Aktif'},
+    {'date': DateTime(2024, 12, 1), 'data': 'Aktif'},
+  ];
+
+  final Map<String, List<Map<String, dynamic>>> milkProductionAndWeightHistory =
+      {
+    'produksiSusu': [
+      {'date': DateTime(2024, 11, 28), 'data': '50 L'},
+      {'date': DateTime(2024, 11, 29), 'data': '52 L'},
+      {'date': DateTime(2024, 11, 30), 'data': '55 L'},
+      {'date': DateTime(2024, 12, 1), 'data': '48 L'},
+    ],
+    'beratBadan': [
+      {'date': DateTime(2024, 11, 28), 'data': '70 Kg'},
+      {'date': DateTime(2024, 11, 29), 'data': '68 Kg'},
+      {'date': DateTime(2024, 11, 30), 'data': '72 Kg'},
+      {'date': DateTime(2024, 12, 1), 'data': '75 Kg'},
+    ],
+  };
+
+  final Map<String, List<Map<String, dynamic>>> feedDataHistory = {
+    'pakanHijau': [
+      {'date': DateTime(2024, 11, 28), 'data': '50 kg'},
+      {'date': DateTime(2024, 11, 29), 'data': '52 kg'},
+      {'date': DateTime(2024, 11, 30), 'data': '55 kg'},
+      {'date': DateTime(2024, 12, 1), 'data': '48 kg'},
+    ],
+    'pakanSentrat': [
+      {'date': DateTime(2024, 11, 28), 'data': '60 kg'},
+      {'date': DateTime(2024, 11, 29), 'data': '58 kg'},
+      {'date': DateTime(2024, 11, 30), 'data': '62 kg'},
+      {'date': DateTime(2024, 12, 1), 'data': '65 kg'},
+    ],
+  };
+
   @override
   Widget build(BuildContext context) {
     final userRole = Provider.of<UserRole>(context);
@@ -706,7 +765,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
                   children: [
                     const SizedBox(height: 16),
                     const Text(
-                      'produksiSusu & beratBadan',
+                      'PRODUKSI SUSU & BERAT BADAN',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -715,7 +774,12 @@ class _DataSapiPageState extends State<DataSapiPage> {
                     ),
                     const SizedBox(height: 10),
                     MultiChartContainer(
-                        chartsData: milkAndWeightData, id: widget.id),
+                      label: 'produksiSusu & beratBadan',
+                      historyData: milkProductionAndWeightHistory,
+                      chartsData: milkAndWeightData,
+                      id: widget.id,
+                      onDelete: (index) {},
+                    ),
                     const SizedBox(height: 25),
                     const Divider(
                       color: Colors.black12,
@@ -731,16 +795,44 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    MultiChartContainer(chartsData: feedData, id: widget.id),
+                    MultiChartContainer(
+                      label: 'pakanHijau & pakanSentrat',
+                      historyData: feedDataHistory,
+                      chartsData: feedData,
+                      id: widget.id,
+                      onDelete: (index) {},
+                    ),
                     const SizedBox(height: 25),
                     const Divider(
                       color: Colors.black12,
                       thickness: 1,
                     ),
                     const SizedBox(height: 25),
-                    ConditionsSection(healthStatus: widget.healthStatus),
+                    ConditionsSection(
+                        healthStatus: widget.healthStatus,
+                        stressLevelHistory: stressLevelHistory,
+                        healthStatusHistory: healthStatusHistory,
+                        deleteStressLevel: (index) {
+                          stressLevelHistory.removeAt(index);
+                        },
+                        deleteHealthStatus: (index) {
+                          healthStatusHistory.removeAt(index);
+                        }),
                     const SizedBox(height: 20),
-                    const PopulationStructureSection(),
+                    PopulationStructureSection(
+                      birahiHistory: birahiHistory,
+                      statusHistory: statusHistory,
+                      deleteBirahi: (index) {
+                        setState(() {
+                          birahiHistory.removeAt(index);
+                        });
+                      },
+                      deleteStatus: (index) {
+                        setState(() {
+                          statusHistory.removeAt(index);
+                        });
+                      },
+                    ),
                     const SizedBox(height: 20),
                     if (widget.healthStatus.toUpperCase() == 'SAKIT') ...[
                       const Text(
@@ -821,7 +913,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       ),
                       const SizedBox(height: 10),
                       TextField(
-                        readOnly: userRole.role == 'admin',
+                        readOnly:
+                            userRole.role == 'admin' || userRole.role == 'user',
                         maxLines: 4,
                         decoration: InputDecoration(
                           labelStyle: const TextStyle(
@@ -845,7 +938,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
                             borderSide:
                                 const BorderSide(color: Color(0xFF8F3505)),
                           ),
-                          hintText: userRole.role == 'admin'
+                          hintText: userRole.role == 'admin' ||
+                                  userRole.role == 'user'
                               ? 'Diagnosis dan pengobatan hanya bisa diisi oleh dokter!'
                               : 'Masukkan diagnosis dan pengobatan...',
                         ),
@@ -898,27 +992,36 @@ class _DataSapiPageState extends State<DataSapiPage> {
                     const SizedBox(height: 30),
                     if (userRole.role != 'doctor')
                       ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor: const Color(0xFFFFECEC),
-                          minimumSize: const Size(double.infinity, 50),
-                          side: const BorderSide(color: Color(0xFFFF3939)),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            backgroundColor: Colors.red,
+                            minimumSize: const Size(double.infinity, 50),
+                            side: const BorderSide(color: Color(0xFFFF3939)),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 15, horizontal: 20),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'KELUARKAN SAPI DARI KANDANG',
-                          style: TextStyle(
-                            color: Color(0xFFE33629),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'KELUARKAN SAPI DARI KANDANG',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Icon(
+                                Icons.exit_to_app,
+                                color: Colors.white,
+                              ),
+                            ],
+                          )),
                     if (userRole.role == 'doctor')
                       ElevatedButton(
                         onPressed: () {},
@@ -959,7 +1062,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
 class _NewDataDialog extends StatelessWidget {
   final String id;
 
-  _NewDataDialog({required this.id});
+  const _NewDataDialog({required this.id});
 
   @override
   Widget build(BuildContext context) {

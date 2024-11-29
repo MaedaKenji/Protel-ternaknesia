@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:ternaknesia/components/custom_line_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -8,11 +10,19 @@ import 'package:ternaknesia/components/dialogs.dart';
 import 'package:ternaknesia/provider/user_role.dart';
 
 class MultiChartContainer extends StatefulWidget {
+  final String label;
   final Map<String, Map<String, List<FlSpot>>> chartsData;
+  final Map<String, List<Map<String, dynamic>>> historyData;
+  final Function(int) onDelete;
   final String id;
 
   const MultiChartContainer(
-      {super.key, required this.chartsData, required this.id});
+      {super.key,
+      required this.label,
+      required this.chartsData,
+      required this.historyData,
+      required this.onDelete,
+      required this.id});
 
   @override
   State<MultiChartContainer> createState() => _MultiChartContainerState();
@@ -44,7 +54,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
   }
 
   Future<void> _sendDataToServer(Map<String, String> data) async {
-    // print("Data adalah: $data akan mulai mengirim ke server");
     try {
       final url = Uri.parse(
           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahdata/${widget.id}');
@@ -53,7 +62,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      // print(response.body);
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,27 +110,17 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
     });
   }
 
-  void _showHistory() async {
-    final List<Map<String, dynamic>> historyData = [
-      {'date': DateTime(2024, 11, 28), 'data': '70 kg/L'},
-      {'date': DateTime(2024, 11, 29), 'data': '65 kg/L'},
-      {'date': DateTime(2024, 11, 30), 'data': '72 kg/L'},
-      {'date': DateTime(2024, 12, 1), 'data': '68 kg/L'},
-    ];
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return HistoryDialog(
-          title: 'Riwayat Pakan',
-          data: historyData,
-          onDelete: (index) {
-            setState(() {
-              historyData.removeAt(index);
-            });
-          },
-        );
-      },
-    );
+  String formatTitle(String title) {
+    String formattedTitle =
+        title.replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (match) {
+      return '${match.group(1)} ${match.group(2)}';
+    });
+
+    formattedTitle = formattedTitle.split(' ').map((word) {
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+
+    return formattedTitle;
   }
 
   @override
@@ -131,7 +129,10 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
     final String currentTitle = chartTitles[currentIndex];
     final Map<String, List<FlSpot>> currentData =
         widget.chartsData[currentTitle]!;
-    print("$currentTitle adalah: $currentData");
+    final List<Map<String, dynamic>> currentHistoryData =
+        widget.historyData[currentTitle] ?? [];
+    final formattedTitle = formatTitle(currentTitle);
+    print("$formattedTitle adalah: $currentData");
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,18 +142,18 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
           children: [
             Expanded(
               child: CustomLineChart(
-                title: currentTitle,
+                title: formattedTitle,
                 datas: currentData,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const SizedBox(height: 10),
+        Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 const Text(
                   'Saat ini :',
@@ -199,8 +200,10 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                 ),
               ],
             ),
+            const SizedBox(height: 10),
             if (userRole.role == 'user')
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildIconButton(
                     icon: Icons.add,
@@ -208,35 +211,57 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                   ),
                   const SizedBox(width: 10),
                   _buildIconButton(
-                    icon: Icons.history,
-                    onPressed: _showHistory,
-                  ),
+                      icon: Icons.history,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return HistoryDialog(
+                              title: 'Riwayat $formattedTitle',
+                              data: currentHistoryData,
+                              onDelete: widget.onDelete,
+                            );
+                          },
+                        );
+                      }),
                 ],
               ),
             if (userRole.role == 'admin' || userRole.role == 'doctor')
               ElevatedButton(
-                  onPressed: _showHistory,
-                  child: Row(
-                    children: const [
-                      Icon(
-                        Icons.history,
-                        color: Colors.white,
-                      ),
-                      SizedBox(width: 5),
-                      Text('Riwayat', style: TextStyle(color: Colors.white)),
-                    ],
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return HistoryDialog(
+                          title: '',
+                          data: currentHistoryData,
+                          onDelete: widget.onDelete);
+                    },
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: const Color(0xFFC35804),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 10,
                   ),
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: const Color(0xFFC35804),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 10,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.history,
+                      color: Colors.white,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                  ))
+                    SizedBox(width: 5),
+                    Text('Riwayat', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              )
           ],
         ),
         const SizedBox(height: 10),
@@ -250,7 +275,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
             ),
             Center(
               child: Text(
-                'Chart ${currentIndex + 1} dari ${chartTitles.length}',
+                'Grafik ${currentIndex + 1} dari ${chartTitles.length}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -269,8 +294,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
     );
   }
 
-  Widget _buildIconButton(
-      {required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildIconButton({required IconData icon, required onPressed}) {
     return Container(
       width: 40,
       height: 40,

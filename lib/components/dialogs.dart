@@ -245,8 +245,8 @@ class HistoryDialog extends StatelessWidget {
                               vertical: 12, horizontal: 24),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
-                              side: BorderSide(
-                                color: const Color(0xFFC35804),
+                              side: const BorderSide(
+                                color: Color(0xFFC35804),
                               )),
                         ),
                         child: const Text(

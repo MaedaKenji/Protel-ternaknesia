@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ternaknesia/components/dialogs.dart';
 import 'package:ternaknesia/components/successful_dialog.dart';
 import 'package:ternaknesia/provider/user_role.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:iconify_flutter/icons/heroicons_solid.dart';
 
 class ConditionsSection extends StatelessWidget {
   final String healthStatus;
+  final List<Map<String, dynamic>> stressLevelHistory;
+  final List<Map<String, dynamic>> healthStatusHistory;
+  final Function(int) deleteStressLevel;
+  final Function(int) deleteHealthStatus;
 
-  const ConditionsSection({super.key, required this.healthStatus});
+  const ConditionsSection(
+      {super.key,
+      required this.healthStatus,
+      required this.stressLevelHistory,
+      required this.healthStatusHistory,
+      required this.deleteStressLevel,
+      required this.deleteHealthStatus});
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +36,22 @@ class ConditionsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        _buildEditableField(context, 'Stress Level', 'Normal'),
+        _buildEditableField(
+          context,
+          'Stress Level',
+          'Normal',
+          stressLevelHistory,
+          deleteStressLevel,
+        ),
         const SizedBox(height: 10),
-        _buildEditableField(context, 'Kesehatan', healthStatus),
+        _buildEditableField(context, 'Kesehatan', healthStatus,
+            healthStatusHistory, deleteHealthStatus),
       ],
     );
   }
 
-  Widget _buildEditableField(BuildContext context, String label, String value) {
+  Widget _buildEditableField(BuildContext context, String label, String value,
+      List<Map<String, dynamic>> historyData, Function(int) onDelete) {
     final userRole = Provider.of<UserRole>(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -65,7 +87,8 @@ class ConditionsSection extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
+                icon: const Iconify(HeroiconsSolid.pencil_square,
+                    color: Color(0xFFC35804)),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -78,14 +101,16 @@ class ConditionsSection extends StatelessWidget {
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.message, color: Color(0xFFC35804)),
+                icon: const Iconify(MaterialSymbols.history,
+                    color: Color(0xFFC35804)),
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder: (context) {
-                      return const SuccessfulDialog(
-                        content: 'Catatan berhasil disimpan!',
-                      );
+                      return HistoryDialog(
+                          title: 'Riwayat $label',
+                          data: historyData,
+                          onDelete: onDelete);
                     },
                   );
                 },
@@ -115,15 +140,25 @@ class ConditionsSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10.0),
                     side: const BorderSide(color: Color(0xFFC35804)),
                   )),
-              child:
-                  const Text('Riwayat', style: TextStyle(color: Color(0xFFC35804)))),
+              child: const Text('Riwayat',
+                  style: TextStyle(color: Color(0xFFC35804)))),
       ],
     );
   }
 }
 
 class PopulationStructureSection extends StatelessWidget {
-  const PopulationStructureSection({super.key});
+  final List<Map<String, dynamic>> birahiHistory;
+  final List<Map<String, dynamic>> statusHistory;
+  final Function(int) deleteBirahi;
+  final Function(int) deleteStatus;
+
+  const PopulationStructureSection(
+      {super.key,
+      required this.birahiHistory,
+      required this.statusHistory,
+      required this.deleteBirahi,
+      required this.deleteStatus});
 
   @override
   Widget build(BuildContext context) {
@@ -139,14 +174,17 @@ class PopulationStructureSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        _buildEditableField(context, 'Birahi', 'Tidak'),
+        _buildEditableField(
+            context, 'Birahi', 'Tidak', birahiHistory, deleteBirahi),
         const SizedBox(height: 10),
-        _buildEditableField(context, 'Status', 'Aktif'),
+        _buildEditableField(
+            context, 'Status', 'Aktif', statusHistory, deleteStatus),
       ],
     );
   }
 
-  Widget _buildEditableField(BuildContext context, String label, String value) {
+  Widget _buildEditableField(BuildContext context, String label, String value,
+      List<Map<String, dynamic>> historyData, Function(int) onDelete) {
     final userRole = Provider.of<UserRole>(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -182,7 +220,8 @@ class PopulationStructureSection extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.edit, color: Color(0xFFC35804)),
+                icon: const Iconify(HeroiconsSolid.pencil_square,
+                    color: Color(0xFFC35804)),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -195,14 +234,18 @@ class PopulationStructureSection extends StatelessWidget {
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.message, color: Color(0xFFC35804)),
+                icon: const Iconify(MaterialSymbols.history,
+                    color: Color(0xFFC35804)),
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder: (context) {
-                      return const SuccessfulDialog(
-                        content: 'Catatan berhasil disimpan!',
-                      );
+                      return HistoryDialog(
+                          title: 'Riwayat $label',
+                          data: historyData,
+                          onDelete: (index) {
+                            historyData.removeAt(index);
+                          });
                     },
                   );
                 },
@@ -232,8 +275,8 @@ class PopulationStructureSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10.0),
                     side: const BorderSide(color: Color(0xFFC35804)),
                   )),
-              child:
-                  const Text('Riwayat', style: TextStyle(color: Color(0xFFC35804)))),
+              child: const Text('Riwayat',
+                  style: TextStyle(color: Color(0xFFC35804)))),
       ],
     );
   }

@@ -47,7 +47,8 @@ class DataSapiPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.orange[100],
-        title: Text('ID SAPI: $id'),
+        // title: Text('ID SAPI: $id'),
+        title: Text(id),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -75,7 +76,7 @@ class DataSapiPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'ID SAPI: $id',
+                            id,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
