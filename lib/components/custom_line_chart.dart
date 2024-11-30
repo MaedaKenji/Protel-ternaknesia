@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+// ignore: must_be_immutable
 class CustomLineChart extends StatefulWidget {
   final String title;
   String? otherInfo;

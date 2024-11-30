@@ -1,11 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { exec } = require('child_process');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const axios = require('axios');
 const moment = require('moment-timezone');
 const { Pool } = require('pg');
+const { PythonShell } = require('python-shell');
+
 require('dotenv').config();
 
 // Models
@@ -20,6 +23,7 @@ const nowUtcPlus7 = moment.tz("Asia/Bangkok").format();
 
 
 const app = express();
+const FLASK_API_URL = 'http://localhost:5000/predict_productivity'; // URL Flask
 app.use(express.json());
 
 const PORT = process.env.PORT;
@@ -34,64 +38,14 @@ function isSameDay(date1, date2) {
 
 // PostgreSQL connection setup 
 const pool = new Pool({ host: process.env.PGHOST, user: process.env.PGUSER, password: process.env.PGPASSWORD, database: process.env.PGDATABASE, port: process.env.PGPORT, });
-// console.log("host:", process.env.PGHOST , "user:", process.env.PGUSER, "password:", process.env.PGPASSWORD, "database:", process.env.PGDATABASE, "port:", process.env.PGPORT, );
+
 
 // Test the connection 
 pool.connect((err) => { if (err) { console.error('PostgreSQL connection error:', err); } else { console.log('Connected to PostgreSQL'); } });
 
-
-//-------------------------------api/users/----------------------------------------
-
 app.use(cors({
   origin: '*',  // Mengizinkan semua domain, atau ganti dengan domain yang diizinkan
 }));
-
-app.post('/api/users/login', async (req, res) => {
-  const { email, password } = req.body;
-  console.log(email, password);
-  const user2 = await User.findOne({ email });
-  console.log(user2);
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'User not found' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    res.json({ success: true, message: 'Login successful' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-
-  }
-});
-
-app.get('/api/users/user', async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.json({ success: true, users });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-});
-
-app.post('/api/users/register', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const newUser = new User({ email, password });
-    await newUser.save();
-    res.json({ success: true, message: 'User registered successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-});
-
-
 
 
 
@@ -187,7 +141,6 @@ app.get('/api/cows/:id', async (req, res) => {
 
 app.post('/api/cows/tambahsapi', async (req, res) => {
   const { id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
-  // console.log("Request Body:", req.body); // Log to check incoming data
 
   if (!id) {
     return res.status(400).json({ message: 'cow_id (id) is required' });
@@ -218,8 +171,7 @@ app.post('/api/cows/tambahdata/:id', async (req, res) => {
   const data = req.body; // Data dalam bentuk {key: value}
   const key = Object.keys(data)[0];
   const value = data[key];
-  console.log("Request Body:", req.body);
-  console.log("ID:", id);
+
 
   try {
     // Cek key untuk menentukan tabel dan kolom yang tepat
@@ -319,7 +271,6 @@ app.get('/api/cows/susu', async (req, res) => {
 
 //-----------------------------------------------CHART-------------------------
 app.get('/api/data/chart', async (req, res) => {
-  console.log("Fetching chart data...");
   try {
     const query = `
       SELECT
@@ -357,7 +308,7 @@ app.get('/api/data/chart', async (req, res) => {
     `;
 
     const result = await pool.query(query);
-    console.log(result.rows);
+  
 
     // Format hasil query agar cocok dengan format frontend
     const formattedResult = result.rows.map(row => ({
@@ -376,13 +327,11 @@ app.get('/api/data/chart', async (req, res) => {
 
 
 
-
 // ---------------------------------------------------RECORDS--------------------------------------------------------------------
 app.post('/api/records', async (req, res) => {
   try {
     const { hasilPerah, jumlahSapiSehat, beratHijauan, beratSentrat } = req.body;
     const timeNow = new Date(Date.now() + 7 * 60 * 60 * 1000);;
-    // console.log(timeNow);
 
     // Cek record terakhir
     let record = await Record.findOne();
@@ -439,6 +388,150 @@ app.post('/api/records', async (req, res) => {
   }
 });
 
+
+// ---------------------------------------------------ANALYTICS--------------------------------------------------------------------
+app.get('/api/cluster', (req, res) => {
+  exec('python kmeans.py', (err, stdout, stderr) => {
+    if (err) {
+      console.error('Error running Python script:', stderr);
+      return res.status(500).json({ error: 'Error executing clustering analysis.' });
+    }
+
+    try {
+      const bestCombinations = JSON.parse(stdout);
+      res.json({ success: true, data: bestCombinations });
+    } catch (parseError) {
+      console.error('Error parsing Python output:', parseError);
+      res.status(500).json({ error: 'Invalid JSON from Python script.' });
+    }
+  });
+});
+
+// Route untuk DBSCAN
+app.get('/api/dbscan', (req, res) => {
+  exec('python dbscan.py', (err, stdout, stderr) => {
+    if (err) {
+      console.error('Error running Python script:', stderr);
+      return res.status(500).json({ error: 'Error executing DBSCAN analysis.' });
+    }
+
+    try {
+      const bestCombinations = JSON.parse(stdout);
+      if (bestCombinations.length === 0) {
+        return res.status(404).json({ error: 'No best combinations found.' });
+      }
+      res.json({ success: true, data: bestCombinations });
+    } catch (parseError) {
+      console.error('Error parsing Python output:', parseError);
+      res.status(500).json({ error: 'Invalid JSON from Python script.' });
+    }
+  });
+});
+
+
+app.post('/api/predict/monthly', async (req, res) => {
+  try {
+    const inputData = req.body;
+    const flaskResponse = await axios.post("http://localhost:5000/predict_monthly_milk", inputData);
+    res.json(flaskResponse.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error while predicting monthly milk production' });
+  }
+});
+
+
+app.post('/api/predict/daily', async (req, res) => {
+  try {
+    const inputData = req.body;
+    const flaskResponse = await axios.post("http://localhost:5000/predict_daily_milk", inputData);
+    res.json(flaskResponse.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error while predicting daily milk production' });
+  }
+});
+
+app.post('/api/predict/productivity', async (req, res) => {
+  try {
+    const inputData = req.body;
+    const flaskResponse = await axios.post("http://localhost:5000/predict_productivity", inputData);
+    res.json(flaskResponse.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error while predicting productivity' });
+  }
+});
+
+
+// ---------------------------------------------------------USERS---------------------------------------------------------------
+app.post('/api/register', async (req, res) => {
+  let { username, password, email, role, phone, cage_location } = req.body;
+
+
+  // Validasi input
+  if (!username || !password || !email || !role || !phone) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    // Hash password sebelum menyimpan ke database
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 adalah jumlah salt rounds
+
+    // Query untuk menyimpan data
+    if (cage_location === '') cage_location = 'null';
+    const query = `
+    INSERT INTO users (username, password, email, role, created_at, updated_at, phone, cage_location)
+    VALUES ($1, $2, $3, $4, NOW(), NOW(), $5, $6) RETURNING id;`;
+
+    const values = [username, hashedPassword, email, role, phone, cage_location];
+    // Eksekusi query dan ambil hasilnya
+    const result = await pool.query(query, values);
+
+    // Mengirimkan response sukses dengan ID user yang baru
+    res.status(201).json({ id: result.rows[0].id, message: 'User registered successfully' });
+  } catch (err) {
+    console.error('Error inserting data', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  try {
+    // Query untuk mengambil user berdasarkan username
+    const query = 'SELECT id, username, password, role, email, phone, cage_location FROM users WHERE username = $1';
+    const result = await pool.query(query, [username]);
+
+
+    // Jika user tidak ditemukan
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const user = result.rows[0];
+
+    // Verifikasi password yang dimasukkan dengan hash yang ada di database
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    // Jika password cocok, login berhasil
+    res.status(200).json({ message: 'Login successful', userId: user.id, username: user.username, role: user.role, email: user.email, phone: user.phone, cage_location: user.cage_location });
+  } catch (err) {
+    console.error('Error logging in', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+
+// ---------------------------------------------------------SERVER---------------------------------------------------------------
 // Middleware untuk menangani error
 app.use((err, req, res, next) => {
   console.error(err.stack);

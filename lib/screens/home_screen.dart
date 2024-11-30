@@ -21,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // ignore: unused_field
   late Future<List<Map<String, String>>> _futureSummaryData;
   Map<String, List<FlSpot>> milkProductionData = {};
   Map<String, List<FlSpot>> greenFodderData = {};
@@ -475,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ])),
                 ),
-              if (userRole.role == 'doctor')
+              if (userRole.role == 'doctor' || userRole.role == 'dokter')
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16),

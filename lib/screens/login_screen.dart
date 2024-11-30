@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:ternaknesia/provider/user_role.dart';
 import 'package:ternaknesia/screens/mainpage.dart';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -24,25 +28,57 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
+  Future<void> _login() async {
     String email = _usernameController.text.trim();
     final userRole = Provider.of<UserRole>(context, listen: false);
+    final String username = _usernameController.text;
+    final String password = _passwordController.text;
+    print('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}');
 
-    if (email == 'user@gmail.com') {
-      userRole.login(email, 'user', 'Atha Rafifi Azmi', '081234567890',
-          'Jl. Raya Kediri - Nganjuk KM 10');
-    } else if (email == 'doctor@gmail.com') {
-      userRole.login(
-          email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
-    } else if (email == 'admin@gmail.com') {
-      userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email tidak terdaftar')),
+    try {
+    // Tentukan waktu timeout dalam detik
+      final response = await http.post(
+        Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/login'), // Ganti dengan URL API Anda
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'username': username, 'password': password}),
+      ).timeout(
+        Duration(seconds: 10), // Timeout 10 detik
+        onTimeout: () {
+          // Kode yang akan dijalankan jika timeout
+          throw TimeoutException('Request timed out');
+        },
       );
-      return;
-    }
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = json.decode(response.body);
+        print(responseBody);
 
+        userRole.login(
+          email, responseBody['role'], responseBody['username'], responseBody['phone'], 
+          responseBody['cage_location']
+        );
+      }
+      else if (email == 'user@gmail.com') {
+        userRole.login(email, 'user', 'Atha Rafifi Azmi', '081234567890',
+            'Jl. Raya Kediri - Nganjuk KM 10');
+      } else if (email == 'doctor@gmail.com') {
+        userRole.login(
+            email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
+      } else if (email == 'admin@gmail.com') {
+        userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email tidak terdaftar')),
+        );
+        return;
+      }
+      } on TimeoutException catch (e) {
+        // Menangani error timeout
+        print('Timeout error: $e');
+      } catch (e) {
+        // Menangani error lainnya
+        print('Error: $e');
+      }
+    
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
       return MediaQuery(
         data: MediaQuery.of(context)
