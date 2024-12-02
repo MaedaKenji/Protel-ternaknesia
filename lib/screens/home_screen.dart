@@ -47,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
       const FlSpot(14.0, 0.0),
     ],
   };
+  int? hijauanWeight;
+  int? sentratWeight;
 
   @override
   void initState() {
@@ -208,6 +210,39 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> fetchBestCombination() async {
+    final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
+    final port = dotenv.env['PORT'] ?? '8080';
+    final url2 = '$baseUrl:$port/api/cluster';
+    final url = Uri.parse(url2);
+    print(url);
+    
+    
+    // final url = Uri.parse(
+    //     'http://localhost:8080/api/cluster'); // Ganti dengan endpoint API Anda
+    // print(url);
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['success'] == true) {
+          setState(() {
+            hijauanWeight = data['data']['hijauan_weight'] ?? 0;
+            sentratWeight = data['data']['sentrat_weight'] ?? 0;
+          });
+        } else {
+          throw Exception('Failed to fetch data');
+        }
+      } else {
+        throw Exception('Failed to fetch data');
+      }
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
   Future<void> _refreshData() async {
     try {
       final summaryData = await _fetchSummaryData();
@@ -217,6 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       await assignFetchedData();
+      await fetchBestCombination();
     } catch (e) {
       print("Error during refresh: $e");
     }
@@ -342,6 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : userRole.role == 'admin'
             ? 'Admin'
             : 'Dokter Hewan';
+
     DateTime now = DateTime.now();
     String formattedDate =
         MaterialLocalizations.of(context).formatFullDate(now);
@@ -462,13 +499,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: 'Berat Pangan Hijauan',
                           datas: greenFodderData,
                           otherInfo: 'Pakan Hijauan Terbaik saat ini :',
-                          valueInfo: 25,
+                          valueInfo: hijauanWeight,
                         ),
                         CustomLineChart(
                           title: 'Berat Pangan Sentrat',
                           datas: concentratedFodderData,
                           otherInfo: 'Pakan Sentrat Terbaik saat ini :',
-                          valueInfo: 25,
+                          valueInfo: sentratWeight,
                         ),
                         CustomLineChart(
                           title: 'Contoh Data dari Server',

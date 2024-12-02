@@ -8,7 +8,7 @@ class CustomLineChart extends StatefulWidget {
   int? valueInfo;
   final Map<String, List<FlSpot>> datas;
 
-  CustomLineChart({
+   CustomLineChart({
     super.key,
     required this.title,
     this.otherInfo,

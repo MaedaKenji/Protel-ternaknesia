@@ -27,14 +27,18 @@ def find_best_combination():
     data["cluster"] = clusters
 
     # Find best cluster based on maximum milk production
-    cluster_avg = data.groupby("cluster")[["milk_production", "weight_gain"]].mean()
-    best_cluster_label = cluster_avg["milk_production"].idxmax()
+    cluster_avg = data.groupby("cluster")["milk_production"].mean()
+    best_cluster_label = cluster_avg.idxmax()
 
     # Filter data for the best cluster
-    best_combinations = data[data["cluster"] == best_cluster_label].to_dict(orient="records")
-    return best_combinations
+    best_cluster_data = data[data["cluster"] == best_cluster_label]
+
+    # Find the best single combination with maximum milk production
+    best_combination = best_cluster_data.loc[best_cluster_data["milk_production"].idxmax()]
+
+    return best_combination.to_dict()
 
 if __name__ == "__main__":
-    # Find and print best combinations
+    # Find and print the best combination
     result = find_best_combination()
-    print(json.dumps(result))
+    print(json.dumps(result, indent=4))
