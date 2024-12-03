@@ -27,6 +27,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool isLoading = false;
 
   Future<void> _login() async {
     String email = _usernameController.text.trim();
@@ -35,50 +36,63 @@ class _LoginPageState extends State<LoginPage> {
     final String password = _passwordController.text;
     print('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}');
 
-    try {
-    // Tentukan waktu timeout dalam detik
-      final response = await http.post(
-        Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/login'), // Ganti dengan URL API Anda
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'username': username, 'password': password}),
-      ).timeout(
-        Duration(seconds: 10), // Timeout 10 detik
-        onTimeout: () {
-          // Kode yang akan dijalankan jika timeout
-          throw TimeoutException('Request timed out');
-        },
-      );
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseBody = json.decode(response.body);
-        print(responseBody);
+    setState(() {
+      isLoading = true; // Mulai loading
+    });
 
-        userRole.login(
-          email, responseBody['role'], responseBody['username'], responseBody['phone'], 
-          responseBody['cage_location']
+    if (email == 'user@gmail.com') {
+      userRole.login(email, 'user', 'Atha Rafifi Azmi', '081234567890',
+          'Jl. Raya Kediri - Nganjuk KM 10');
+    } else if (email == 'doctor@gmail.com') {
+      userRole.login(
+          email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
+    } else if (email == 'admin@gmail.com') {
+      userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
+    } else {
+      try {
+        // Tentukan waktu timeout dalam detik
+        final response = await http
+            .post(
+          Uri.parse(
+              '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/login'), // Ganti dengan URL API Anda
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'username': username, 'password': password}),
+        )
+            .timeout(
+          Duration(seconds: 10), // Timeout 10 detik
+          onTimeout: () {
+            throw TimeoutException('Request timed out');
+          },
         );
-      }
-      else if (email == 'user@gmail.com') {
-        userRole.login(email, 'user', 'Atha Rafifi Azmi', '081234567890',
-            'Jl. Raya Kediri - Nganjuk KM 10');
-      } else if (email == 'doctor@gmail.com') {
-        userRole.login(
-            email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
-      } else if (email == 'admin@gmail.com') {
-        userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email tidak terdaftar')),
-        );
-        return;
-      }
+
+        print(response.statusCode);
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> responseBody = json.decode(response.body);
+          print(responseBody);
+
+          userRole.login(email, responseBody['role'], responseBody['username'],
+              responseBody['phone'], responseBody['cage_location']);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Email tidak terdaftar')),
+          );
+          return;
+        }
       } on TimeoutException catch (e) {
         // Menangani error timeout
         print('Timeout error: $e');
+        return;
       } catch (e) {
         // Menangani error lainnya
         print('Error: $e');
+        return;
+      } finally {
+        setState(() {
+          isLoading = false; // Selesai loading
+        });
       }
-    
+    }
+
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
       return MediaQuery(
         data: MediaQuery.of(context)
@@ -152,28 +166,50 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 30),
                 SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC35804),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
+                    width: double.infinity,
+                    child: isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC35804),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 15,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ),
+                            ),
+                            child: const Text('LOGIN',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                )),
+                          )
+                    // ElevatedButton(
+                    //   onPressed: _login,
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: const Color(0xFFC35804),
+                    //     padding: const EdgeInsets.symmetric(
+                    //       horizontal: 20,
+                    //       vertical: 15,
+                    //     ),
+                    //     shape: RoundedRectangleBorder(
+                    //       borderRadius: BorderRadius.circular(20.0),
+                    //     ),
+                    //   ),
+                    //   child: const Text('LOGIN',
+                    //       style: TextStyle(
+                    //         fontFamily: 'Inter',
+                    //         color: Colors.white,
+                    //         fontSize: 16,
+                    //         fontWeight: FontWeight.bold,
+                    //       )),
+                    // ),
                     ),
-                    child: const Text('LOGIN',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        )),
-                  ),
-                ),
                 const SizedBox(height: 20),
                 const Row(
                   children: [

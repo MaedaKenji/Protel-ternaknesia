@@ -3,26 +3,38 @@ import 'package:provider/provider.dart';
 import 'package:ternaknesia/provider/user_role.dart';
 
 class SummaryCards extends StatelessWidget {
-  const SummaryCards({super.key});
+  final List<Map<String, dynamic>> data;
+
+  const SummaryCards({
+    super.key,
+    required this.data,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Access the user role from the provider
+    print(data);
     final userRole = Provider.of<UserRole>(context);
 
     // Define a map of summary cards for each role
     final Map<String, List<SummaryCard>> summaryCardRole = {
       'user': [
-        const SummaryCard(title: '80,3L', subtitle: 'Perolehan susu hari ini'),
-        const SummaryCard(title: '18', subtitle: 'Sapi yang telah diperah'),
-        const SummaryCard(
-            title: '20', subtitle: 'Sapi yang telah diberi pakan'),
+        SummaryCard(
+            title: data[0]['title'] + ' L',
+            subtitle: 'Perolehan susu hari ini'),
+        SummaryCard(
+            title: data[1]['title'], subtitle: 'Sapi yang telah diperah'),
+        SummaryCard(
+            title: data[2]['title'], subtitle: 'Sapi yang telah diberi pakan'),
       ],
       'doctor': [
         const SummaryCard(title: '35', subtitle: 'Sapi sehat'),
         const SummaryCard(title: '8', subtitle: 'Sapi terindikasi sakit'),
-        const SummaryCard(
-            title: '5', subtitle: 'Sapi dalam pengobatan'),
+        const SummaryCard(title: '5', subtitle: 'Sapi dalam pengobatan'),
+      ],
+      'dokter': [
+        const SummaryCard(title: '35', subtitle: 'Sapi sehat'),
+        const SummaryCard(title: '8', subtitle: 'Sapi terindikasi sakit'),
+        const SummaryCard(title: '5', subtitle: 'Sapi dalam pengobatan'),
       ],
       'admin': [
         const SummaryCard(title: '80,3L', subtitle: 'Perolehan susu hari ini'),

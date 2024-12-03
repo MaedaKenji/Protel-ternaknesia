@@ -212,7 +212,7 @@ app.post('/api/cows/tambahdata/:id', async (req, res) => {
   }
 });
 
-app.get('/api/cows/sapi_diperah', async (req, res) => {
+app.get('/api/cows/data/sapi_diperah', async (req, res) => {
   console.log("MASUK");
   try {
     const query = `
@@ -229,7 +229,7 @@ app.get('/api/cows/sapi_diperah', async (req, res) => {
   }
 });
 
-app.get('/api/cows/sapi_diberi_pakan', async (req, res) => {
+app.get('/api/cows/data/sapi_diberi_pakan', async (req, res) => {
   console.log("MASUK 2");
   try {
     const query = `
@@ -248,7 +248,7 @@ app.get('/api/cows/sapi_diberi_pakan', async (req, res) => {
   }
 });
 
-app.get('/api/cows/susu', async (req, res) => {
+app.get('/api/cows/data/susu', async (req, res) => {
   console.log("MASUK 3");
   try {
     const query = `

@@ -48,7 +48,7 @@ class _MainPageState extends State<MainPage> {
             label: 'Home',
           ),
           if (userRole.role == 'user')
-            const BottomNavigationBarItem(
+          const BottomNavigationBarItem(
               icon: Icon(Icons.nfc),
               label: 'Input',
             ),

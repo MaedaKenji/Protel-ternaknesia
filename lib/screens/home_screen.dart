@@ -60,9 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final baseUrl = dotenv.env['BASE_URL']!;
     final port = dotenv.env['PORT']!;
     final endpoints = {
-      'susu': '/api/cows/susu',
-      'sapi_diperah': '/api/cows/sapi_diperah',
-      'sapi_diberi_pakan': '/api/cows/sapi_diberi_pakan',
+      'susu': '/api/cows/data/susu',
+      'sapi_diperah': '/api/cows/data/sapi_diperah',
+      'sapi_diberi_pakan': '/api/cows/data/sapi_diberi_pakan',
     };
 
     try {
@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
           'title': responses[1],
           'subtitle': responses[1] == '' || responses[1] == 'Error'
               ? 'Tidak ada data dari server'
-              : 'Sapi yang telah dipe',
+              : 'Sapi yang telah diperah',
         },
         {
           'title': responses[2],
@@ -215,9 +215,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final port = dotenv.env['PORT'] ?? '8080';
     final url2 = '$baseUrl:$port/api/cluster';
     final url = Uri.parse(url2);
-    print(url);
-    
-    
+    // print(url);
+
     // final url = Uri.parse(
     //     'http://localhost:8080/api/cluster'); // Ganti dengan endpoint API Anda
     // print(url);
@@ -251,8 +250,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _futureSummaryData = Future.value(summaryData);
       });
 
+      _futureSummaryData = Future.value(summaryData);
+
       await assignFetchedData();
       await fetchBestCombination();
+      await _fetchSummaryData();
     } catch (e) {
       print("Error during refresh: $e");
     }
@@ -490,7 +492,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: ListView(children: [
-                        const SummaryCards(),
+                        FutureBuilder<List<Map<String, String>>>(
+                          future: _futureSummaryData, // Future yang digunakan
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            } else if (snapshot.hasData) {
+                              final data = snapshot.data!;
+                              return SummaryCards(
+                                  data: data); // Passing data ke SummaryCards
+                            } else {
+                              return const Text('No data available');
+                            }
+                          },
+                        ),
                         const SizedBox(height: 8),
                         CustomLineChart(
                             title: 'Hasil Perolehan Susu ',
@@ -519,7 +538,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.all(16),
                     child: ListView(
                       children: [
-                        const SummaryCards(),
+                        FutureBuilder<List<Map<String, String>>>(
+                          future: _futureSummaryData, // Future yang digunakan
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            } else if (snapshot.hasData) {
+                              final data = snapshot.data!;
+                              return SummaryCards(
+                                  data: data); // Passing data ke SummaryCards
+                            } else {
+                              return const Text('No data available');
+                            }
+                          },
+                        ),
                         const SizedBox(height: 16),
                         const Text(
                           'Sapi Terindikasi Sakit :',
