@@ -11,6 +11,7 @@ class MultiChartContainer extends StatefulWidget {
   final String label;
   final Map<String, Map<String, List<FlSpot>>> chartsData;
   final Map<String, List<Map<String, dynamic>>> historyData;
+  final Function(int) onEdit;
   final Function(int) onDelete;
   final String id;
 
@@ -19,6 +20,7 @@ class MultiChartContainer extends StatefulWidget {
       required this.label,
       required this.chartsData,
       required this.historyData,
+      required this.onEdit,
       required this.onDelete,
       required this.id});
 
@@ -132,163 +134,159 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
     final formattedTitle = formatTitle(currentTitle);
     print("$formattedTitle adalah: $currentData");
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: CustomLineChart(
-                title: formattedTitle,
-                datas: currentData,
-              ),
+    return SingleChildScrollView(
+      // Add a scroll view to handle overflow
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Wrap the PageView inside a Container or SizedBox for height constraint
+          SizedBox(
+            height: 350, // Adjust this height as per your design
+            child: PageView.builder(
+              itemCount: chartTitles.length,
+              itemBuilder: (context, index) {
+                final String title = chartTitles[index];
+                final data = widget.chartsData[title]!;
+                return CustomLineChart(
+                  title: formatTitle(title),
+                  datas: data,
+                );
+              },
+              onPageChanged: (index) {
+                setState(() {
+                  currentIndex = index;
+                });
+              },
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const Text(
-                  'Saat ini :',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.brown,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 80,
-                  child: TextField(
-                    controller: inputControllers[currentTitle],
-                    cursorColor: const Color(0xFFC35804),
-                    decoration: InputDecoration(
-                      fillColor: const Color(0xFFC35804).withOpacity(0.1),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFC35804)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFC35804)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFC35804)),
-                      ),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                const Text(
-                  'Kg',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            if (userRole.role == 'user')
+          ),
+
+          const SizedBox(height: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildIconButton(
-                    icon: Icons.add,
-                    onPressed: _addNewData,
-                  ),
-                  const SizedBox(width: 10),
-                  _buildIconButton(
-                      icon: Icons.history,
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return HistoryDialog(
-                              title: 'Riwayat $formattedTitle',
-                              data: currentHistoryData,
-                              onDelete: widget.onDelete,
+                  // Left group: Add and History buttons
+                  Row(
+                    children: [
+                      _buildIconButton(
+                        icon: Icons.add,
+                        onPressed: _addNewData,
+                      ),
+                      const SizedBox(width: 10),
+                      _buildIconButton(
+                          icon: Icons.history,
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return HistoryDialog(
+                                  title: 'Riwayat $formattedTitle',
+                                  data: currentHistoryData,
+                                  onEdit: widget.onEdit,
+                                  onDelete: widget.onDelete,
+                                );
+                              },
                             );
-                          },
-                        );
-                      }),
+                          }),
+                    ],
+                  ),
+                  // Right group: Current text and input
+                  Row(
+                    children: [
+                      const Text(
+                        'Saat ini :',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.brown,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        width: 80,
+                        child: TextField(
+                          controller: inputControllers[currentTitle],
+                          cursorColor: const Color(0xFFC35804),
+                          decoration: InputDecoration(
+                            fillColor: const Color(0xFFC35804).withOpacity(0.1),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFC35804)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFC35804)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFC35804)),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Text(
+                        'Kg',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            if (userRole.role == 'admin' || userRole.role == 'doctor')
-              ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return HistoryDialog(
-                          title: '',
-                          data: currentHistoryData,
-                          onDelete: widget.onDelete);
-                    },
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: const Color(0xFFC35804),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.history,
-                      color: Colors.white,
+              const SizedBox(height: 10),
+              if (userRole.role == 'admin' || userRole.role == 'doctor')
+                ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return HistoryDialog(
+                            title: '',
+                            data: currentHistoryData,
+                            onEdit: widget.onEdit,
+                            onDelete: widget.onDelete);
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: const Color(0xFFC35804),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 10,
                     ),
-                    SizedBox(width: 5),
-                    Text('Riwayat', style: TextStyle(color: Colors.white)),
-                  ],
-                ),
-              )
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              onPressed: _previousChart,
-              icon: const Icon(Icons.arrow_back_rounded,
-                  color: Color(0xFFC35804)),
-            ),
-            Center(
-              child: Text(
-                'Grafik ${currentIndex + 1} dari ${chartTitles.length}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFFC35804),
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: _nextChart,
-              icon: const Icon(Icons.arrow_forward_rounded,
-                  color: Color(0xFFC35804)),
-            ),
-          ],
-        ),
-      ],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.history,
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: 5),
+                      Text('Riwayat', style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                )
+            ],
+          ),
+        ],
+      ),
     );
   }
 

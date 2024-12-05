@@ -22,7 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // ignore: unused_field
-  late Future<List<Map<String, String>>> _futureSummaryData;
+  Future<List<Map<String, String>>> _futureSummaryData = Future.value([]);
   Map<String, List<FlSpot>> milkProductionData = {};
   Map<String, List<FlSpot>> greenFodderData = {};
   Map<String, List<FlSpot>> concentratedFodderData = {};
@@ -53,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _futureSummaryData = _fetchSummaryData(); // Inisialisasi _futureSummaryData
     _refreshData();
   }
 
@@ -266,6 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Betina',
       'info': 'Tidak nafsu makan dan mata merah',
       'checked': true,
+      'isConnectedToNFCTag': false,
       'age': '2 Tahun',
     },
     {
@@ -273,6 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Jantan',
       'info': 'Diare',
       'checked': false,
+      'isConnectedToNFCTag': true,
       'age': '3 Tahun',
     },
     {
@@ -280,6 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Betina',
       'info': 'Luka di mulut dan demam',
       'checked': false,
+      'isConnectedToNFCTag': true,
       'age': '1 Tahun',
     },
     {
@@ -287,6 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Betina',
       'info': 'Kaki pincang',
       'checked': false,
+      'isConnectedToNFCTag': false,
       'age': '2 Tahun',
     },
   ];
@@ -297,6 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Betina',
       'info': 'Bovine Viral Diarrhea (BVD)',
       'checked': false,
+      'isConnectedToNFCTag': true,
       'age': '2 Tahun',
     },
     {
@@ -304,6 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Jantan',
       'info': 'Tidak nafsu makan dan mata merah',
       'checked': false,
+      'isConnectedToNFCTag': false,
       'age': '3 Tahun',
     },
     {
@@ -311,6 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Betina',
       'info': 'Tidak nafsu makan dan mata merah',
       'checked': false,
+      'isConnectedToNFCTag': true,
       'age': '1 Tahun',
     },
     {
@@ -318,6 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'gender': 'Betina',
       'info': 'Tidak nafsu makan dan mata merah',
       'checked': false,
+      'isConnectedToNFCTag': false,
       'age': '2 Tahun',
     },
   ];
@@ -493,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.all(16),
                       child: ListView(children: [
                         FutureBuilder<List<Map<String, String>>>(
-                          future: _futureSummaryData, // Future yang digunakan
+                          future: _futureSummaryData,
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -503,8 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               return Text('Error: ${snapshot.error}');
                             } else if (snapshot.hasData) {
                               final data = snapshot.data!;
-                              return SummaryCards(
-                                  data: data); // Passing data ke SummaryCards
+                              return SummaryCards(data: data);
                             } else {
                               return const Text('No data available');
                             }
@@ -539,7 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: ListView(
                       children: [
                         FutureBuilder<List<Map<String, String>>>(
-                          future: _futureSummaryData, // Future yang digunakan
+                          future: _futureSummaryData,
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -549,8 +557,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               return Text('Error: ${snapshot.error}');
                             } else if (snapshot.hasData) {
                               final data = snapshot.data!;
-                              return SummaryCards(
-                                  data: data); // Passing data ke SummaryCards
+                              return SummaryCards(data: data);
                             } else {
                               return const Text('No data available');
                             }
@@ -578,6 +585,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 gender: cattle['gender'],
                                 age: cattle['age'],
                                 healthStatus: 'SAKIT',
+                                isProductive: true,
+                                isConnectedToNFCTag:
+                                    cattle['isConnectedToNFCTag'],
                               );
                             },
                           ),
@@ -603,6 +613,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 gender: cattle['gender'],
                                 age: cattle['age'],
                                 healthStatus: 'SAKIT',
+                                isProductive: true,
+                                isConnectedToNFCTag:
+                                    cattle['isConnectedToNFCTag'],
                               );
                             },
                           ),

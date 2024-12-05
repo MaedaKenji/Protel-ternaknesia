@@ -14,6 +14,8 @@ class Cattle {
   final int age;
   final String gender;
   final String healthStatus;
+  final bool isProductive;
+  final bool isConnectedToNFCTag;
 
   Cattle({
     required this.id,
@@ -21,6 +23,8 @@ class Cattle {
     required this.age,
     required this.gender,
     required this.healthStatus,
+    required this.isProductive,
+    required this.isConnectedToNFCTag,
   });
 
   factory Cattle.fromJson(Map<String, dynamic> json) {
@@ -34,13 +38,15 @@ class Cattle {
       weight: int.tryParse(json['weight']?.toString() ?? '0') ?? 0,
       age: int.tryParse(json['age']?.toString() ?? '0') ?? 0,
       gender: json['gender']?.toString() ?? 'Unknown',
-      healthStatus: healthStatus,
+      healthStatus: json['health_status']?.toString() ?? healthStatus,
+      isProductive: json['is_productive'] ?? false,
+      isConnectedToNFCTag: json['is_connected_to_nfc_tag'] ?? false,
     );
   }
 
   @override
   String toString() {
-    return 'Cattle{id: $id, weight: $weight, age: $age, gender: $gender, healthStatus: $healthStatus}';
+    return 'Cattle{id: $id, weight: $weight, age: $age, gender: $gender, healthStatus: $healthStatus, isProductive: $isProductive}';
   }
 }
 
@@ -64,6 +70,8 @@ class _DataPageState extends State<DataPage> {
       'weight': 100,
       'age': '2 Bulan',
       'status': 'SAKIT',
+      'isProductive': false,
+      'isConnectedToNFCTag': false,
       'gender': 'Betina',
       'statusColor': Colors.red,
     },
@@ -72,6 +80,8 @@ class _DataPageState extends State<DataPage> {
       'weight': 100,
       'age': '2 Bulan',
       'status': 'SEHAT',
+      'isProductive': true,
+      'isConnectedToNFCTag': true,
       'gender': 'Jantan',
       'statusColor': Colors.green,
     },
@@ -267,11 +277,15 @@ class _DataPageState extends State<DataPage> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {
+                print(cattle[
+                    'isProductive']); // Untuk debugging, pastikan ini adalah boolean
                 return DataSapiPage(
                   id: cattle['id'],
                   gender: cattle['gender'],
                   age: cattle['age'],
                   healthStatus: cattle['status'],
+                  isProductive: cattle['isProductive'],
+                  isConnectedToNFCTag: cattle['isConnectedToNFCTag'],
                 );
               }),
             );
@@ -283,6 +297,7 @@ class _DataPageState extends State<DataPage> {
           age: cattle['age'],
           status: cattle['status'],
           statusColor: cattle['statusColor'],
+          isProductive: cattle['isProductive'],
         );
       },
     );
@@ -304,6 +319,9 @@ class _DataPageState extends State<DataPage> {
                   gender: cattle.gender,
                   age: cattle.age.toString(),
                   healthStatus: cattle.healthStatus,
+                  isProductive: cattle.isProductive,
+                  isConnectedToNFCTag: cattle.isConnectedToNFCTag,
+
                 );
               }),
             );
@@ -317,6 +335,7 @@ class _DataPageState extends State<DataPage> {
           statusColor: cattle.healthStatus.toLowerCase() == 'sehat'
               ? Colors.green
               : Colors.red,
+          isProductive: cattle.isProductive,
         );
       },
     );
@@ -329,6 +348,7 @@ class _DataPageState extends State<DataPage> {
       required String status,
       required String gender,
       required Color statusColor,
+      required bool isProductive,
       required VoidCallback onPressed}) {
     return GestureDetector(
       onTap: onPressed,
@@ -344,59 +364,109 @@ class _DataPageState extends State<DataPage> {
         margin: const EdgeInsets.symmetric(vertical: 8),
         child: Padding(
           padding: const EdgeInsets.all(14.0),
-          child: Row(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              const CircleAvatar(
-                radius: 30,
-                backgroundImage: AssetImage('assets/images/cow_alt.png'),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return CustomPopUpDialog(
-                                        title: 'ID SAPI', content: id);
-                                  });
-                            },
-                            child: Text(
-                              id,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF8F3505),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              softWrap: false,
+              Row(
+                children: [
+                  // Membungkus gambar dan indikator gender dalam Stack
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const CircleAvatar(
+                        radius: 30,
+                        backgroundImage:
+                            AssetImage('assets/images/cow_alt.png'),
+                      ),
+                      // Indikator jenis kelamin di pojok kanan bawah dari gambar
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                gender.toLowerCase() == 'jantan'
+                                    ? Colors.blue.shade300
+                                    : Colors.pink.shade300,
+                                gender.toLowerCase() == 'jantan'
+                                    ? Colors.blue.shade600
+                                    : Colors.pink.shade600,
+                              ],
                             ),
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                gender.toLowerCase() == 'jantan'
+                                    ? Icons.male
+                                    : Icons.female,
+                                color: Colors.white,
+                                size: 17,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        _buildCowIndicator(
-                            isHealthy: status.toLowerCase() == 'sehat',
-                            isMale: gender.toLowerCase() == 'jantan'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return CustomPopUpDialog(
+                                        title: 'ID SAPI',
+                                        content: id,
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Text(
+                                  id,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF8F3505),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            _buildCowIndicator(
+                              isHealthy: status.toLowerCase() == 'sehat',
+                              isProductive: isProductive,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _buildCowInfo(
+                                'Berat', '$weight Kg', MaterialSymbols.weight),
+                            _buildCowInfo(
+                                'Umur', age, MaterialSymbols.calendar_month),
+                          ],
+                        )
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        _buildCowInfo(
-                            'Berat', '$weight Kg', MaterialSymbols.weight),
-                        _buildCowInfo(
-                            'Umur', age, MaterialSymbols.calendar_month),
-                      ],
-                    )
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -405,58 +475,78 @@ class _DataPageState extends State<DataPage> {
     );
   }
 
-  Widget _buildCowIndicator({required bool isHealthy, required bool isMale}) {
+  Widget _buildCowIndicator({
+    bool? isHealthy,
+    bool? isProductive,
+  }) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              isHealthy ? Colors.green.shade300 : Colors.red.shade300,
-              isHealthy ? Colors.green.shade600 : Colors.red.shade600,
-            ]),
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isHealthy ? Icons.check : Icons.error,
-                color: Colors.white,
-                size: 12,
+        // Indikator Kesehatan (Opsional)
+        if (isHealthy != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  isHealthy ? Colors.green.shade300 : Colors.red.shade300,
+                  isHealthy ? Colors.green.shade600 : Colors.red.shade600,
+                ],
               ),
-              const SizedBox(width: 4),
-              Text(
-                isHealthy ? 'SEHAT' : 'SAKIT',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isHealthy ? Icons.check : Icons.error,
+                  color: Colors.white,
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isHealthy ? 'SEHAT' : 'SAKIT',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        if (isProductive == true) const SizedBox(width: 8),
+
+        // Indikator Produktifitas (Opsional)
+        if (isProductive != null && isProductive)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.green.shade300,
+                  Colors.green.shade600,
+                ],
               ),
-            ],
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'PRODUKTIF',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              isMale ? Colors.blue.shade300 : Colors.pink.shade300,
-              isMale ? Colors.blue.shade600 : Colors.pink.shade600,
-            ]),
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isMale ? Icons.male : Icons.female,
-                color: Colors.white,
-                size: 17,
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }

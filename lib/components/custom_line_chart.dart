@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-// ignore: must_be_immutable
 class CustomLineChart extends StatefulWidget {
   final String title;
   String? otherInfo;
   int? valueInfo;
   final Map<String, List<FlSpot>> datas;
 
-   CustomLineChart({
+  CustomLineChart({
     super.key,
     required this.title,
     this.otherInfo,
@@ -42,6 +41,14 @@ class _CustomLineChartState extends State<CustomLineChart> {
 
     double maxY = maxYValue + (maxYValue * 0.2);
     double interval = maxY / 5;
+
+    List<FlSpot> lastDataPoints = widget.datas[selectedMonth] ?? [];
+    FlSpot? lastPoint = lastDataPoints.isNotEmpty ? lastDataPoints.last : null;
+
+    FlSpot? predictionPoint;
+    if (lastPoint != null && widget.title == 'Produksi Susu') {
+      predictionPoint = FlSpot(lastPoint.x + 1, lastPoint.y * 1.1);
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -158,12 +165,24 @@ class _CustomLineChartState extends State<CustomLineChart> {
                       maxY: maxY,
                       lineBarsData: [
                         LineChartBarData(
-                          spots: widget.datas[selectedMonth] ?? [],
+                          spots: lastDataPoints,
                           isCurved: true,
                           color: const Color(0xFFC35804),
                           barWidth: 3,
                           dotData: const FlDotData(show: true),
                         ),
+                        if (predictionPoint != null &&
+                            widget.title == 'Produksi Susu')
+                          LineChartBarData(
+                            spots: [lastPoint!, predictionPoint],
+                            isCurved: true,
+                            color: Colors.green,
+                            barWidth: 3,
+                            isStrokeCapRound: true,
+                            dotData: FlDotData(show: true),
+                            belowBarData: BarAreaData(show: false),
+                            dashArray: [5, 8],
+                          ),
                       ],
                     ),
                   )

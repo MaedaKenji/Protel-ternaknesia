@@ -11,19 +11,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ternaknesia/provider/user_role.dart';
+import 'package:ternaknesia/screens/addeditnfctag.dart';
 
 class DataSapiPage extends StatefulWidget {
   final String id;
   final String gender;
   final String age;
   final String healthStatus;
+  final bool isProductive;
+  final bool isConnectedToNFCTag;
 
-  const DataSapiPage({
+  DataSapiPage({
     super.key,
     required this.id,
     required this.gender,
     required this.age,
     required this.healthStatus,
+    required this.isProductive,
+    required this.isConnectedToNFCTag,
   });
 
   @override
@@ -203,7 +208,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
       {required String id,
       required String gender,
       required String age,
-      required String healthStatus}) {
+      required String healthStatus,
+      required bool isProductive}) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -254,18 +260,57 @@ class _DataSapiPageState extends State<DataSapiPage> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9E2B5),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
                   border: Border.all(
                     color: const Color(0xFFC35804),
                   ),
                 ),
                 child: Row(
                   children: [
-                    const CircleAvatar(
-                      radius: 36,
-                      backgroundImage: AssetImage('assets/images/cow_alt.png'),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const CircleAvatar(
+                          radius: 36,
+                          backgroundImage:
+                              AssetImage('assets/images/cow_alt.png'),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 5),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  gender.toLowerCase() == 'jantan'
+                                      ? Colors.blue.shade300
+                                      : Colors.pink.shade300,
+                                  gender.toLowerCase() == 'jantan'
+                                      ? Colors.blue.shade600
+                                      : Colors.pink.shade600,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  gender.toLowerCase() == 'jantan'
+                                      ? Icons.male
+                                      : Icons.female,
+                                  color: Colors.white,
+                                  size: 17,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,10 +346,9 @@ class _DataSapiPageState extends State<DataSapiPage> {
                               ),
                               const SizedBox(width: 10),
                               _buildCowIndicator(
-                                isHealthy:
-                                    healthStatus.toUpperCase() == 'SEHAT',
-                                isMale: gender.toUpperCase() == 'JANTAN',
-                              ),
+                                  isHealthy:
+                                      healthStatus.toUpperCase() == 'SEHAT',
+                                  isProductive: isProductive),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -367,58 +411,78 @@ class _DataSapiPageState extends State<DataSapiPage> {
     );
   }
 
-  Widget _buildCowIndicator({required bool isHealthy, required bool isMale}) {
+  Widget _buildCowIndicator({
+    bool? isHealthy,
+    bool? isProductive,
+  }) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              isHealthy ? Colors.green.shade300 : Colors.red.shade300,
-              isHealthy ? Colors.green.shade600 : Colors.red.shade600,
-            ]),
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isHealthy ? Icons.check : Icons.error,
-                color: Colors.white,
-                size: 12,
+        // Indikator Kesehatan (Opsional)
+        if (isHealthy != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  isHealthy ? Colors.green.shade300 : Colors.red.shade300,
+                  isHealthy ? Colors.green.shade600 : Colors.red.shade600,
+                ],
               ),
-              const SizedBox(width: 4),
-              Text(
-                isHealthy ? 'SEHAT' : 'SAKIT',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isHealthy ? Icons.check : Icons.error,
+                  color: Colors.white,
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isHealthy ? 'SEHAT' : 'SAKIT',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        if (isProductive == true) const SizedBox(width: 8),
+
+        // Indikator Produktifitas (Opsional)
+        if (isProductive != null && isProductive)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.green.shade300,
+                  Colors.green.shade600,
+                ],
               ),
-            ],
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'PRODUKTIF',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              isMale ? Colors.blue.shade300 : Colors.pink.shade300,
-              isMale ? Colors.blue.shade600 : Colors.pink.shade600,
-            ]),
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isMale ? Icons.male : Icons.female,
-                color: Colors.white,
-                size: 17,
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -633,12 +697,36 @@ class _DataSapiPageState extends State<DataSapiPage> {
       {'date': DateTime(2024, 11, 30), 'data': 'Kesepian :('},
       {'date': DateTime(2024, 12, 1), 'data': 'Sakit perut'},
     ];
+
     await showDialog(
       context: context,
       builder: (context) {
         return HistoryDialog(
           title: 'Riwayat Catatan',
           data: historyData,
+          onEdit: (index) async {
+            // Mengambil data yang akan diedit
+            String initialData = historyData[index]['data'];
+
+            // Menampilkan EditDataDialog dan menunggu hasilnya
+            String? updatedData = await showDialog<String>(
+              context: context,
+              builder: (context) {
+                return EditDataDialog(
+                  id: historyData[index]['date'].toString(),
+                  initialData: initialData,
+                  title: formattedDate(historyData[index]['date']),
+                );
+              },
+            );
+
+            if (updatedData != null && updatedData.isNotEmpty) {
+              setState(() {
+                // Memperbarui data dengan nilai yang baru
+                historyData[index]['data'] = updatedData;
+              });
+            }
+          },
           onDelete: (index) {
             setState(() {
               historyData.removeAt(index);
@@ -662,6 +750,29 @@ class _DataSapiPageState extends State<DataSapiPage> {
         return HistoryDialog(
           title: 'Riwayat Pengobatan',
           data: historyData,
+          onEdit: (index) async {
+            // Mengambil data yang akan diedit
+            String initialData = historyData[index]['data'];
+
+            // Menampilkan EditDataDialog dan menunggu hasilnya
+            String? updatedData = await showDialog<String>(
+              context: context,
+              builder: (context) {
+                return EditDataDialog(
+                  id: historyData[index]['date'].toString(),
+                  initialData: initialData,
+                  title: formattedDate(historyData[index]['date']),
+                );
+              },
+            );
+
+            if (updatedData != null && updatedData.isNotEmpty) {
+              setState(() {
+                // Memperbarui data dengan nilai yang baru
+                historyData[index]['data'] = updatedData;
+              });
+            }
+          },
           onDelete: (index) {
             setState(() {
               historyData.removeAt(index);
@@ -731,6 +842,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
     ],
   };
 
+  String formattedDate(DateTime date) {
+    return MaterialLocalizations.of(context).formatShortDate(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final userRole = Provider.of<UserRole>(context);
@@ -753,9 +868,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
                   gender: widget.gender,
                   age: widget.age,
                   healthStatus: widget.healthStatus,
+                  isProductive: widget.isProductive,
                 ),
               ),
-              const SizedBox(height: 80),
+              const SizedBox(height: 70),
 
               // Konten utama setelah header
               Padding(
@@ -778,7 +894,42 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       historyData: milkProductionAndWeightHistory,
                       chartsData: milkAndWeightData,
                       id: widget.id,
-                      onDelete: (index) {},
+                      onEdit: (index) async {
+                        Navigator.of(context).pop();
+                        // Mengambil data yang akan diedit
+                        String initialData = milkProductionAndWeightHistory[
+                            'produksiSusu']![index]['data'];
+
+                        // Menampilkan EditDataDialog dan menunggu hasilnya
+                        String? updatedData = await showDialog<String>(
+                          context: context,
+                          builder: (context) {
+                            return EditDataDialog(
+                              id: milkProductionAndWeightHistory[
+                                      'produksiSusu']![index]['date']
+                                  .toString(),
+                              initialData: initialData,
+                              title: formattedDate(
+                                  milkProductionAndWeightHistory[
+                                      'produksiSusu']![index]['date']),
+                            );
+                          },
+                        );
+
+                        if (updatedData != null && updatedData.isNotEmpty) {
+                          setState(() {
+                            // Memperbarui data dengan nilai yang baru
+                            milkProductionAndWeightHistory['produksiSusu']![
+                                index]['data'] = updatedData;
+                          });
+                        }
+                      },
+                      onDelete: (index) {
+                        setState(() {
+                          milkProductionAndWeightHistory['produksiSusu']
+                              ?.removeAt(index);
+                        });
+                      },
                     ),
                     const SizedBox(height: 25),
                     const Divider(
@@ -800,7 +951,40 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       historyData: feedDataHistory,
                       chartsData: feedData,
                       id: widget.id,
-                      onDelete: (index) {},
+                      onEdit: (index) async {
+                        Navigator.of(context).pop();
+                        // Mengambil data yang akan diedit
+                        String initialData =
+                            feedDataHistory['pakanHijau']![index]['data'];
+
+                        // Menampilkan EditDataDialog dan menunggu hasilnya
+                        String? updatedData = await showDialog<String>(
+                          context: context,
+                          builder: (context) {
+                            return EditDataDialog(
+                              id: feedDataHistory['pakanHijau']![index]['date']
+                                  .toString(),
+                              initialData: initialData,
+                              title: formattedDate(
+                                  feedDataHistory['pakanHijau']![index]
+                                      ['date']),
+                            );
+                          },
+                        );
+
+                        if (updatedData != null && updatedData.isNotEmpty) {
+                          setState(() {
+                            // Memperbarui data dengan nilai yang baru
+                            feedDataHistory['pakanHijau']![index]['data'] =
+                                updatedData;
+                          });
+                        }
+                      },
+                      onDelete: (index) {
+                        setState(() {
+                          feedDataHistory['pakanHijau']!.removeAt(index);
+                        });
+                      },
                     ),
                     const SizedBox(height: 25),
                     const Divider(
@@ -812,16 +996,165 @@ class _DataSapiPageState extends State<DataSapiPage> {
                         healthStatus: widget.healthStatus,
                         stressLevelHistory: stressLevelHistory,
                         healthStatusHistory: healthStatusHistory,
+                        editHealthStatus: (index) async {
+                          // Mengambil data yang akan diedit
+                          String initialData =
+                              healthStatusHistory[index]['data'];
+
+                          // Menampilkan EditDataDialog dan menunggu hasilnya
+                          String? updatedData = await showDialog<String>(
+                            context: context,
+                            builder: (context) {
+                              return EditDataDialog(
+                                id: healthStatusHistory[index]['date']
+                                    .toString(),
+                                initialData: initialData,
+                                title: formattedDate(
+                                    healthStatusHistory[index]['date']),
+                              );
+                            },
+                          );
+
+                          // Setelah mendapatkan hasil, cek apakah ada perubahan data
+                          if (updatedData != null && updatedData.isNotEmpty) {
+                            setState(() {
+                              // Memperbarui data dengan nilai yang baru
+                              healthStatusHistory[index]['data'] = updatedData;
+                            });
+
+                            // Menampilkan hasil sukses
+                            ShowResultDialog.show(context, true,
+                                customMessage:
+                                    'Data kesehatan berhasil diperbarui!');
+                          } else {
+                            // Menampilkan hasil gagal
+                            ShowResultDialog.show(context, false,
+                                customMessage:
+                                    'Gagal memperbarui data kesehatan!');
+                          }
+
+                          // Menutup dialog setelah menampilkan hasil (tunda agar dialog berhasil muncul)
+                          Future.delayed(const Duration(seconds: 2), () {
+                            Navigator.of(context)
+                                .pop(); // Menutup dialog setelah 2 detik
+                          });
+                        },
+                        editStressLevel: (index) async {
+                          // Mengambil data yang akan diedit
+                          String initialData =
+                              stressLevelHistory[index]['data'];
+
+                          // Menampilkan EditDataDialog dan menunggu hasilnya
+                          String? updatedData = await showDialog<String>(
+                            context: context,
+                            builder: (context) {
+                              return EditDataDialog(
+                                id: stressLevelHistory[index]['date']
+                                    .toString(),
+                                initialData: initialData,
+                                title: formattedDate(
+                                    stressLevelHistory[index]['data']),
+                              );
+                            },
+                          );
+
+                          // Setelah mendapatkan hasil, cek apakah ada perubahan data
+                          if (updatedData != null && updatedData.isNotEmpty) {
+                            setState(() {
+                              // Memperbarui data dengan nilai yang baru
+                              stressLevelHistory[index]['data'] = updatedData;
+                            });
+
+                            // Menampilkan hasil sukses
+                            ShowResultDialog.show(context, true,
+                                customMessage:
+                                    'Tingkat stres berhasil diperbarui!');
+                          } else {
+                            // Menampilkan hasil gagal
+                            ShowResultDialog.show(context, false,
+                                customMessage:
+                                    'Gagal memperbarui tingkat stres!');
+                          }
+
+                          // Menutup dialog setelah menampilkan hasil (tunda agar dialog berhasil muncul)
+                          Future.delayed(const Duration(seconds: 2), () {
+                            Navigator.of(context)
+                                .pop(); // Menutup dialog setelah 2 detik
+                          });
+                        },
                         deleteStressLevel: (index) {
-                          stressLevelHistory.removeAt(index);
+                          setState(() {
+                            stressLevelHistory.removeAt(index);
+                          });
+
+                          Navigator.of(context).pop();
+
+                          // Menampilkan hasil sukses penghapusan
+                          ShowResultDialog.show(context, true,
+                              customMessage: 'Tingkat stres berhasil dihapus!');
                         },
                         deleteHealthStatus: (index) {
-                          healthStatusHistory.removeAt(index);
+                          setState(() {
+                            healthStatusHistory.removeAt(index);
+                          });
+
+                          Navigator.of(context).pop();
+
+                          // Menampilkan hasil sukses penghapusan
+                          ShowResultDialog.show(context, true,
+                              customMessage:
+                                  'Data kesehatan berhasil dihapus!');
                         }),
                     const SizedBox(height: 20),
                     PopulationStructureSection(
                       birahiHistory: birahiHistory,
                       statusHistory: statusHistory,
+                      editBirahi: (index) async {
+                        // Mengambil data yang akan diedit
+                        String initialData = birahiHistory[index]['data'];
+
+                        // Menampilkan EditDataDialog dan menunggu hasilnya
+                        String? updatedData = await showDialog<String>(
+                          context: context,
+                          builder: (context) {
+                            return EditDataDialog(
+                              id: birahiHistory[index]['date'].toString(),
+                              initialData: initialData,
+                              title: 'Hello',
+                            );
+                          },
+                        );
+
+                        if (updatedData != null && updatedData.isNotEmpty) {
+                          setState(() {
+                            // Memperbarui data dengan nilai yang baru
+                            birahiHistory[index]['data'] = updatedData;
+                          });
+                        }
+                      },
+                      editStatus: (index) async {
+                        // Mengambil data yang akan diedit
+                        String initialData = statusHistory[index]['data'];
+
+                        // Menampilkan EditDataDialog dan menunggu hasilnya
+                        String? updatedData = await showDialog<String>(
+                          context: context,
+                          builder: (context) {
+                            return EditDataDialog(
+                              id: statusHistory[index]['date'].toString(),
+                              initialData: initialData,
+                              title: statusHistory[index]['date'].toString(),
+                            );
+                          },
+                        );
+
+                        if (updatedData != null && updatedData.isNotEmpty) {
+                          setState(() {
+                            // Memperbarui data dengan nilai yang baru
+                            statusHistory[index]['data'] = updatedData;
+                          });
+                        }
+                      },
                       deleteBirahi: (index) {
                         setState(() {
                           birahiHistory.removeAt(index);
@@ -990,38 +1323,135 @@ class _DataSapiPageState extends State<DataSapiPage> {
                             ),
                           )),
                     const SizedBox(height: 30),
-                    if (userRole.role != 'doctor')
-                      ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: Colors.red,
-                            minimumSize: const Size(double.infinity, 50),
-                            side: const BorderSide(color: Color(0xFFFF3939)),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 20),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'KELUARKAN SAPI DARI KANDANG',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                    if (userRole.role != 'doctor') ...[
+                      Row(
+                        children: [
+                          // Edit NFC Tag button
+                          if (widget.isConnectedToNFCTag)
+                            Flexible(
+                              flex: 1,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Navigator.push(context,
+                                      MaterialPageRoute(builder: (context) {
+                                    return AddEditNFCTag(
+                                        id: widget.id,
+                                        isConnectedToNFCTag:
+                                            widget.isConnectedToNFCTag);
+                                  }));
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                      color: Color(0xFF8F3505)),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 15, horizontal: 20),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Edit NFC Tag',
+                                      style: TextStyle(
+                                        color: Color(0xFF8F3505),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Icon(
+                                      Icons.edit,
+                                      color: Color(0xFF8F3505),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              SizedBox(width: 10),
-                              Icon(
-                                Icons.exit_to_app,
-                                color: Colors.white,
+                            ),
+                          if (!widget.isConnectedToNFCTag)
+                            Flexible(
+                              flex: 1,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Navigator.push(context,
+                                      MaterialPageRoute(builder: (context) {
+                                    return AddEditNFCTag(
+                                        id: widget.id,
+                                        isConnectedToNFCTag:
+                                            widget.isConnectedToNFCTag);
+                                  }));
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Colors.green),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 15, horizontal: 20),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Sambung NFC Tag',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Icon(
+                                      Icons.add,
+                                      color: Colors.green,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          )),
+                            ),
+                          const SizedBox(width: 10),
+                          // Keluarkan Sapi button
+                          Flexible(
+                            flex: 1,
+                            child: ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                backgroundColor: Colors.red,
+                                minimumSize: const Size(double.infinity, 50),
+                                side:
+                                    const BorderSide(color: Color(0xFFFF3939)),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 15, horizontal: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Keluarkan Sapi',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Icon(
+                                    Icons.exit_to_app,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                     if (userRole.role == 'doctor')
                       ElevatedButton(
                         onPressed: () {},
@@ -1046,7 +1476,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
                           ),
                         ),
                       ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
@@ -1072,7 +1502,7 @@ class _NewDataDialog extends StatelessWidget {
       title: const Text("SILAHKAN INPUT DATA BARU :"),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(suffixText: "Kg/L"),
+        // decoration: const InputDecoration(suffixText: "Kg/L"),
         keyboardType: TextInputType.number,
       ),
       actions: [

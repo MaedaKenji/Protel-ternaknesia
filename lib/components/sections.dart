@@ -11,6 +11,8 @@ class ConditionsSection extends StatelessWidget {
   final String healthStatus;
   final List<Map<String, dynamic>> stressLevelHistory;
   final List<Map<String, dynamic>> healthStatusHistory;
+  final Function(int) editStressLevel;
+  final Function(int) editHealthStatus;
   final Function(int) deleteStressLevel;
   final Function(int) deleteHealthStatus;
 
@@ -19,6 +21,8 @@ class ConditionsSection extends StatelessWidget {
       required this.healthStatus,
       required this.stressLevelHistory,
       required this.healthStatusHistory,
+      required this.editStressLevel,
+      required this.editHealthStatus,
       required this.deleteStressLevel,
       required this.deleteHealthStatus});
 
@@ -41,17 +45,23 @@ class ConditionsSection extends StatelessWidget {
           'Stress Level',
           'Normal',
           stressLevelHistory,
+          editStressLevel,
           deleteStressLevel,
         ),
         const SizedBox(height: 10),
         _buildEditableField(context, 'Kesehatan', healthStatus,
-            healthStatusHistory, deleteHealthStatus),
+            healthStatusHistory, editHealthStatus, deleteHealthStatus),
       ],
     );
   }
 
-  Widget _buildEditableField(BuildContext context, String label, String value,
-      List<Map<String, dynamic>> historyData, Function(int) onDelete) {
+  Widget _buildEditableField(
+      BuildContext context,
+      String label,
+      String value,
+      List<Map<String, dynamic>> historyData,
+      Function(int) onEdit,
+      Function(int) onDelete) {
     final userRole = Provider.of<UserRole>(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -110,6 +120,27 @@ class ConditionsSection extends StatelessWidget {
                       return HistoryDialog(
                           title: 'Riwayat $label',
                           data: historyData,
+                          onEdit: (index) async {
+                            Navigator.of(context).pop();
+                            String initialData =
+                                historyData[index]['data'].toString();
+
+                            // Menampilkan EditDataDialog dan menunggu hasilnya
+                            String? updatedData = await showDialog<String>(
+                              context: context,
+                              builder: (context) {
+                                return EditDataDialog(
+                                  id: historyData[index]['id'].toString(),
+                                  initialData: initialData,
+                                  title: MaterialLocalizations.of(context).formatShortDate(historyData[index]['date']).toString()
+                                );
+                              },
+                            );
+
+                            if (updatedData != null && updatedData.isNotEmpty) {
+                              historyData[index]['data'] = updatedData;
+                            }
+                          },
                           onDelete: onDelete);
                     },
                   );
@@ -150,6 +181,8 @@ class ConditionsSection extends StatelessWidget {
 class PopulationStructureSection extends StatelessWidget {
   final List<Map<String, dynamic>> birahiHistory;
   final List<Map<String, dynamic>> statusHistory;
+  final Function(int) editBirahi;
+  final Function(int) editStatus;
   final Function(int) deleteBirahi;
   final Function(int) deleteStatus;
 
@@ -157,6 +190,8 @@ class PopulationStructureSection extends StatelessWidget {
       {super.key,
       required this.birahiHistory,
       required this.statusHistory,
+      required this.editBirahi,
+      required this.editStatus,
       required this.deleteBirahi,
       required this.deleteStatus});
 
@@ -174,17 +209,22 @@ class PopulationStructureSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        _buildEditableField(
-            context, 'Birahi', 'Tidak', birahiHistory, deleteBirahi),
+        _buildEditableField(context, 'Birahi', 'Tidak', birahiHistory,
+            editBirahi, deleteBirahi),
         const SizedBox(height: 10),
-        _buildEditableField(
-            context, 'Status', 'Aktif', statusHistory, deleteStatus),
+        _buildEditableField(context, 'Status', 'Aktif', statusHistory,
+            editStatus, deleteStatus),
       ],
     );
   }
 
-  Widget _buildEditableField(BuildContext context, String label, String value,
-      List<Map<String, dynamic>> historyData, Function(int) onDelete) {
+  Widget _buildEditableField(
+      BuildContext context,
+      String label,
+      String value,
+      List<Map<String, dynamic>> historyData,
+      Function(int) onEdit,
+      Function(int) onDelete) {
     final userRole = Provider.of<UserRole>(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -243,6 +283,27 @@ class PopulationStructureSection extends StatelessWidget {
                       return HistoryDialog(
                           title: 'Riwayat $label',
                           data: historyData,
+                          onEdit: (index) async {
+                            Navigator.of(context).pop();
+                            String initialData =
+                                historyData[index]['data'].toString();
+
+                            // Menampilkan EditDataDialog dan menunggu hasilnya
+                            String? updatedData = await showDialog<String>(
+                              context: context,
+                              builder: (context) {
+                                return EditDataDialog(
+                                  id: historyData[index]['id'].toString(),
+                                  initialData: initialData,
+                                  title: MaterialLocalizations.of(context).formatShortDate(historyData[index]['date']).toString()
+                                );
+                              },
+                            );
+
+                            if (updatedData != null && updatedData.isNotEmpty) {
+                              historyData[index]['data'] = updatedData;
+                            }
+                          },
                           onDelete: (index) {
                             historyData.removeAt(index);
                           });

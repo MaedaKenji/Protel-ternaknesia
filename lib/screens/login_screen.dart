@@ -59,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
           body: json.encode({'username': username, 'password': password}),
         )
             .timeout(
-          Duration(seconds: 10), // Timeout 10 detik
+          const Duration(seconds: 10), // Timeout 10 detik
           onTimeout: () {
             throw TimeoutException('Request timed out');
           },
@@ -137,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                    labelText: 'Username (Email)',
+                    labelText: 'Email',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
                       borderSide: const BorderSide(color: Colors.black),
@@ -146,7 +146,16 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(20.0),
                       borderSide: const BorderSide(color: Colors.black),
                     ),
+                    focusColor: const Color(0xFFC35804),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                      borderSide: const BorderSide(color: Color(0xFFC35804)),
+                    ),
                   ),
+                  cursorColor: const Color(0xFFC35804),
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 ),
                 const SizedBox(height: 20),
                 TextField(
@@ -160,6 +169,11 @@ class _LoginPageState extends State<LoginPage> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
                       borderSide: const BorderSide(color: Colors.black),
+                    ),
+                    focusColor: const Color(0xFFC35804),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                      borderSide: const BorderSide(color: Color(0xFFC35804)),
                     ),
                   ),
                   obscureText: true,
