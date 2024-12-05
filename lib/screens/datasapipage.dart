@@ -140,8 +140,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
     showDialog(
       context: context,
-      builder: (context) =>
-          _NewDataDialog(id: widget.id), // Ganti dengan ID yang sesuai
+      builder: (context) => _NewDataDialog(id: widget.id),
     ).then((data) {
       if (data != null && data.isNotEmpty) {
         final Map<String, String> dictionary = {key: data};
@@ -265,7 +264,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9E2B5),
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
                   border: Border.all(
                     color: const Color(0xFFC35804),
                   ),
@@ -422,7 +421,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
   }) {
     return Row(
       children: [
-        // Indikator Kesehatan (Opsional)
         if (isHealthy != null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -455,8 +453,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
             ),
           ),
         if (isProductive == true) const SizedBox(width: 8),
-
-        // Indikator Produktifitas (Opsional)
         if (isProductive != null && isProductive)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -469,7 +465,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
               ),
               borderRadius: BorderRadius.circular(50),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -477,10 +473,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
                   color: Colors.white,
                   size: 12,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   'PRODUKTIF',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold),
@@ -492,7 +488,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
     );
   }
 
-  // Fetch data from API
   Future<http.Response> fetchData() async {
     setState(() {
       isLoading = true;
@@ -503,10 +498,9 @@ class _DataSapiPageState extends State<DataSapiPage> {
       final url = Uri.parse(
           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
       final response = await http.get(url);
-      // print(response.body);
 
       if (response.statusCode == 200) {
-        return response; // Tambahkan return di sini
+        return response;
       } else {
         setState(() {
           errorMessage =
@@ -519,7 +513,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
       setState(() {
         errorMessage = 'Terjadi kesalahan: $e';
       });
-      rethrow; // Jangan swallow error, lempar ulang error
+      rethrow;
     } finally {
       setState(() {
         isLoading = false;
@@ -535,11 +529,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
       'pakanSentrat': {},
     };
 
-    // Proses data pakanHijauan
     feedHijauan.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
-      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+      return dateA.compareTo(dateB);
     });
 
     for (var feed in feedHijauan) {
@@ -553,11 +546,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
           .add(FlSpot(date.day.toDouble(), amount));
     }
 
-    // Proses data pakanSentrate
     feedSentrate.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
-      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+      return dateA.compareTo(dateB);
     });
 
     for (var feed in feedSentrate) {
@@ -582,11 +574,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
       'beratBadan': {},
     };
 
-    // Proses data produksiSusu
     milkProduction.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
-      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+      return dateA.compareTo(dateB);
     });
 
     for (var milk in milkProduction) {
@@ -601,11 +592,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
           .add(FlSpot(date.day.toDouble(), productionAmount));
     }
 
-    // Proses data beratBadan
     weights.sort((a, b) {
       DateTime dateA = DateTime.parse(a['date']);
       DateTime dateB = DateTime.parse(b['date']);
-      return dateA.compareTo(dateB); // Mengurutkan dari yang paling lama
+      return dateA.compareTo(dateB);
     });
 
     for (var weight in weights) {
@@ -655,7 +645,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
     final milkAndWeightData =
         processMilkAndWeightData(recentMilkProduction, recentWeights);
 
-    // Gunakan feedData dan milkAndWeightData untuk widget MultiChartContainer
     setState(() {
       this.feedData = feedData;
       this.milkAndWeightData = milkAndWeightData;
@@ -664,12 +653,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
   Future<void> _refreshData() async {
     try {
-      // Fetch data from API
-      final response = await fetchData(); // Sesuaikan dengan fungsi fetch Anda
+      final response = await fetchData();
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
 
-        // Proses data dengan pengecekan null
         final recentWeights = List<Map<String, dynamic>>.from(
             responseBody['recent_weights'] ?? []);
         final recentMilkProduction = List<Map<String, dynamic>>.from(
@@ -679,7 +666,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
         final recentFeedSentrate = List<Map<String, dynamic>>.from(
             responseBody['recent_feed_sentrate'] ?? []);
 
-        // Update state with processed data
         setState(() {
           feedData = processFeedData(recentFeedHijauan, recentFeedSentrate);
           milkAndWeightData =
@@ -691,7 +677,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
       }
     } catch (e) {
       print('Error fetching data: $e');
-      // Handle error (e.g., show a message to the user)
     }
   }
 
@@ -710,10 +695,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
           title: 'Riwayat Catatan',
           data: historyData,
           onEdit: (index) async {
-            // Mengambil data yang akan diedit
             String initialData = historyData[index]['data'];
 
-            // Menampilkan EditDataDialog dan menunggu hasilnya
             String? updatedData = await showDialog<String>(
               context: context,
               builder: (context) {
@@ -727,7 +710,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
             if (updatedData != null && updatedData.isNotEmpty) {
               setState(() {
-                // Memperbarui data dengan nilai yang baru
                 historyData[index]['data'] = updatedData;
               });
             }
@@ -756,10 +738,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
           title: 'Riwayat Pengobatan',
           data: historyData,
           onEdit: (index) async {
-            // Mengambil data yang akan diedit
             String initialData = historyData[index]['data'];
 
-            // Menampilkan EditDataDialog dan menunggu hasilnya
             String? updatedData = await showDialog<String>(
               context: context,
               builder: (context) {
@@ -773,7 +753,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
             if (updatedData != null && updatedData.isNotEmpty) {
               setState(() {
-                // Memperbarui data dengan nilai yang baru
                 historyData[index]['data'] = updatedData;
               });
             }
@@ -859,14 +838,11 @@ class _DataSapiPageState extends State<DataSapiPage> {
       body: RefreshIndicator(
         onRefresh: _refreshData,
         child: SingleChildScrollView(
-          physics:
-              const AlwaysScrollableScrollPhysics(), // Agar tetap bisa di-scroll
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cattle Card (Header bagian atas)
               Container(
-                // padding: const EdgeInsets.all(16.0),
                 color: Colors.white,
                 child: _buildHeader(
                   id: widget.id,
@@ -877,8 +853,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                 ),
               ),
               const SizedBox(height: 70),
-
-              // Konten utama setelah header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
@@ -901,11 +875,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       id: widget.id,
                       onEdit: (index) async {
                         Navigator.of(context).pop();
-                        // Mengambil data yang akan diedit
+
                         String initialData = milkProductionAndWeightHistory[
                             'produksiSusu']![index]['data'];
 
-                        // Menampilkan EditDataDialog dan menunggu hasilnya
                         String? updatedData = await showDialog<String>(
                           context: context,
                           builder: (context) {
@@ -923,7 +896,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
                         if (updatedData != null && updatedData.isNotEmpty) {
                           setState(() {
-                            // Memperbarui data dengan nilai yang baru
                             milkProductionAndWeightHistory['produksiSusu']![
                                 index]['data'] = updatedData;
                           });
@@ -958,11 +930,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       id: widget.id,
                       onEdit: (index) async {
                         Navigator.of(context).pop();
-                        // Mengambil data yang akan diedit
+
                         String initialData =
                             feedDataHistory['pakanHijau']![index]['data'];
 
-                        // Menampilkan EditDataDialog dan menunggu hasilnya
                         String? updatedData = await showDialog<String>(
                           context: context,
                           builder: (context) {
@@ -979,7 +950,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
                         if (updatedData != null && updatedData.isNotEmpty) {
                           setState(() {
-                            // Memperbarui data dengan nilai yang baru
                             feedDataHistory['pakanHijau']![index]['data'] =
                                 updatedData;
                           });
@@ -997,7 +967,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       thickness: 1,
                     ),
                     const SizedBox(height: 15),
-                    // Container Tanggal Hari Ini dan rata tengah
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -1005,10 +974,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .center, // Menyusun konten secara horizontal di tengah
-                        crossAxisAlignment: CrossAxisAlignment
-                            .center, // Menyusun konten secara vertikal di tengah
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const Icon(
                             Icons.calendar_today,
@@ -1027,107 +994,86 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       ),
                     ),
                     const SizedBox(height: 15),
-
                     ConditionsSection(
                         healthStatus: widget.healthStatus,
                         stressLevelHistory: stressLevelHistory,
                         addEditStressLevelDateNow: () async {
-                          // Ambil nilai dari TextFormField
                           String updatedData =
                               stressLevelController.text.trim();
 
                           if (updatedData.isNotEmpty) {
                             setState(() {
-                              // Menambahkan data baru ke dalam history
                               stressLevelHistory.add({
                                 'date': DateTime.now(),
                                 'data': updatedData,
                               });
                             });
-
-                            // Menampilkan hasil sukses
                           }
                         },
                         healthStatusHistory: healthStatusHistory,
                         addEditHealthStatusDateNow: () async {
-                          // Ambil nilai dari TextFormField
                           String updatedData =
                               healthStatusController.text.trim();
 
                           if (updatedData.isNotEmpty) {
                             setState(() {
-                              // Menambahkan data baru ke dalam history
                               healthStatusHistory.add({
                                 'date': DateTime.now(),
                                 'data': updatedData,
                               });
                             });
 
-                            // Menampilkan hasil sukses
                             ShowAddEditDataResultDialog.show(context, true,
                                 customMessage:
                                     'Data kesehatan berhasil ditambahkan!');
                           } else {
-                            // Menampilkan hasil gagal
                             ShowAddEditDataResultDialog.show(context, false,
                                 customMessage:
                                     'Gagal menambahkan data kesehatan!');
                           }
                         },
                         editHealthStatus: (index) async {
-                          // Mengambil data yang akan diedit
                           String updatedData =
                               healthStatusController.text.trim();
 
                           if (updatedData.isNotEmpty) {
                             setState(() {
-                              // Memperbarui data dengan nilai yang baru
                               healthStatusHistory[index]['data'] = updatedData;
                             });
 
-                            // Menampilkan hasil sukses
                             ShowResultDialog.show(context, true,
                                 customMessage:
                                     'Data kesehatan berhasil diperbarui!');
                           } else {
-                            // Menampilkan hasil gagal
                             ShowResultDialog.show(context, false,
                                 customMessage:
                                     'Gagal memperbarui data kesehatan!');
                           }
 
-                          // Menutup dialog setelah menampilkan hasil (tunda agar dialog berhasil muncul)
                           Future.delayed(const Duration(seconds: 2), () {
-                            Navigator.of(context)
-                                .pop(); // Menutup dialog setelah 2 detik
+                            Navigator.of(context).pop();
                           });
                         },
                         editStressLevel: (index) async {
-                          // Mengambil data yang akan diedit
                           String updatedData =
                               stressLevelController.text.trim();
 
                           if (updatedData.isNotEmpty) {
                             setState(() {
-                              // Memperbarui data dengan nilai yang baru
                               stressLevelHistory[index]['data'] = updatedData;
                             });
 
-                            // Menampilkan hasil sukses
                             ShowResultDialog.show(context, true,
                                 customMessage:
                                     'Tingkat stres berhasil diperbarui!');
                           } else {
-                            // Menampilkan hasil gagal
                             ShowResultDialog.show(context, false,
                                 customMessage:
                                     'Gagal memperbarui tingkat stres!');
                           }
 
-                          // Menutup dialog setelah menampilkan hasil (tunda agar dialog berhasil muncul)
                           Future.delayed(const Duration(seconds: 2), () {
-                            Navigator.of(context)
-                                .pop(); // Menutup dialog setelah 2 detik
+                            Navigator.of(context).pop();
                           });
                         },
                         deleteStressLevel: (index) {
@@ -1137,7 +1083,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
                           Navigator.of(context).pop();
 
-                          // Menampilkan hasil sukses penghapusan
                           ShowResultDialog.show(context, true,
                               customMessage: 'Tingkat stres berhasil dihapus!');
                         },
@@ -1148,7 +1093,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
                           Navigator.of(context).pop();
 
-                          // Menampilkan hasil sukses penghapusan
                           ShowResultDialog.show(context, true,
                               customMessage:
                                   'Data kesehatan berhasil dihapus!');
@@ -1157,55 +1101,47 @@ class _DataSapiPageState extends State<DataSapiPage> {
                     PopulationStructureSection(
                       birahiHistory: birahiHistory,
                       addEditBirahiDateNow: () async {
-                        // Ambil nilai dari TextFormField
                         String updatedData = birahiController.text.trim();
 
                         if (updatedData.isNotEmpty) {
                           setState(() {
-                            // Menambahkan data baru ke dalam history
                             birahiHistory.add({
                               'date': DateTime.now(),
                               'data': updatedData,
                             });
                           });
 
-                          // Menampilkan hasil sukses
                           ShowAddEditDataResultDialog.show(context, true,
-                              customMessage: 'Data birahi berhasil ditambahkan!');
+                              customMessage:
+                                  'Data birahi berhasil ditambahkan!');
                         } else {
-                          // Menampilkan hasil gagal
                           ShowAddEditDataResultDialog.show(context, false,
                               customMessage: 'Gagal menambahkan data birahi!');
                         }
                       },
                       addEditStatusDateNow: () async {
-                        // Ambil nilai dari TextFormField
                         String updatedData = statusController.text.trim();
 
                         if (updatedData.isNotEmpty) {
                           setState(() {
-                            // Menambahkan data baru ke dalam history
                             statusHistory.add({
                               'date': DateTime.now(),
                               'data': updatedData,
                             });
                           });
 
-                          // Menampilkan hasil sukses
                           ShowAddEditDataResultDialog.show(context, true,
-                              customMessage: 'Data status berhasil ditambahkan!');
+                              customMessage:
+                                  'Data status berhasil ditambahkan!');
                         } else {
-                          // Menampilkan hasil gagal
                           ShowAddEditDataResultDialog.show(context, false,
                               customMessage: 'Gagal menambahkan data status!');
                         }
                       },
                       statusHistory: statusHistory,
                       editBirahi: (index) async {
-                        // Mengambil data yang akan diedit
                         String initialData = birahiHistory[index]['data'];
 
-                        // Menampilkan EditDataDialog dan menunggu hasilnya
                         String? updatedData = await showDialog<String>(
                           context: context,
                           builder: (context) {
@@ -1219,16 +1155,13 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
                         if (updatedData != null && updatedData.isNotEmpty) {
                           setState(() {
-                            // Memperbarui data dengan nilai yang baru
                             birahiHistory[index]['data'] = updatedData;
                           });
                         }
                       },
                       editStatus: (index) async {
-                        // Mengambil data yang akan diedit
                         String initialData = statusHistory[index]['data'];
 
-                        // Menampilkan EditDataDialog dan menunggu hasilnya
                         String? updatedData = await showDialog<String>(
                           context: context,
                           builder: (context) {
@@ -1242,7 +1175,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
                         if (updatedData != null && updatedData.isNotEmpty) {
                           setState(() {
-                            // Memperbarui data dengan nilai yang baru
                             statusHistory[index]['data'] = updatedData;
                           });
                         }
@@ -1418,7 +1350,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                     if (userRole.role != 'doctor') ...[
                       Row(
                         children: [
-                          // Edit NFC Tag button
                           if (widget.isConnectedToNFCTag)
                             Flexible(
                               flex: 1,
@@ -1503,7 +1434,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                               ),
                             ),
                           const SizedBox(width: 10),
-                          // Keluarkan Sapi button
                           Flexible(
                             flex: 1,
                             child: ElevatedButton(
@@ -1578,9 +1508,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
       ),
     );
   }
-} // end of class
+}
 
-// Dialog untuk menambahkan data baru
 class _NewDataDialog extends StatelessWidget {
   final String id;
 
@@ -1594,7 +1523,6 @@ class _NewDataDialog extends StatelessWidget {
       title: const Text("SILAHKAN INPUT DATA BARU :"),
       content: TextField(
         controller: controller,
-        // decoration: const InputDecoration(suffixText: "Kg/L"),
         keyboardType: TextInputType.number,
       ),
       actions: [
@@ -1605,8 +1533,7 @@ class _NewDataDialog extends StatelessWidget {
         TextButton(
           onPressed: () {
             String data = controller.text;
-            Navigator.of(context)
-                .pop(data); // Mengembalikan data ke _addNewData
+            Navigator.of(context).pop(data);
           },
           child: const Text("OK"),
         ),
@@ -1615,7 +1542,6 @@ class _NewDataDialog extends StatelessWidget {
   }
 }
 
-// Dialog untuk riwayat data
 class _HistoryDialog extends StatelessWidget {
   final List<String> data;
   final Function(int) onDelete;
@@ -1639,7 +1565,7 @@ class _HistoryDialog extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.orange),
-                    onPressed: () {}, // Logika untuk edit data
+                    onPressed: () {},
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.orange),

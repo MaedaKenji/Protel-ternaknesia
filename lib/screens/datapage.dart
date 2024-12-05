@@ -528,7 +528,7 @@ class _DataPageState extends State<DataPage> {
               ),
               borderRadius: BorderRadius.circular(50),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -536,10 +536,10 @@ class _DataPageState extends State<DataPage> {
                   color: Colors.white,
                   size: 12,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   'PRODUKTIF',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold),

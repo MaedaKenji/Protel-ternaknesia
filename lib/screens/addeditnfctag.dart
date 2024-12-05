@@ -237,7 +237,7 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
         context,
         MaterialPageRoute(
           builder: (context) {
-            return InputDataPage(
+            return const InputDataPage(
               cowId: 'ss',
             );
           },
@@ -248,14 +248,12 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
 
   void _saveChanges() {
     if (_isNfcTagConnected) {
-      // Simulate saving changes with a short delay
       Future.delayed(const Duration(seconds: 2), () {
         setState(() {
           _isNfcTagConnected = false;
         });
         _showMessage('Perubahan berhasil disimpan');
 
-        // Kembali ke halaman sebelumnya
         Navigator.pop(context);
       });
     } else {
@@ -309,7 +307,7 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
                             widget.isConnectedToNFCTag
                                 ? 'Edit NFC Tag'
                                 : 'Sambung NFC Tag',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -318,7 +316,6 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
                           ),
                         ],
                       ),
-                      // Container untuk ID yang ada di sisi kanan
                       Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
@@ -330,13 +327,13 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
                             children: [
                               const Icon(
                                 Icons.perm_identity,
-                                color: Color(0xFF8A5E3B), // Brown color
+                                color: Color(0xFF8A5E3B),
                               ),
                               const SizedBox(width: 5),
                               Text(
                                 'ID: ${widget.id}',
-                                style: TextStyle(
-                                  color: Color(0xFF8A5E3B), // Brown color
+                                style: const TextStyle(
+                                  color: Color(0xFF8A5E3B),
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),

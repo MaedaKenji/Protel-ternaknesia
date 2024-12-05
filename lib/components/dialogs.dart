@@ -169,8 +169,8 @@ class EditDataDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.edit, color: Colors.white),
-                  SizedBox(width: 8),
+                  const Icon(Icons.edit, color: Colors.white),
+                  const SizedBox(width: 8),
                   Text(
                     "Edit Data - $title",
                     style: const TextStyle(
