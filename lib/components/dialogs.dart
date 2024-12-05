@@ -437,6 +437,57 @@ class _HistoryDialogState extends State<HistoryDialog> {
   }
 }
 
+class ShowAddEditDataResultDialog {
+  static void show(BuildContext context, bool isSuccess,
+      {String? customMessage}) {
+    Iconify icon;
+    String message;
+    Color iconColor;
+
+    if (isSuccess) {
+      icon =
+          const Iconify(Ic.twotone_check_circle, color: Colors.green, size: 40);
+      message = customMessage ?? 'Berhasil!';
+      iconColor = Colors.green;
+    } else {
+      icon = const Iconify(Ic.outline_close, color: Colors.red, size: 40);
+      message = customMessage ?? 'Gagal!';
+      iconColor = Colors.red;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              icon,
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  message,
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: iconColor),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.of(context).pop();
+    });
+  }
+}
+
 class ShowResultDialog {
   static void show(BuildContext context, bool isSuccess,
       {String? customMessage}) {

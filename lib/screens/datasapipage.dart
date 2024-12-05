@@ -46,6 +46,11 @@ class _DataSapiPageState extends State<DataSapiPage> {
   bool isLoading = false;
   String errorMessage = '';
 
+  TextEditingController stressLevelController = TextEditingController();
+  TextEditingController healthStatusController = TextEditingController();
+  TextEditingController birahiController = TextEditingController();
+  TextEditingController statusController = TextEditingController();
+
   Map<String, Map<String, List<FlSpot>>> feedData = {
     'pakanHijau': {
       'Januari': [
@@ -787,7 +792,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
     {'date': DateTime(2024, 11, 28), 'data': 'Stress'},
     {'date': DateTime(2024, 11, 29), 'data': 'Stress'},
     {'date': DateTime(2024, 11, 30), 'data': 'Stress'},
-    {'date': DateTime(2024, 12, 1), 'data': 'Stress'},
+    {'date': DateTime(2024, 12, 6), 'data': 'Stress'},
   ];
 
   final List<Map<String, dynamic>> healthStatusHistory = [
@@ -991,32 +996,90 @@ class _DataSapiPageState extends State<DataSapiPage> {
                       color: Colors.black12,
                       thickness: 1,
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 15),
+                    // Container Tanggal Hari Ini dan rata tengah
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9E2B5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment
+                            .center, // Menyusun konten secara horizontal di tengah
+                        crossAxisAlignment: CrossAxisAlignment
+                            .center, // Menyusun konten secara vertikal di tengah
+                        children: [
+                          const Icon(
+                            Icons.calendar_today,
+                            color: Color(0xFF8F3505),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Hari Ini, ${formattedDate(DateTime.now())}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF8F3505),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+
                     ConditionsSection(
                         healthStatus: widget.healthStatus,
                         stressLevelHistory: stressLevelHistory,
+                        addEditStressLevelDateNow: () async {
+                          // Ambil nilai dari TextFormField
+                          String updatedData =
+                              stressLevelController.text.trim();
+
+                          if (updatedData.isNotEmpty) {
+                            setState(() {
+                              // Menambahkan data baru ke dalam history
+                              stressLevelHistory.add({
+                                'date': DateTime.now(),
+                                'data': updatedData,
+                              });
+                            });
+
+                            // Menampilkan hasil sukses
+                          }
+                        },
                         healthStatusHistory: healthStatusHistory,
+                        addEditHealthStatusDateNow: () async {
+                          // Ambil nilai dari TextFormField
+                          String updatedData =
+                              healthStatusController.text.trim();
+
+                          if (updatedData.isNotEmpty) {
+                            setState(() {
+                              // Menambahkan data baru ke dalam history
+                              healthStatusHistory.add({
+                                'date': DateTime.now(),
+                                'data': updatedData,
+                              });
+                            });
+
+                            // Menampilkan hasil sukses
+                            ShowAddEditDataResultDialog.show(context, true,
+                                customMessage:
+                                    'Data kesehatan berhasil ditambahkan!');
+                          } else {
+                            // Menampilkan hasil gagal
+                            ShowAddEditDataResultDialog.show(context, false,
+                                customMessage:
+                                    'Gagal menambahkan data kesehatan!');
+                          }
+                        },
                         editHealthStatus: (index) async {
                           // Mengambil data yang akan diedit
-                          String initialData =
-                              healthStatusHistory[index]['data'];
+                          String updatedData =
+                              healthStatusController.text.trim();
 
-                          // Menampilkan EditDataDialog dan menunggu hasilnya
-                          String? updatedData = await showDialog<String>(
-                            context: context,
-                            builder: (context) {
-                              return EditDataDialog(
-                                id: healthStatusHistory[index]['date']
-                                    .toString(),
-                                initialData: initialData,
-                                title: formattedDate(
-                                    healthStatusHistory[index]['date']),
-                              );
-                            },
-                          );
-
-                          // Setelah mendapatkan hasil, cek apakah ada perubahan data
-                          if (updatedData != null && updatedData.isNotEmpty) {
+                          if (updatedData.isNotEmpty) {
                             setState(() {
                               // Memperbarui data dengan nilai yang baru
                               healthStatusHistory[index]['data'] = updatedData;
@@ -1041,25 +1104,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
                         },
                         editStressLevel: (index) async {
                           // Mengambil data yang akan diedit
-                          String initialData =
-                              stressLevelHistory[index]['data'];
+                          String updatedData =
+                              stressLevelController.text.trim();
 
-                          // Menampilkan EditDataDialog dan menunggu hasilnya
-                          String? updatedData = await showDialog<String>(
-                            context: context,
-                            builder: (context) {
-                              return EditDataDialog(
-                                id: stressLevelHistory[index]['date']
-                                    .toString(),
-                                initialData: initialData,
-                                title: formattedDate(
-                                    stressLevelHistory[index]['data']),
-                              );
-                            },
-                          );
-
-                          // Setelah mendapatkan hasil, cek apakah ada perubahan data
-                          if (updatedData != null && updatedData.isNotEmpty) {
+                          if (updatedData.isNotEmpty) {
                             setState(() {
                               // Memperbarui data dengan nilai yang baru
                               stressLevelHistory[index]['data'] = updatedData;
@@ -1108,6 +1156,50 @@ class _DataSapiPageState extends State<DataSapiPage> {
                     const SizedBox(height: 20),
                     PopulationStructureSection(
                       birahiHistory: birahiHistory,
+                      addEditBirahiDateNow: () async {
+                        // Ambil nilai dari TextFormField
+                        String updatedData = birahiController.text.trim();
+
+                        if (updatedData.isNotEmpty) {
+                          setState(() {
+                            // Menambahkan data baru ke dalam history
+                            birahiHistory.add({
+                              'date': DateTime.now(),
+                              'data': updatedData,
+                            });
+                          });
+
+                          // Menampilkan hasil sukses
+                          ShowAddEditDataResultDialog.show(context, true,
+                              customMessage: 'Data birahi berhasil ditambahkan!');
+                        } else {
+                          // Menampilkan hasil gagal
+                          ShowAddEditDataResultDialog.show(context, false,
+                              customMessage: 'Gagal menambahkan data birahi!');
+                        }
+                      },
+                      addEditStatusDateNow: () async {
+                        // Ambil nilai dari TextFormField
+                        String updatedData = statusController.text.trim();
+
+                        if (updatedData.isNotEmpty) {
+                          setState(() {
+                            // Menambahkan data baru ke dalam history
+                            statusHistory.add({
+                              'date': DateTime.now(),
+                              'data': updatedData,
+                            });
+                          });
+
+                          // Menampilkan hasil sukses
+                          ShowAddEditDataResultDialog.show(context, true,
+                              customMessage: 'Data status berhasil ditambahkan!');
+                        } else {
+                          // Menampilkan hasil gagal
+                          ShowAddEditDataResultDialog.show(context, false,
+                              customMessage: 'Gagal menambahkan data status!');
+                        }
+                      },
                       statusHistory: statusHistory,
                       editBirahi: (index) async {
                         // Mengambil data yang akan diedit
