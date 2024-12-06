@@ -25,7 +25,6 @@ class _CustomLineChartState extends State<CustomLineChart> {
   @override
   void initState() {
     super.initState();
-
     selectedMonth =
         widget.datas.isNotEmpty ? widget.datas.keys.first : 'Default';
   }
@@ -49,6 +48,13 @@ class _CustomLineChartState extends State<CustomLineChart> {
     if (lastPoint != null && widget.title == 'Produksi Susu') {
       predictionPoint = FlSpot(lastPoint.x + 1, lastPoint.y * 1.1);
     }
+
+    // Tentukan lebar grafik berdasarkan jumlah titik data
+    double chartWidth =
+        lastDataPoints.length * 50.0; // Lebar berdasarkan jumlah titik
+    chartWidth = chartWidth < 330
+        ? 330
+        : chartWidth; // Jika data sedikit, beri lebar minimal
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -111,79 +117,87 @@ class _CustomLineChartState extends State<CustomLineChart> {
           SizedBox(
             height: 200,
             child: widget.datas.isNotEmpty
-                ? LineChart(
-                    LineChartData(
-                      gridData: const FlGridData(show: true),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: interval,
-                            reservedSize: 40,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                value.toInt().toString(),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black,
-                                ),
-                              );
-                            },
+                ? SingleChildScrollView(
+                    scrollDirection:
+                        Axis.horizontal, // This allows horizontal scroll
+                    child: SizedBox(
+                      width:
+                          chartWidth, // Gunakan chartWidth yang sudah dihitung
+                      child: LineChart(
+                        LineChartData(
+                          gridData: const FlGridData(show: true),
+                          titlesData: FlTitlesData(
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                interval: interval,
+                                reservedSize: 40,
+                                getTitlesWidget: (value, meta) {
+                                  return Text(
+                                    value.toInt().toString(),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                interval: 1,
+                                getTitlesWidget: (value, meta) {
+                                  final day = (value.toInt() + 1).toString();
+                                  return Text(
+                                    day,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                           ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: 1,
-                            getTitlesWidget: (value, meta) {
-                              final day = (value.toInt() + 1).toString();
-                              return Text(
-                                day,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black,
-                                ),
-                              );
-                            },
+                          borderData: FlBorderData(
+                            show: true,
+                            border: const Border(
+                              left: BorderSide(color: Colors.black, width: 1),
+                              bottom: BorderSide(color: Colors.black, width: 1),
+                            ),
                           ),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
+                          minY: 0,
+                          maxY: maxY,
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: lastDataPoints,
+                              isCurved: true,
+                              color: const Color(0xFFE6B87D),
+                              barWidth: 3,
+                              dotData: const FlDotData(show: true),
+                            ),
+                            if (predictionPoint != null &&
+                                widget.title == 'Produksi Susu')
+                              LineChartBarData(
+                                spots: [lastPoint!, predictionPoint],
+                                isCurved: true,
+                                color: Color(0xFFC35804),
+                                barWidth: 3,
+                                isStrokeCapRound: true,
+                                dotData: const FlDotData(show: true),
+                                belowBarData: BarAreaData(show: false),
+                                dashArray: [5, 8],
+                              ),
+                          ],
                         ),
                       ),
-                      borderData: FlBorderData(
-                        show: true,
-                        border: const Border(
-                          left: BorderSide(color: Colors.black, width: 1),
-                          bottom: BorderSide(color: Colors.black, width: 1),
-                        ),
-                      ),
-                      minY: 0,
-                      maxY: maxY,
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: lastDataPoints,
-                          isCurved: true,
-                          color: const Color(0xFFC35804),
-                          barWidth: 3,
-                          dotData: const FlDotData(show: true),
-                        ),
-                        if (predictionPoint != null &&
-                            widget.title == 'Produksi Susu')
-                          LineChartBarData(
-                            spots: [lastPoint!, predictionPoint],
-                            isCurved: true,
-                            color: Colors.green,
-                            barWidth: 3,
-                            isStrokeCapRound: true,
-                            dotData: FlDotData(show: true),
-                            belowBarData: BarAreaData(show: false),
-                            dashArray: [5, 8],
-                          ),
-                      ],
                     ),
                   )
                 : const Center(
@@ -196,8 +210,37 @@ class _CustomLineChartState extends State<CustomLineChart> {
                     ),
                   ),
           ),
-          if (widget.otherInfo?.isNotEmpty ?? false || widget.valueInfo != null)
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: Color(0xFFE6B87D)),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Data Asli'),
+                ],
+              ),
+              const SizedBox(width: 16),
+              if (predictionPoint != null && widget.title == 'Produksi Susu')
+                Row(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: const BoxDecoration(
+                          shape: BoxShape.circle, color: Color(0xFFC35804)),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Prediksi'),
+                  ],
+                ),
+            ],
+          ),
           if (widget.otherInfo?.isNotEmpty ?? false || widget.valueInfo != null)
             const SizedBox(height: 16),
           if (widget.otherInfo?.isNotEmpty ?? false || widget.valueInfo != null)

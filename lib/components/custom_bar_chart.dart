@@ -13,6 +13,22 @@ class CustomBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final predictionBar = BarChartGroupData(
+      x: data.length,
+      barRods: [
+        if (title == 'Produksi Susu per Bulan')
+          BarChartRodData(
+            toY: 500,
+            color: Color(0xFFC35804),
+            width: 22,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(6),
+              topRight: Radius.circular(6),
+            ),
+          ),
+      ],
+    );
+
     return Container(
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 16),
@@ -62,12 +78,7 @@ class CustomBarChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        final months = [
-                          'September',
-                          'Oktober',
-                          'November',
-                          'Desember'
-                        ];
+                        final months = ['Sep', 'Okt', 'Nov', 'Des', 'Jan'];
                         final index = value.toInt();
                         if (index < 0 || index >= months.length) {
                           return const SizedBox.shrink();
@@ -98,9 +109,61 @@ class CustomBarChart extends StatelessWidget {
                   ),
                 ),
                 maxY: 1000,
-                barGroups: data,
+                barGroups: [
+                  ...data.map((barGroup) {
+                    return BarChartGroupData(
+                      x: barGroup.x,
+                      barRods: barGroup.barRods.map((rod) {
+                        return BarChartRodData(
+                          toY: rod.toY,
+                          color: Color(0xFFE6B87D),
+                          width: rod.width,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(6),
+                            topRight: Radius.circular(6),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  }).toList(),
+                  if (title == 'Produksi Susu per Bulan') predictionBar,
+                ],
               ),
             ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFE6B87D),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Data Asli',
+                style: TextStyle(fontSize: 12, color: Colors.black),
+              ),
+              const SizedBox(width: 16),
+              if (title == 'Produksi Susu per Bulan') ...[
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFC35804),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Data Prediksi',
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
+              ]
+            ],
           ),
         ],
       ),

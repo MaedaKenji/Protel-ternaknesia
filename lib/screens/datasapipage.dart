@@ -21,7 +21,7 @@ class DataSapiPage extends StatefulWidget {
   final bool isProductive;
   final bool isConnectedToNFCTag;
 
-  DataSapiPage({
+  const DataSapiPage({
     super.key,
     required this.id,
     required this.gender,
@@ -404,7 +404,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
             Text(
               value,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
@@ -768,10 +768,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
   }
 
   final List<Map<String, dynamic>> stressLevelHistory = [
-    {'date': DateTime(2024, 11, 28), 'data': 'Stress'},
-    {'date': DateTime(2024, 11, 29), 'data': 'Stress'},
-    {'date': DateTime(2024, 11, 30), 'data': 'Stress'},
-    {'date': DateTime(2024, 12, 6), 'data': 'Stress'},
+    {'date': DateTime(2024, 11, 28), 'data': 'Tidak'},
+    {'date': DateTime(2024, 11, 29), 'data': 'Ringan'},
+    {'date': DateTime(2024, 11, 30), 'data': 'Berat'},
+    {'date': DateTime(2024, 12, 6), 'data': 'Ringan'},
   ];
 
   final List<Map<String, dynamic>> healthStatusHistory = [
@@ -782,17 +782,10 @@ class _DataSapiPageState extends State<DataSapiPage> {
   ];
 
   final List<Map<String, dynamic>> birahiHistory = [
-    {'date': DateTime(2024, 11, 28), 'data': 'Birahi'},
-    {'date': DateTime(2024, 11, 29), 'data': 'Birahi'},
-    {'date': DateTime(2024, 11, 30), 'data': 'Birahi'},
-    {'date': DateTime(2024, 12, 1), 'data': 'Birahi'},
-  ];
-
-  final List<Map<String, dynamic>> statusHistory = [
-    {'date': DateTime(2024, 11, 28), 'data': 'Aktif'},
-    {'date': DateTime(2024, 11, 29), 'data': 'Aktif'},
-    {'date': DateTime(2024, 11, 30), 'data': 'Aktif'},
-    {'date': DateTime(2024, 12, 1), 'data': 'Aktif'},
+    {'date': DateTime(2024, 11, 28), 'data': 'Ya'},
+    {'date': DateTime(2024, 11, 29), 'data': 'Tidak'},
+    {'date': DateTime(2024, 11, 30), 'data': 'Ya'},
+    {'date': DateTime(2024, 12, 1), 'data': 'Ya'},
   ];
 
   final Map<String, List<Map<String, dynamic>>> milkProductionAndWeightHistory =
@@ -1032,6 +1025,27 @@ class _DataSapiPageState extends State<DataSapiPage> {
                                     'Gagal menambahkan data kesehatan!');
                           }
                         },
+                        birahiHistory: birahiHistory,
+                        addEditBirahiDateNow: () async {
+                          String updatedData = birahiController.text.trim();
+
+                          if (updatedData.isNotEmpty) {
+                            setState(() {
+                              birahiHistory.add({
+                                'date': DateTime.now(),
+                                'data': updatedData,
+                              });
+                            });
+
+                            ShowAddEditDataResultDialog.show(context, true,
+                                customMessage:
+                                    'Data birahi berhasil ditambahkan!');
+                          } else {
+                            ShowAddEditDataResultDialog.show(context, false,
+                                customMessage:
+                                    'Gagal menambahkan data birahi!');
+                          }
+                        },
                         editHealthStatus: (index) async {
                           String updatedData =
                               healthStatusController.text.trim();
@@ -1076,6 +1090,27 @@ class _DataSapiPageState extends State<DataSapiPage> {
                             Navigator.of(context).pop();
                           });
                         },
+                        editBirahi: (index) async {
+                          String updatedData = birahiController.text.trim();
+
+                          if (updatedData.isNotEmpty) {
+                            setState(() {
+                              birahiHistory[index]['data'] = updatedData;
+                            });
+
+                            ShowResultDialog.show(context, true,
+                                customMessage:
+                                    'Data birahi berhasil diperbarui!');
+                          } else {
+                            ShowResultDialog.show(context, false,
+                                customMessage:
+                                    'Gagal memperbarui data birahi!');
+                          }
+
+                          Future.delayed(const Duration(seconds: 2), () {
+                            Navigator.of(context).pop();
+                          });
+                        },
                         deleteStressLevel: (index) {
                           setState(() {
                             stressLevelHistory.removeAt(index);
@@ -1096,100 +1131,17 @@ class _DataSapiPageState extends State<DataSapiPage> {
                           ShowResultDialog.show(context, true,
                               customMessage:
                                   'Data kesehatan berhasil dihapus!');
+                        },
+                        deleteBirahi: (index) {
+                          setState(() {
+                            birahiHistory.removeAt(index);
+                          });
+
+                          Navigator.of(context).pop();
+
+                          ShowResultDialog.show(context, true,
+                              customMessage: 'Data birahi berhasil dihapus!');
                         }),
-                    const SizedBox(height: 20),
-                    PopulationStructureSection(
-                      birahiHistory: birahiHistory,
-                      addEditBirahiDateNow: () async {
-                        String updatedData = birahiController.text.trim();
-
-                        if (updatedData.isNotEmpty) {
-                          setState(() {
-                            birahiHistory.add({
-                              'date': DateTime.now(),
-                              'data': updatedData,
-                            });
-                          });
-
-                          ShowAddEditDataResultDialog.show(context, true,
-                              customMessage:
-                                  'Data birahi berhasil ditambahkan!');
-                        } else {
-                          ShowAddEditDataResultDialog.show(context, false,
-                              customMessage: 'Gagal menambahkan data birahi!');
-                        }
-                      },
-                      addEditStatusDateNow: () async {
-                        String updatedData = statusController.text.trim();
-
-                        if (updatedData.isNotEmpty) {
-                          setState(() {
-                            statusHistory.add({
-                              'date': DateTime.now(),
-                              'data': updatedData,
-                            });
-                          });
-
-                          ShowAddEditDataResultDialog.show(context, true,
-                              customMessage:
-                                  'Data status berhasil ditambahkan!');
-                        } else {
-                          ShowAddEditDataResultDialog.show(context, false,
-                              customMessage: 'Gagal menambahkan data status!');
-                        }
-                      },
-                      statusHistory: statusHistory,
-                      editBirahi: (index) async {
-                        String initialData = birahiHistory[index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: birahiHistory[index]['date'].toString(),
-                              initialData: initialData,
-                              title: 'Hello',
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            birahiHistory[index]['data'] = updatedData;
-                          });
-                        }
-                      },
-                      editStatus: (index) async {
-                        String initialData = statusHistory[index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: statusHistory[index]['date'].toString(),
-                              initialData: initialData,
-                              title: statusHistory[index]['date'].toString(),
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            statusHistory[index]['data'] = updatedData;
-                          });
-                        }
-                      },
-                      deleteBirahi: (index) {
-                        setState(() {
-                          birahiHistory.removeAt(index);
-                        });
-                      },
-                      deleteStatus: (index) {
-                        setState(() {
-                          statusHistory.removeAt(index);
-                        });
-                      },
-                    ),
                     const SizedBox(height: 20),
                     if (widget.healthStatus.toUpperCase() == 'SAKIT') ...[
                       const Text(
@@ -1343,96 +1295,130 @@ class _DataSapiPageState extends State<DataSapiPage> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Color(0xFF2d8a30),
-                              fontSize: 14,
+                              fontSize: 15,
                             ),
                           )),
                     const SizedBox(height: 30),
                     if (userRole.role != 'doctor') ...[
+                      if (widget.isConnectedToNFCTag)
+                        Container(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return AddEditNFCTag(
+                                    id: widget.id,
+                                    isConnectedToNFCTag:
+                                        widget.isConnectedToNFCTag);
+                              }));
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF8F3505)),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 15, horizontal: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Edit NFC Tag',
+                                  style: TextStyle(
+                                    color: Color(0xFF8F3505),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Icon(
+                                  Icons.edit,
+                                  color: Color(0xFF8F3505),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (!widget.isConnectedToNFCTag)
+                        Container(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return AddEditNFCTag(
+                                    id: widget.id,
+                                    isConnectedToNFCTag:
+                                        widget.isConnectedToNFCTag);
+                              }));
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.green),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 15, horizontal: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Sambung NFC Tag',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Icon(
+                                  Icons.add,
+                                  color: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 10),
                       Row(
                         children: [
-                          if (widget.isConnectedToNFCTag)
-                            Flexible(
-                              flex: 1,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (context) {
-                                    return AddEditNFCTag(
-                                        id: widget.id,
-                                        isConnectedToNFCTag:
-                                            widget.isConnectedToNFCTag);
-                                  }));
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                      color: Color(0xFF8F3505)),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 15, horizontal: 20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Edit NFC Tag',
-                                      style: TextStyle(
-                                        color: Color(0xFF8F3505),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Icon(
-                                      Icons.edit,
-                                      color: Color(0xFF8F3505),
-                                    ),
-                                  ],
+                          Flexible(
+                            flex: 1,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                ShowResultDialog.show(context, true,
+                                    customMessage: 'Data berhasil disimpan!');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                backgroundColor: const Color(0xFF8F3505),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 15, horizontal: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                            ),
-                          if (!widget.isConnectedToNFCTag)
-                            Flexible(
-                              flex: 1,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (context) {
-                                    return AddEditNFCTag(
-                                        id: widget.id,
-                                        isConnectedToNFCTag:
-                                            widget.isConnectedToNFCTag);
-                                  }));
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.green),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 15, horizontal: 20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Simpan/OK',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Sambung NFC Tag',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Icon(
-                                      Icons.add,
-                                      color: Colors.green,
-                                    ),
-                                  ],
-                                ),
+                                  SizedBox(width: 5),
+                                  Icon(
+                                    Icons.save,
+                                    color: Colors.white,
+                                  ),
+                                ],
                               ),
                             ),
+                          ),
                           const SizedBox(width: 10),
                           Flexible(
                             flex: 1,
@@ -1457,11 +1443,11 @@ class _DataSapiPageState extends State<DataSapiPage> {
                                     'Keluarkan Sapi',
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 16,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(width: 10),
+                                  SizedBox(width: 5),
                                   Icon(
                                     Icons.exit_to_app,
                                     color: Colors.white,

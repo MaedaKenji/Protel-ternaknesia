@@ -57,7 +57,7 @@ class LogoutDialog extends StatelessWidget {
               content,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),

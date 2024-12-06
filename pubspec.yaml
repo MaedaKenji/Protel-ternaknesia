@@ -80,7 +80,9 @@ flutter:
     - assets/images/cow.png
     - assets/images/cow_alt.png
     - assets/images/LogoTernaknesia.png
-    - assets/images/profileHome.png
+    - assets/images/farmer.png
+    - assets/images/admin.png
+    - assets/images/doctor.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

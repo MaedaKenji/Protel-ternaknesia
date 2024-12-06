@@ -127,11 +127,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 60,
-                    backgroundImage: NetworkImage(
-                        'https://cdn-icons-png.flaticon.com/512/1998/1998627.png'),
-                  ),
+                  CircleAvatar(
+                      radius: 60,
+                      backgroundImage: (userRole.role == 'user'
+                          ? const AssetImage('assets/images/farmer.png')
+                          : userRole.role == 'admin'
+                              ? const AssetImage('assets/images/admin.png')
+                              : const AssetImage('assets/images/doctor.png'))),
                   const SizedBox(height: 10),
                   Text(
                     _nameController.text,

@@ -141,7 +141,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
         children: [
           // Wrap the PageView inside a Container or SizedBox for height constraint
           SizedBox(
-            height: 350, // Adjust this height as per your design
+            height: 400, // Adjust this height as per your design
             child: PageView.builder(
               itemCount: chartTitles.length,
               itemBuilder: (context, index) {
@@ -167,32 +167,69 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Left group: Add and History buttons
-                  Row(
-                    children: [
-                      _buildIconButton(
-                        icon: Icons.add,
-                        onPressed: _addNewData,
+                  if (userRole.role == 'user')
+                    Row(
+                      children: [
+                        _buildIconButton(
+                          icon: Icons.add,
+                          onPressed: _addNewData,
+                        ),
+                        const SizedBox(width: 10),
+                        _buildIconButton(
+                            icon: Icons.history,
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return HistoryDialog(
+                                    title: 'Riwayat $formattedTitle',
+                                    data: currentHistoryData,
+                                    onEdit: widget.onEdit,
+                                    onDelete: widget.onDelete,
+                                  );
+                                },
+                              );
+                            }),
+                      ],
+                    ),
+                  if (userRole.role == 'admin' || userRole.role == 'doctor')
+                    ElevatedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return HistoryDialog(
+                                title: 'Riwayat $formattedTitle',
+                                data: currentHistoryData,
+                                onEdit: widget.onEdit,
+                                onDelete: widget.onDelete);
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFFC35804),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
                       ),
-                      const SizedBox(width: 10),
-                      _buildIconButton(
-                          icon: Icons.history,
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return HistoryDialog(
-                                  title: 'Riwayat $formattedTitle',
-                                  data: currentHistoryData,
-                                  onEdit: widget.onEdit,
-                                  onDelete: widget.onDelete,
-                                );
-                              },
-                            );
-                          }),
-                    ],
-                  ),
-                  // Right group: Current text and input
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.history,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 5),
+                          Text('Riwayat',
+                              style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
                   Row(
                     children: [
                       const Text(
@@ -200,89 +237,34 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.brown,
+                          color: Color(0xFFC35804),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      SizedBox(
-                        width: 80,
-                        child: TextField(
-                          controller: inputControllers[currentTitle],
-                          cursorColor: const Color(0xFFC35804),
-                          decoration: InputDecoration(
-                            fillColor: const Color(0xFFC35804).withOpacity(0.1),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFC35804)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFC35804)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFC35804)),
-                            ),
+                      Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFC35804),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      const Text(
-                        'Kg',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
-                      ),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${inputControllers[currentTitle]!.text} Kg',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          )),
                     ],
-                  ),
+                  )
                 ],
               ),
               const SizedBox(height: 10),
-              if (userRole.role == 'admin' || userRole.role == 'doctor')
-                ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return HistoryDialog(
-                            title: '',
-                            data: currentHistoryData,
-                            onEdit: widget.onEdit,
-                            onDelete: widget.onDelete);
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: const Color(0xFFC35804),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 10,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.history,
-                        color: Colors.white,
-                      ),
-                      SizedBox(width: 5),
-                      Text('Riwayat', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                )
             ],
           ),
         ],

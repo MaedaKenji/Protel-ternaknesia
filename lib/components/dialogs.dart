@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ternaknesia/provider/user_role.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/line_md.dart';
 import 'package:iconify_flutter/icons/ic.dart';
 
 class NewDataDialog extends StatelessWidget {
@@ -259,6 +258,150 @@ class EditDataDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class EditDataWithDropdownDialog extends StatelessWidget {
+  final String id;
+  final String title;
+  final String initialData;
+  final List<String> dropdownItems;
+
+  const EditDataWithDropdownDialog({
+    super.key,
+    required this.id,
+    required this.title,
+    required this.initialData,
+    required this.dropdownItems,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    TextEditingController controller = TextEditingController(text: initialData);
+
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Container(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFC35804), Color(0xFFE6B87D)],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.edit, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Edit Data - $title",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: DropdownButtonFormField<String>(
+                value: _getInitialDropdownValue(initialData),
+                onChanged: (newValue) {
+                  controller.text = newValue ?? '';
+                },
+                items: dropdownItems
+                    .map((item) => DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(item),
+                        ))
+                    .toList(),
+                decoration: const InputDecoration(
+                  labelText: "Pilih Data Baru",
+                  labelStyle: TextStyle(color: Color(0xFFC35804)),
+                  fillColor: Color(0xFFF9E2B5),
+                  border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFC35804))),
+                  enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFC35804))),
+                  focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFC35804))),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    String updatedData = controller.text;
+
+                    if (updatedData == initialData) {
+                      ShowResultDialog.show(context, false,
+                          customMessage: 'Data tidak berubah');
+                    } else {
+                      ShowResultDialog.show(context, true,
+                          customMessage: 'Data berhasil diubah');
+                    }
+
+                    Future.delayed(const Duration(seconds: 2), () {
+                      Navigator.of(context).pop(updatedData);
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFC35804),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // This function ensures the initial value is in the dropdown items
+  String? _getInitialDropdownValue(String initialData) {
+    return dropdownItems.contains(initialData) ? initialData : null;
   }
 }
 
@@ -533,7 +676,7 @@ class ShowResultDialog {
       },
     );
 
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1, milliseconds: 500), () {
       Navigator.of(context).pop();
     });
   }

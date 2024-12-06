@@ -331,6 +331,55 @@ class _HomeScreenState extends State<HomeScreen> {
     },
   ];
 
+  List<BarChartGroupData> milkProductionPerMonth() {
+    return [
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 500,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 250,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 900,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 3,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 100,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+    ];
+  }
+
   List<BarChartGroupData> sickCowPerMonthData() {
     return [
       BarChartGroupData(
@@ -466,10 +515,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: Row(
                               children: [
-                                const Image(
-                                    image: AssetImage(
-                                        'assets/images/profileHome.png'),
-                                    width: 65),
+                                CircleAvatar(
+                                    backgroundImage: userRole.role == 'user'
+                                        ? const AssetImage('assets/images/farmer.png')
+                                        : userRole.role == 'admin'
+                                            ? const AssetImage(
+                                                'assets/images/admin.png')
+                                            : const AssetImage(
+                                                'assets/images/doctor.png'),
+                                    radius: 30),
                                 const SizedBox(width: 16),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,9 +573,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                         const SizedBox(height: 8),
-                        CustomLineChart(
-                            title: 'Hasil Perolehan Susu ',
-                            datas: milkProductionData),
+                        if (userRole.role != 'admin')
+                          CustomLineChart(
+                              title: 'Hasil Perolehan Susu ',
+                              datas: milkProductionData),
                         CustomLineChart(
                           title: 'Berat Pangan Hijauan',
                           datas: greenFodderData,
@@ -538,6 +593,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: 'Contoh Data dari Server',
                           datas: exampleServerData,
                         ),
+                        CustomBarChart(
+                            title: 'Produksi Susu per Bulan',
+                            data: milkProductionPerMonth()),
                       ])),
                 ),
               if (userRole.role == 'doctor' || userRole.role == 'dokter')
