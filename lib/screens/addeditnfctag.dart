@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:ternaknesia/main.dart';
 import 'package:ternaknesia/screens/inputdata.dart';
+import 'package:http/http.dart' as http;
+
 
 class AddEditNFCTag extends StatefulWidget {
   final String id;
@@ -48,7 +52,9 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
   bool _isNfcTagConnected = false;
   bool _isChanged = false;
   late AnimationController _animationController;
-  final TextEditingController _nfcCodeController = TextEditingController();
+  TextEditingController _nfcCodeController = TextEditingController();
+  bool _isSaving = false;
+  String? _nfcId;
 
   @override
   void initState() {
@@ -58,53 +64,20 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
+    print(_nfcId);
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     _nfcCodeController.dispose();
+    _nfcId = null;
+    _nfcCodeController.clear(); // Clear TextField
     super.dispose();
   }
 
   Future<void> _checkNfcAvailability() async {
     setState(() {});
-  }
-
-  void _startNfcScan() async {
-    setState(() {});
-
-    _showNfcDialog();
-
-    try {
-      await NfcManager.instance.startSession(
-        onDiscovered: (NfcTag tag) async {
-          final nfcData = tag.data.toString();
-
-          setState(() {
-            _isNfcEnabled = true;
-            _isNfcTagConnected = true;
-            _isChanged = true;
-          });
-
-          if (navigatorKey.currentState?.canPop() ?? false) {
-            navigatorKey.currentState?.pop();
-          }
-
-          await NfcManager.instance.stopSession();
-
-          _showNfcResultDialog(nfcData);
-        },
-      );
-    } catch (e) {
-      setState(() {});
-
-      if (navigatorKey.currentState?.canPop() ?? false) {
-        navigatorKey.currentState?.pop();
-      }
-
-      _showMessage('Terjadi kesalahan: $e');
-    }
   }
 
   void _showNfcDialog() {
@@ -246,19 +219,137 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
     }
   }
 
-  void _saveChanges() {
-    if (_isNfcTagConnected) {
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isNfcTagConnected = false;
-        });
-        _showMessage('Perubahan berhasil disimpan');
-
-        Navigator.pop(context);
-      });
-    } else {
-      _showMessage('Tidak ada NFC Tag yang terhubung!');
+  void _saveChanges() async {
+    if (_nfcId == null) {
+      _showMessage('ID NFC tidak tersedia. Silakan scan ulang.');
+      return;
     }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      String cowId = widget.id; // Ambil ID sapi dari widget
+
+      // Panggil API untuk update database hanya saat save changes
+      await updateNfcId(cowId, _nfcId!);
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      setState(() {
+        _isNfcTagConnected = false;
+        _isSaving = false;
+      });
+
+      _showMessage('Perubahan berhasil disimpan');
+      Navigator.pop(context);
+    } catch (e) {
+      setState(() {
+        _isSaving = false;
+      });
+
+      _showMessage('Gagal menyimpan perubahan: $e');
+    }
+  }
+
+  void _startNfcScan() async {
+    // Menampilkan dialog saat scan NFC dimulai
+    _showNfcDialog();
+
+    try {
+      // Memulai sesi NFC untuk membaca tag NFC
+      await NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          // Proses tag NFC saat terdeteksi
+          try {
+            // Mendapatkan data dari tag NFC
+            Map<String, dynamic> nfcData = tag.data;
+
+            // Memanggil fungsi untuk memproses data NFC
+            _onNfcRead(nfcData);
+
+            // Menutup dialog setelah NFC terdeteksi
+            if (navigatorKey.currentState?.canPop() ?? false) {
+              navigatorKey.currentState?.pop();
+            }
+          } finally {
+            // Menghentikan sesi NFC setelah selesai memproses tag
+            await NfcManager.instance.stopSession();
+          }
+        },
+      );
+    } catch (e) {
+      // Menangani kesalahan jika terjadi saat pemindaian NFC
+      setState(() {});
+
+      // Menutup dialog jika ada kesalahan
+      if (navigatorKey.currentState?.canPop() ?? false) {
+        navigatorKey.currentState?.pop();
+      }
+
+      // Menampilkan pesan kesalahan
+      _showMessage('Terjadi kesalahan: $e');
+    }
+  }
+
+  void _onNfcRead(Map<String, dynamic> nfcData) async {
+    try {
+      // Ekstraksi identifier dari data NFC
+      if (nfcData.containsKey('nfca')) {
+        List<int> identifier = nfcData['nfca']['identifier'];
+        String nfcId = identifier
+            .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+            .join(':');
+
+        setState(() {
+          _nfcId = nfcId; // Simpan ID NFC ke dalam state
+          _nfcCodeController.text =
+              nfcId; // Update nilai TextField dengan nfcId
+        });
+        print(_nfcId);
+
+        // Menampilkan notifikasi sukses
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('NFC ID berhasil diperbarui: $nfcId')),
+        );
+      } else {
+        throw Exception('Data NFC tidak valid, identifier tidak ditemukan.');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> updateNfcId(String cowId, String nfcId) async {
+    final url = Uri.parse(
+        '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/update-nfc');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          'cow_id': cowId,
+          'nfc_id': nfcId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('NFC ID updated successfully: $nfcId');
+      } else {
+        print(
+            'Failed to update NFC ID (status ${response.statusCode}): ${response.body}');
+      }
+    } catch (e) {
+      print('Error updating NFC ID: $e');
+    }
+  }
+
+  bool _isInputEmpty() {
+    return _nfcCodeController.text.trim().isEmpty;
   }
 
   @override
@@ -362,9 +453,10 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
                         labelText: 'Kode NFC',
                       ),
                       onChanged: (value) {
-                        setState(() {
-                          _isChanged = value.isNotEmpty;
-                        });
+                        setState(() {});
+                        // setState(() {
+                        //   _isChanged = value.isNotEmpty;
+                        // });
                       },
                     ),
                     const SizedBox(height: 20),
@@ -424,7 +516,8 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
                     ],
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: _isChanged ? _saveChanges : null,
+                      onPressed: _saveChanges,
+                      // onPressed: _isInputEmpty() ? null : _saveChanges,
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         backgroundColor: const Color(0xFFC35804),

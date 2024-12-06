@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -47,14 +48,16 @@ class _HomeScreenState extends State<HomeScreen> {
       const FlSpot(14.0, 0.0),
     ],
   };
-  int? hijauanWeight;
-  int? sentratWeight;
+  double? hijauanWeight;
+  double? sentratWeight;
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _futureSummaryData = _fetchSummaryData(); // Inisialisasi _futureSummaryData
+    // _futureSummaryData = _fetchSummaryData(); // Inisialisasi _futureSummaryData
     _refreshData();
+    // _futureSummaryData = _fetchSummaryData();
   }
 
   Future<List<Map<String, String>>> _fetchSummaryData() async {
@@ -65,6 +68,10 @@ class _HomeScreenState extends State<HomeScreen> {
       'sapi_diperah': '/api/cows/data/sapi_diperah',
       'sapi_diberi_pakan': '/api/cows/data/sapi_diberi_pakan',
     };
+
+    setState(() {
+      isLoading = true;
+    });
 
     try {
       final responses = await Future.wait([
@@ -99,6 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
         {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
         {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
       ];
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -195,6 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+// Gak bisa dipake global
   Future<String> _fetchWithTimeout(String url) async {
     try {
       final response =
@@ -212,22 +224,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> fetchBestCombination() async {
-    final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
-    final port = dotenv.env['PORT'] ?? '8080';
-    final url2 = '$baseUrl:$port/api/cluster';
-    final url = Uri.parse(url2);
-    // print(url);
-
-    // final url = Uri.parse(
-    //     'http://localhost:8080/api/cluster'); // Ganti dengan endpoint API Anda
-    // print(url);
     try {
-      final response = await http.get(url);
+      final response = await http
+          .get(
+            Uri.parse(
+                '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cluster'),
+          )
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print(data['data']['hijauan_weight']);
 
-        if (data['success'] == true) {
+        if (data['success'] == true && data['data'] != null) {
           setState(() {
             hijauanWeight = data['data']['hijauan_weight'] ?? 0;
             sentratWeight = data['data']['sentrat_weight'] ?? 0;
@@ -244,6 +253,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refreshData() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       final summaryData = await _fetchSummaryData();
 
@@ -251,13 +264,17 @@ class _HomeScreenState extends State<HomeScreen> {
         _futureSummaryData = Future.value(summaryData);
       });
 
-      _futureSummaryData = Future.value(summaryData);
+      // _futureSummaryData = Future.value(summaryData);
 
       await assignFetchedData();
       await fetchBestCombination();
-      await _fetchSummaryData();
+      // await _fetchSummaryData();
     } catch (e) {
       print("Error during refresh: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -444,248 +461,252 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialLocalizations.of(context).formatFullDate(now);
     return Scaffold(
         backgroundColor: Colors.white,
-        body: RefreshIndicator(
-            onRefresh: _refreshData,
-            child: Column(children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    height: 140,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFE6B87D), Color(0xFFF9E2B5)],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(20),
-                        bottomRight: Radius.circular(20),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    top: 16,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8.0),
-                              child: Image.asset(
-                                'assets/images/LogoTernaknesia.png',
-                                width: 50,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('SAPYY',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF8F3505),
-                                    )),
-                                Text(formattedDate,
-                                    style: const TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF8F3505),
-                                    )),
-                              ],
-                            )
-                          ],
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _refreshData,
+                child: Column(children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        height: 140,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFFE6B87D), Color(0xFFF9E2B5)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(20),
+                            bottomRight: Radius.circular(20),
+                          ),
                         ),
-                        const SizedBox(height: 15),
-                        Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFC35804),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFFF9E2B5),
-                              ),
-                            ),
-                            child: Row(
+                      ),
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        top: 16,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                    backgroundImage: userRole.role == 'user'
-                                        ? const AssetImage('assets/images/farmer.png')
-                                        : userRole.role == 'admin'
-                                            ? const AssetImage(
-                                                'assets/images/admin.png')
-                                            : const AssetImage(
-                                                'assets/images/doctor.png'),
-                                    radius: 30),
-                                const SizedBox(width: 16),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  child: Image.asset(
+                                    'assets/images/LogoTernaknesia.png',
+                                    width: 50,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Hai, $displayName!',
+                                    const Text('SAPYY',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF8F3505),
+                                        )),
+                                    Text(formattedDate,
                                         style: const TextStyle(
                                           fontFamily: 'Inter',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF8F3505),
                                         )),
-                                    Text(
-                                      role,
-                                      style: const TextStyle(
-                                          fontSize: 14, color: Colors.white),
+                                  ],
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 15),
+                            Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFC35804),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: const Color(0xFFF9E2B5),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                    backgroundImage: userRole.role == 'user'
+                                        ? const AssetImage('assets/images/farmer.png')
+                                            : userRole.role == 'admin'
+                                            ? const AssetImage(
+                                                'assets/images/admin.png')
+                                            : const AssetImage(
+                                                    'assets/images/doctor.png'),
+                                        radius: 30),
+                                    const SizedBox(width: 16),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Hai, $displayName!',
+                                            style: const TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                            )),
+                                        Text(
+                                          role,
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white),
+                                        ),
+                                      ],
                                     ),
                                   ],
-                                ),
-                              ],
-                            )),
-                      ],
-                    ),
+                                )),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 35),
-              if (userRole.role == 'user' || userRole.role == 'admin')
-                Expanded(
-                  child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: ListView(children: [
-                        FutureBuilder<List<Map<String, String>>>(
-                          future: _futureSummaryData,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            } else if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
-                            } else if (snapshot.hasData) {
-                              final data = snapshot.data!;
-                              return SummaryCards(data: data);
-                            } else {
-                              return const Text('No data available');
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        if (userRole.role != 'admin')
+                  const SizedBox(height: 35),
+                  if (userRole.role == 'user' || userRole.role == 'admin')
+                    Expanded(
+                      child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: ListView(children: [
+                            FutureBuilder<List<Map<String, String>>>(
+                              future: _futureSummaryData,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                } else if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                } else if (snapshot.hasData) {
+                                  final data = snapshot.data!;
+                                  return SummaryCards(data: data);
+                                } else {
+                                  return const Text('No data available');
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            if (userRole.role != 'admin')
                           CustomLineChart(
-                              title: 'Hasil Perolehan Susu ',
-                              datas: milkProductionData),
-                        CustomLineChart(
-                          title: 'Berat Pangan Hijauan',
-                          datas: greenFodderData,
-                          otherInfo: 'Pakan Hijauan Terbaik saat ini :',
-                          valueInfo: hijauanWeight,
-                        ),
-                        CustomLineChart(
-                          title: 'Berat Pangan Sentrat',
-                          datas: concentratedFodderData,
-                          otherInfo: 'Pakan Sentrat Terbaik saat ini :',
-                          valueInfo: sentratWeight,
-                        ),
-                        CustomLineChart(
-                          title: 'Contoh Data dari Server',
-                          datas: exampleServerData,
-                        ),
-                        CustomBarChart(
+                                  title: 'Hasil Perolehan Susu ',
+                                  datas: milkProductionData),
+                            CustomLineChart(
+                              title: 'Berat Pangan Hijauan',
+                              datas: greenFodderData,
+                              otherInfo: 'Pakan Hijauan Terbaik saat ini :',
+                              valueInfo: hijauanWeight,
+                            ),
+                            CustomLineChart(
+                              title: 'Berat Pangan Sentrat',
+                              datas: concentratedFodderData,
+                              otherInfo: 'Pakan Sentrat Terbaik saat ini :',
+                              valueInfo: sentratWeight,
+                            ),
+                            CustomLineChart(
+                              title: 'Contoh Data dari Server',
+                              datas: exampleServerData,
+                            ),
+                            CustomBarChart(
                             title: 'Produksi Susu per Bulan',
                             data: milkProductionPerMonth()),
                       ])),
-                ),
-              if (userRole.role == 'doctor' || userRole.role == 'dokter')
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ListView(
-                      children: [
-                        FutureBuilder<List<Map<String, String>>>(
-                          future: _futureSummaryData,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            } else if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
-                            } else if (snapshot.hasData) {
-                              final data = snapshot.data!;
-                              return SummaryCards(data: data);
-                            } else {
-                              return const Text('No data available');
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Sapi Terindikasi Sakit :',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF8F3505),
-                          ),
-                        ),
-                        for (var cattle in sickIndicated)
-                          _buildCattleCard(
-                            context,
-                            id: cattle['id'],
-                            gender: cattle['gender'],
-                            info: cattle['info'],
-                            checked: cattle['checked'] ?? false,
-                            onPressed: () {
-                              return DataSapiPage(
-                                id: cattle['id'],
-                                gender: cattle['gender'],
-                                age: cattle['age'],
-                                healthStatus: 'SAKIT',
-                                isProductive: true,
-                                isConnectedToNFCTag:
-                                    cattle['isConnectedToNFCTag'],
-                              );
-                            },
-                          ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Sapi Sakit & Dalam Pengobatan :',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF8F3505),
-                          ),
-                        ),
-                        for (var cattle in sickCowAndTreatment)
-                          _buildCattleCard(
-                            context,
-                            id: cattle['id'],
-                            gender: cattle['gender'],
-                            info: cattle['info'],
-                            checked: cattle['checked'] ?? false,
-                            onPressed: () {
-                              return DataSapiPage(
-                                id: cattle['id'],
-                                gender: cattle['gender'],
-                                age: cattle['age'],
-                                healthStatus: 'SAKIT',
-                                isProductive: true,
-                                isConnectedToNFCTag:
-                                    cattle['isConnectedToNFCTag'],
-                              );
-                            },
-                          ),
-                        const SizedBox(height: 20),
-                        CustomBarChart(
-                            title: 'Jumlah Sapi Sakit per Bulan',
-                            data: sickCowPerMonthData()),
-                      ],
                     ),
-                  ),
-                ),
-            ])));
+                  if (userRole.role == 'doctor' || userRole.role == 'dokter')
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: ListView(
+                          children: [
+                            FutureBuilder<List<Map<String, String>>>(
+                              future: _futureSummaryData,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                } else if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                } else if (snapshot.hasData) {
+                                  final data = snapshot.data!;
+                                  return SummaryCards(data: data);
+                                } else {
+                                  return const Text('No data available');
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Sapi Terindikasi Sakit :',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF8F3505),
+                              ),
+                            ),
+                            for (var cattle in sickIndicated)
+                              _buildCattleCard(
+                                context,
+                                id: cattle['id'],
+                                gender: cattle['gender'],
+                                info: cattle['info'],
+                                checked: cattle['checked'] ?? false,
+                                onPressed: () {
+                                  return DataSapiPage(
+                                    id: cattle['id'],
+                                    gender: cattle['gender'],
+                                    age: cattle['age'],
+                                    healthStatus: 'SAKIT',
+                                    isProductive: true,
+                                    isConnectedToNFCTag:
+                                        cattle['isConnectedToNFCTag'],
+                                  );
+                                },
+                              ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Sapi Sakit & Dalam Pengobatan :',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF8F3505),
+                              ),
+                            ),
+                            for (var cattle in sickCowAndTreatment)
+                              _buildCattleCard(
+                                context,
+                                id: cattle['id'],
+                                gender: cattle['gender'],
+                                info: cattle['info'],
+                                checked: cattle['checked'] ?? false,
+                                onPressed: () {
+                                  return DataSapiPage(
+                                    id: cattle['id'],
+                                    gender: cattle['gender'],
+                                    age: cattle['age'],
+                                    healthStatus: 'SAKIT',
+                                    isProductive: true,
+                                    isConnectedToNFCTag:
+                                        cattle['isConnectedToNFCTag'],
+                                  );
+                                },
+                              ),
+                            const SizedBox(height: 20),
+                            CustomBarChart(
+                                title: 'Jumlah Sapi Sakit per Bulan',
+                                data: sickCowPerMonthData()),
+                          ],
+                        ),
+                      ),
+                    ),
+                ])));
   }
 
   Widget _buildCattleCard(

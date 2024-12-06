@@ -43,7 +43,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
   List<String> historyData = ['70 Kg', '65 Kg', '72 Kg', '68 Kg'];
   int _currentChartIndex = 0;
 
-  bool isLoading = false;
+  bool isLoading = true;
   String errorMessage = '';
 
   TextEditingController stressLevelController = TextEditingController();
@@ -497,7 +497,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
     try {
       final url = Uri.parse(
           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         return response;
@@ -828,193 +828,200 @@ class _DataSapiPageState extends State<DataSapiPage> {
     final userRole = Provider.of<UserRole>(context);
     return Scaffold(
       backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                color: Colors.white,
-                child: _buildHeader(
-                  id: widget.id,
-                  gender: widget.gender,
-                  age: widget.age,
-                  healthStatus: widget.healthStatus,
-                  isProductive: widget.isProductive,
-                ),
-              ),
-              const SizedBox(height: 70),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _refreshData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
-                    const Text(
-                      'PRODUKSI SUSU & BERAT BADAN',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF8F3505),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    MultiChartContainer(
-                      label: 'produksiSusu & beratBadan',
-                      historyData: milkProductionAndWeightHistory,
-                      chartsData: milkAndWeightData,
-                      id: widget.id,
-                      onEdit: (index) async {
-                        Navigator.of(context).pop();
-
-                        String initialData = milkProductionAndWeightHistory[
-                            'produksiSusu']![index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: milkProductionAndWeightHistory[
-                                      'produksiSusu']![index]['date']
-                                  .toString(),
-                              initialData: initialData,
-                              title: formattedDate(
-                                  milkProductionAndWeightHistory[
-                                      'produksiSusu']![index]['date']),
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            milkProductionAndWeightHistory['produksiSusu']![
-                                index]['data'] = updatedData;
-                          });
-                        }
-                      },
-                      onDelete: (index) {
-                        setState(() {
-                          milkProductionAndWeightHistory['produksiSusu']
-                              ?.removeAt(index);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 25),
-                    const Divider(
-                      color: Colors.black12,
-                      thickness: 1,
-                    ),
-                    const SizedBox(height: 25),
-                    const Text(
-                      'PAKAN YANG DIBERIKAN',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF8F3505),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    MultiChartContainer(
-                      label: 'pakanHijau & pakanSentrat',
-                      historyData: feedDataHistory,
-                      chartsData: feedData,
-                      id: widget.id,
-                      onEdit: (index) async {
-                        Navigator.of(context).pop();
-
-                        String initialData =
-                            feedDataHistory['pakanHijau']![index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: feedDataHistory['pakanHijau']![index]['date']
-                                  .toString(),
-                              initialData: initialData,
-                              title: formattedDate(
-                                  feedDataHistory['pakanHijau']![index]
-                                      ['date']),
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            feedDataHistory['pakanHijau']![index]['data'] =
-                                updatedData;
-                          });
-                        }
-                      },
-                      onDelete: (index) {
-                        setState(() {
-                          feedDataHistory['pakanHijau']!.removeAt(index);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 25),
-                    const Divider(
-                      color: Colors.black12,
-                      thickness: 1,
-                    ),
-                    const SizedBox(height: 15),
                     Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9E2B5),
-                        borderRadius: BorderRadius.circular(20),
+                      color: Colors.white,
+                      child: _buildHeader(
+                        id: widget.id,
+                        gender: widget.gender,
+                        age: widget.age,
+                        healthStatus: widget.healthStatus,
+                        isProductive: widget.isProductive,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                    ),
+                    const SizedBox(height: 70),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            color: Color(0xFF8F3505),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Hari Ini, ${formattedDate(DateTime.now())}',
-                            style: const TextStyle(
-                              fontSize: 16,
+                          const SizedBox(height: 16),
+                          const Text(
+                            'PRODUKSI SUSU & BERAT BADAN',
+                            style: TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF8F3505),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    ConditionsSection(
-                        healthStatus: widget.healthStatus,
-                        stressLevelHistory: stressLevelHistory,
-                        addEditStressLevelDateNow: () async {
-                          String updatedData =
-                              stressLevelController.text.trim();
+                          const SizedBox(height: 10),
+                          MultiChartContainer(
+                            label: 'produksiSusu & beratBadan',
+                            historyData: milkProductionAndWeightHistory,
+                            chartsData: milkAndWeightData,
+                            id: widget.id,
+                            onEdit: (index) async {
+                              Navigator.of(context).pop();
 
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              stressLevelHistory.add({
-                                'date': DateTime.now(),
-                                'data': updatedData,
-                              });
-                            });
-                          }
-                        },
-                        healthStatusHistory: healthStatusHistory,
-                        addEditHealthStatusDateNow: () async {
-                          String updatedData =
-                              healthStatusController.text.trim();
+                              String initialData =
+                                  milkProductionAndWeightHistory[
+                                      'produksiSusu']![index]['data'];
 
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              healthStatusHistory.add({
-                                'date': DateTime.now(),
-                                'data': updatedData,
+                              String? updatedData = await showDialog<String>(
+                                context: context,
+                                builder: (context) {
+                                  return EditDataDialog(
+                                    id: milkProductionAndWeightHistory[
+                                            'produksiSusu']![index]['date']
+                                        .toString(),
+                                    initialData: initialData,
+                                    title: formattedDate(
+                                        milkProductionAndWeightHistory[
+                                            'produksiSusu']![index]['date']),
+                                  );
+                                },
+                              );
+
+                              if (updatedData != null &&
+                                  updatedData.isNotEmpty) {
+                                setState(() {
+                                  milkProductionAndWeightHistory[
+                                          'produksiSusu']![index]['data'] =
+                                      updatedData;
+                                });
+                              }
+                            },
+                            onDelete: (index) {
+                              setState(() {
+                                milkProductionAndWeightHistory['produksiSusu']
+                                    ?.removeAt(index);
                               });
-                            });
+                            },
+                          ),
+                          const SizedBox(height: 25),
+                          const Divider(
+                            color: Colors.black12,
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 25),
+                          const Text(
+                            'PAKAN YANG DIBERIKAN',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF8F3505),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          MultiChartContainer(
+                            label: 'pakanHijau & pakanSentrat',
+                            historyData: feedDataHistory,
+                            chartsData: feedData,
+                            id: widget.id,
+                            onEdit: (index) async {
+                              Navigator.of(context).pop();
+
+                              String initialData =
+                                  feedDataHistory['pakanHijau']![index]['data'];
+
+                              String? updatedData = await showDialog<String>(
+                                context: context,
+                                builder: (context) {
+                                  return EditDataDialog(
+                                    id: feedDataHistory['pakanHijau']![index]
+                                            ['date']
+                                        .toString(),
+                                    initialData: initialData,
+                                    title: formattedDate(
+                                        feedDataHistory['pakanHijau']![index]
+                                            ['date']),
+                                  );
+                                },
+                              );
+
+                              if (updatedData != null &&
+                                  updatedData.isNotEmpty) {
+                                setState(() {
+                                  feedDataHistory['pakanHijau']![index]
+                                      ['data'] = updatedData;
+                                });
+                              }
+                            },
+                            onDelete: (index) {
+                              setState(() {
+                                feedDataHistory['pakanHijau']!.removeAt(index);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 25),
+                          const Divider(
+                            color: Colors.black12,
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 15),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9E2B5),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: Color(0xFF8F3505),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Hari Ini, ${formattedDate(DateTime.now())}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF8F3505),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          ConditionsSection(
+                              healthStatus: widget.healthStatus,
+                              stressLevelHistory: stressLevelHistory,
+                              addEditStressLevelDateNow: () async {
+                                String updatedData =
+                                    stressLevelController.text.trim();
+
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    stressLevelHistory.add({
+                                      'date': DateTime.now(),
+                                      'data': updatedData,
+                                    });
+                                  });
+                                }
+                              },
+                              healthStatusHistory: healthStatusHistory,
+                              addEditHealthStatusDateNow: () async {
+                                String updatedData =
+                                    healthStatusController.text.trim();
+
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    healthStatusHistory.add({
+                                      'date': DateTime.now(),
+                                      'data': updatedData,
+                                    });
+                                  });
 
                             ShowAddEditDataResultDialog.show(context, true,
                                 customMessage:
@@ -1050,32 +1057,34 @@ class _DataSapiPageState extends State<DataSapiPage> {
                           String updatedData =
                               healthStatusController.text.trim();
 
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              healthStatusHistory[index]['data'] = updatedData;
-                            });
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    healthStatusHistory[index]['data'] =
+                                        updatedData;
+                                  });
 
-                            ShowResultDialog.show(context, true,
-                                customMessage:
-                                    'Data kesehatan berhasil diperbarui!');
-                          } else {
-                            ShowResultDialog.show(context, false,
-                                customMessage:
-                                    'Gagal memperbarui data kesehatan!');
-                          }
+                                  ShowResultDialog.show(context, true,
+                                      customMessage:
+                                          'Data kesehatan berhasil diperbarui!');
+                                } else {
+                                  ShowResultDialog.show(context, false,
+                                      customMessage:
+                                          'Gagal memperbarui data kesehatan!');
+                                }
 
-                          Future.delayed(const Duration(seconds: 2), () {
-                            Navigator.of(context).pop();
-                          });
-                        },
-                        editStressLevel: (index) async {
-                          String updatedData =
-                              stressLevelController.text.trim();
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  Navigator.of(context).pop();
+                                });
+                              },
+                              editStressLevel: (index) async {
+                                String updatedData =
+                                    stressLevelController.text.trim();
 
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              stressLevelHistory[index]['data'] = updatedData;
-                            });
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    stressLevelHistory[index]['data'] =
+                                        updatedData;
+                                  });
 
                             ShowResultDialog.show(context, true,
                                 customMessage:
@@ -1107,26 +1116,27 @@ class _DataSapiPageState extends State<DataSapiPage> {
                                     'Gagal memperbarui data birahi!');
                           }
 
-                          Future.delayed(const Duration(seconds: 2), () {
-                            Navigator.of(context).pop();
-                          });
-                        },
-                        deleteStressLevel: (index) {
-                          setState(() {
-                            stressLevelHistory.removeAt(index);
-                          });
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  Navigator.of(context).pop();
+                                });
+                              },
+                              deleteStressLevel: (index) {
+                                setState(() {
+                                  stressLevelHistory.removeAt(index);
+                                });
 
-                          Navigator.of(context).pop();
+                                Navigator.of(context).pop();
 
-                          ShowResultDialog.show(context, true,
-                              customMessage: 'Tingkat stres berhasil dihapus!');
-                        },
-                        deleteHealthStatus: (index) {
-                          setState(() {
-                            healthStatusHistory.removeAt(index);
-                          });
+                                ShowResultDialog.show(context, true,
+                                    customMessage:
+                                        'Tingkat stres berhasil dihapus!');
+                              },
+                              deleteHealthStatus: (index) {
+                                setState(() {
+                                  healthStatusHistory.removeAt(index);
+                                });
 
-                          Navigator.of(context).pop();
+                                Navigator.of(context).pop();
 
                           ShowResultDialog.show(context, true,
                               customMessage:
