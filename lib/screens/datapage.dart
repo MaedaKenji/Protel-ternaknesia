@@ -28,17 +28,17 @@ class Cattle {
   });
 
   factory Cattle.fromJson(Map<String, dynamic> json) {
-    String healthStatus =
-        (json['health_record'] != null && json['health_record'] == true)
-            ? 'Sehat'
-            : 'Tidak Sehat';
+    // String healthStatus =
+    //     (json['health_record'] != null && json['health_record'] == true)
+    //         ? 'Sehat'
+    //         : 'Tidak Sehat';
 
     return Cattle(
       id: json['cow_id']?.toString() ?? 'Unknown ID',
       weight: int.tryParse(json['weight']?.toString() ?? '0') ?? 0,
       age: int.tryParse(json['age']?.toString() ?? '0') ?? 0,
       gender: json['gender']?.toString() ?? 'Unknown',
-      healthStatus: json['health_status']?.toString() ?? healthStatus,
+      healthStatus: json['health_status']?.toString() ?? "false",
       isProductive: json['is_productive'] ?? false,
       isConnectedToNFCTag: json['is_connected_to_nfc_tag'] ?? false,
     );
@@ -91,6 +91,7 @@ class _DataPageState extends State<DataPage> {
   void initState() {
     super.initState();
     cattleData = fetchCattleData();
+    _refreshData();
   }
 
   Future<List<Cattle>> fetchCattleData() async {
@@ -103,11 +104,38 @@ class _DataPageState extends State<DataPage> {
         throw Exception('Request timed out');
       });
 
+      // try {
+      //   // Call API to predict productivity
+      //   final response = await http.post(
+      //     Uri.parse(
+      //         '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/predict.productivity'),
+      //     headers: {
+      //       'Content-Type': 'application/json; charset=UTF-8',
+      //     },
+      //     body: jsonEncode(<String, dynamic>{
+      //       'cow_id': json['cow_id'],
+      //       'weight': json['weight'],
+      //       'age': json['age'],
+      //       'gender': json['gender'],
+      //       'health_status': healthStatus,
+      //     }),
+      //   );
+      //   bool isProductive = false;
+      //   if (response.statusCode == 200) {
+      //     final Map<String, dynamic> responseBody = jsonDecode(response.body);
+      //     isProductive = responseBody['is_productive'] ?? false;
+      //   } else {}
+      // } catch (e) {
+      //   print(e);
+      // }
+
       if (response.statusCode == 200) {
         List<dynamic> cattleJson = json.decode(response.body);
+        print(response.body);
 
         return cattleJson.map((json) {
-          return Cattle.fromJson(json);
+          return Cattle.fromJson(
+              {...json, 'is_connected_to_nfc_tag': json['nfc_id'] != null,'health_status': json['health_record'] ? 'SEHAT' : 'SAKIT'});
         }).toList();
       } else {
         throw Exception(
@@ -122,6 +150,10 @@ class _DataPageState extends State<DataPage> {
     setState(() {
       cattleData = fetchCattleData();
     });
+    for (var cattle in await cattleData!) {
+      print(
+          cattle); // Pastikan `Cattle` memiliki `toString` yang diimplementasikan.
+    }
   }
 
   @override
@@ -321,7 +353,6 @@ class _DataPageState extends State<DataPage> {
                   healthStatus: cattle.healthStatus,
                   isProductive: cattle.isProductive,
                   isConnectedToNFCTag: cattle.isConnectedToNFCTag,
-
                 );
               }),
             );

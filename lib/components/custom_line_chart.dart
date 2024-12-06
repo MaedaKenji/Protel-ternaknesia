@@ -1,10 +1,12 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class CustomLineChart extends StatefulWidget {
   final String title;
   String? otherInfo;
-  int? valueInfo;
+  double? valueInfo;
   final Map<String, List<FlSpot>> datas;
 
   CustomLineChart({

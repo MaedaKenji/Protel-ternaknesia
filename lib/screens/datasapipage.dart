@@ -43,7 +43,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
   List<String> historyData = ['70 Kg', '65 Kg', '72 Kg', '68 Kg'];
   int _currentChartIndex = 0;
 
-  bool isLoading = false;
+  bool isLoading = true;
   String errorMessage = '';
 
   TextEditingController stressLevelController = TextEditingController();
@@ -497,7 +497,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
     try {
       final url = Uri.parse(
           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         return response;
@@ -835,677 +835,716 @@ class _DataSapiPageState extends State<DataSapiPage> {
     final userRole = Provider.of<UserRole>(context);
     return Scaffold(
       backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                color: Colors.white,
-                child: _buildHeader(
-                  id: widget.id,
-                  gender: widget.gender,
-                  age: widget.age,
-                  healthStatus: widget.healthStatus,
-                  isProductive: widget.isProductive,
-                ),
-              ),
-              const SizedBox(height: 70),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _refreshData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
-                    const Text(
-                      'PRODUKSI SUSU & BERAT BADAN',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF8F3505),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    MultiChartContainer(
-                      label: 'produksiSusu & beratBadan',
-                      historyData: milkProductionAndWeightHistory,
-                      chartsData: milkAndWeightData,
-                      id: widget.id,
-                      onEdit: (index) async {
-                        Navigator.of(context).pop();
-
-                        String initialData = milkProductionAndWeightHistory[
-                            'produksiSusu']![index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: milkProductionAndWeightHistory[
-                                      'produksiSusu']![index]['date']
-                                  .toString(),
-                              initialData: initialData,
-                              title: formattedDate(
-                                  milkProductionAndWeightHistory[
-                                      'produksiSusu']![index]['date']),
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            milkProductionAndWeightHistory['produksiSusu']![
-                                index]['data'] = updatedData;
-                          });
-                        }
-                      },
-                      onDelete: (index) {
-                        setState(() {
-                          milkProductionAndWeightHistory['produksiSusu']
-                              ?.removeAt(index);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 25),
-                    const Divider(
-                      color: Colors.black12,
-                      thickness: 1,
-                    ),
-                    const SizedBox(height: 25),
-                    const Text(
-                      'PAKAN YANG DIBERIKAN',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF8F3505),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    MultiChartContainer(
-                      label: 'pakanHijau & pakanSentrat',
-                      historyData: feedDataHistory,
-                      chartsData: feedData,
-                      id: widget.id,
-                      onEdit: (index) async {
-                        Navigator.of(context).pop();
-
-                        String initialData =
-                            feedDataHistory['pakanHijau']![index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: feedDataHistory['pakanHijau']![index]['date']
-                                  .toString(),
-                              initialData: initialData,
-                              title: formattedDate(
-                                  feedDataHistory['pakanHijau']![index]
-                                      ['date']),
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            feedDataHistory['pakanHijau']![index]['data'] =
-                                updatedData;
-                          });
-                        }
-                      },
-                      onDelete: (index) {
-                        setState(() {
-                          feedDataHistory['pakanHijau']!.removeAt(index);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 25),
-                    const Divider(
-                      color: Colors.black12,
-                      thickness: 1,
-                    ),
-                    const SizedBox(height: 15),
                     Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9E2B5),
-                        borderRadius: BorderRadius.circular(20),
+                      color: Colors.white,
+                      child: _buildHeader(
+                        id: widget.id,
+                        gender: widget.gender,
+                        age: widget.age,
+                        healthStatus: widget.healthStatus,
+                        isProductive: widget.isProductive,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                    ),
+                    const SizedBox(height: 70),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            color: Color(0xFF8F3505),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Hari Ini, ${formattedDate(DateTime.now())}',
-                            style: const TextStyle(
-                              fontSize: 16,
+                          const SizedBox(height: 16),
+                          const Text(
+                            'PRODUKSI SUSU & BERAT BADAN',
+                            style: TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF8F3505),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    ConditionsSection(
-                        healthStatus: widget.healthStatus,
-                        stressLevelHistory: stressLevelHistory,
-                        addEditStressLevelDateNow: () async {
-                          String updatedData =
-                              stressLevelController.text.trim();
+                          const SizedBox(height: 10),
+                          MultiChartContainer(
+                            label: 'produksiSusu & beratBadan',
+                            historyData: milkProductionAndWeightHistory,
+                            chartsData: milkAndWeightData,
+                            id: widget.id,
+                            onEdit: (index) async {
+                              Navigator.of(context).pop();
 
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              stressLevelHistory.add({
-                                'date': DateTime.now(),
-                                'data': updatedData,
+                              String initialData =
+                                  milkProductionAndWeightHistory[
+                                      'produksiSusu']![index]['data'];
+
+                              String? updatedData = await showDialog<String>(
+                                context: context,
+                                builder: (context) {
+                                  return EditDataDialog(
+                                    id: milkProductionAndWeightHistory[
+                                            'produksiSusu']![index]['date']
+                                        .toString(),
+                                    initialData: initialData,
+                                    title: formattedDate(
+                                        milkProductionAndWeightHistory[
+                                            'produksiSusu']![index]['date']),
+                                  );
+                                },
+                              );
+
+                              if (updatedData != null &&
+                                  updatedData.isNotEmpty) {
+                                setState(() {
+                                  milkProductionAndWeightHistory[
+                                          'produksiSusu']![index]['data'] =
+                                      updatedData;
+                                });
+                              }
+                            },
+                            onDelete: (index) {
+                              setState(() {
+                                milkProductionAndWeightHistory['produksiSusu']
+                                    ?.removeAt(index);
                               });
-                            });
-                          }
-                        },
-                        healthStatusHistory: healthStatusHistory,
-                        addEditHealthStatusDateNow: () async {
-                          String updatedData =
-                              healthStatusController.text.trim();
-
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              healthStatusHistory.add({
-                                'date': DateTime.now(),
-                                'data': updatedData,
-                              });
-                            });
-
-                            ShowAddEditDataResultDialog.show(context, true,
-                                customMessage:
-                                    'Data kesehatan berhasil ditambahkan!');
-                          } else {
-                            ShowAddEditDataResultDialog.show(context, false,
-                                customMessage:
-                                    'Gagal menambahkan data kesehatan!');
-                          }
-                        },
-                        editHealthStatus: (index) async {
-                          String updatedData =
-                              healthStatusController.text.trim();
-
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              healthStatusHistory[index]['data'] = updatedData;
-                            });
-
-                            ShowResultDialog.show(context, true,
-                                customMessage:
-                                    'Data kesehatan berhasil diperbarui!');
-                          } else {
-                            ShowResultDialog.show(context, false,
-                                customMessage:
-                                    'Gagal memperbarui data kesehatan!');
-                          }
-
-                          Future.delayed(const Duration(seconds: 2), () {
-                            Navigator.of(context).pop();
-                          });
-                        },
-                        editStressLevel: (index) async {
-                          String updatedData =
-                              stressLevelController.text.trim();
-
-                          if (updatedData.isNotEmpty) {
-                            setState(() {
-                              stressLevelHistory[index]['data'] = updatedData;
-                            });
-
-                            ShowResultDialog.show(context, true,
-                                customMessage:
-                                    'Tingkat stres berhasil diperbarui!');
-                          } else {
-                            ShowResultDialog.show(context, false,
-                                customMessage:
-                                    'Gagal memperbarui tingkat stres!');
-                          }
-
-                          Future.delayed(const Duration(seconds: 2), () {
-                            Navigator.of(context).pop();
-                          });
-                        },
-                        deleteStressLevel: (index) {
-                          setState(() {
-                            stressLevelHistory.removeAt(index);
-                          });
-
-                          Navigator.of(context).pop();
-
-                          ShowResultDialog.show(context, true,
-                              customMessage: 'Tingkat stres berhasil dihapus!');
-                        },
-                        deleteHealthStatus: (index) {
-                          setState(() {
-                            healthStatusHistory.removeAt(index);
-                          });
-
-                          Navigator.of(context).pop();
-
-                          ShowResultDialog.show(context, true,
-                              customMessage:
-                                  'Data kesehatan berhasil dihapus!');
-                        }),
-                    const SizedBox(height: 20),
-                    PopulationStructureSection(
-                      birahiHistory: birahiHistory,
-                      addEditBirahiDateNow: () async {
-                        String updatedData = birahiController.text.trim();
-
-                        if (updatedData.isNotEmpty) {
-                          setState(() {
-                            birahiHistory.add({
-                              'date': DateTime.now(),
-                              'data': updatedData,
-                            });
-                          });
-
-                          ShowAddEditDataResultDialog.show(context, true,
-                              customMessage:
-                                  'Data birahi berhasil ditambahkan!');
-                        } else {
-                          ShowAddEditDataResultDialog.show(context, false,
-                              customMessage: 'Gagal menambahkan data birahi!');
-                        }
-                      },
-                      addEditStatusDateNow: () async {
-                        String updatedData = statusController.text.trim();
-
-                        if (updatedData.isNotEmpty) {
-                          setState(() {
-                            statusHistory.add({
-                              'date': DateTime.now(),
-                              'data': updatedData,
-                            });
-                          });
-
-                          ShowAddEditDataResultDialog.show(context, true,
-                              customMessage:
-                                  'Data status berhasil ditambahkan!');
-                        } else {
-                          ShowAddEditDataResultDialog.show(context, false,
-                              customMessage: 'Gagal menambahkan data status!');
-                        }
-                      },
-                      statusHistory: statusHistory,
-                      editBirahi: (index) async {
-                        String initialData = birahiHistory[index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: birahiHistory[index]['date'].toString(),
-                              initialData: initialData,
-                              title: 'Hello',
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            birahiHistory[index]['data'] = updatedData;
-                          });
-                        }
-                      },
-                      editStatus: (index) async {
-                        String initialData = statusHistory[index]['data'];
-
-                        String? updatedData = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return EditDataDialog(
-                              id: statusHistory[index]['date'].toString(),
-                              initialData: initialData,
-                              title: statusHistory[index]['date'].toString(),
-                            );
-                          },
-                        );
-
-                        if (updatedData != null && updatedData.isNotEmpty) {
-                          setState(() {
-                            statusHistory[index]['data'] = updatedData;
-                          });
-                        }
-                      },
-                      deleteBirahi: (index) {
-                        setState(() {
-                          birahiHistory.removeAt(index);
-                        });
-                      },
-                      deleteStatus: (index) {
-                        setState(() {
-                          statusHistory.removeAt(index);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    if (widget.healthStatus.toUpperCase() == 'SAKIT') ...[
-                      const Text(
-                        'CATATAN :',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        readOnly: userRole.role == 'doctor' ||
-                            userRole.role == 'admin',
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          labelStyle: const TextStyle(
-                            color: Color(0xFF8F3505),
+                            },
                           ),
-                          hintStyle: TextStyle(
-                            color: const Color(0xFF8F3505).withOpacity(0.5),
+                          const SizedBox(height: 25),
+                          const Divider(
+                            color: Colors.black12,
+                            thickness: 1,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF8F3505)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF8F3505)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF8F3505)),
-                          ),
-                          hintText: userRole.role == 'doctor' ||
-                                  userRole.role == 'admin'
-                              ? 'Catatan hanya bisa diisi oleh peternak!'
-                              : 'Masukkan catatan...',
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _showNotesHistory();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor:
-                              const Color(0xFF8F3505).withOpacity(0.1),
-                          minimumSize: const Size(double.infinity, 50),
-                          side: const BorderSide(color: Color(0xFF8F3505)),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text(
-                          'RIWAYAT CATATAN',
-                          style: TextStyle(
-                            color: Color(0xFF8F3505),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'DIAGNOSIS DAN PENGOBATAN :',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        readOnly:
-                            userRole.role == 'admin' || userRole.role == 'user',
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          labelStyle: const TextStyle(
-                            color: Color(0xFF8F3505),
-                          ),
-                          hintStyle: TextStyle(
-                            color: const Color(0xFF8F3505).withOpacity(0.5),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF8F3505)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF8F3505)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF8F3505)),
-                          ),
-                          hintText: userRole.role == 'admin' ||
-                                  userRole.role == 'user'
-                              ? 'Diagnosis dan pengobatan hanya bisa diisi oleh dokter!'
-                              : 'Masukkan diagnosis dan pengobatan...',
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _showTreatmentHistory();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor:
-                              const Color(0xFF8F3505).withOpacity(0.1),
-                          minimumSize: const Size(double.infinity, 50),
-                          side: const BorderSide(color: Color(0xFF8F3505)),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text(
-                          'RIWAYAT PENGOBATAN',
-                          style: TextStyle(
-                            color: Color(0xFF8F3505),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (widget.healthStatus.toUpperCase() == 'SEHAT')
-                      Container(
-                          padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4caf4f).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.green,
-                            ),
-                          ),
-                          child: const Text(
-                            'Catatan: Karena sapi dalam kondisi sehat, maka kolom catatan dan diagnosis disembunyikan!',
-                            textAlign: TextAlign.center,
+                          const SizedBox(height: 25),
+                          const Text(
+                            'PAKAN YANG DIBERIKAN',
                             style: TextStyle(
-                              color: Color(0xFF2d8a30),
-                              fontSize: 14,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF8F3505),
                             ),
-                          )),
-                    const SizedBox(height: 30),
-                    if (userRole.role != 'doctor') ...[
-                      Row(
-                        children: [
-                          if (widget.isConnectedToNFCTag)
-                            Flexible(
-                              flex: 1,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (context) {
-                                    return AddEditNFCTag(
-                                        id: widget.id,
-                                        isConnectedToNFCTag:
-                                            widget.isConnectedToNFCTag);
-                                  }));
+                          ),
+                          const SizedBox(height: 10),
+                          MultiChartContainer(
+                            label: 'pakanHijau & pakanSentrat',
+                            historyData: feedDataHistory,
+                            chartsData: feedData,
+                            id: widget.id,
+                            onEdit: (index) async {
+                              Navigator.of(context).pop();
+
+                              String initialData =
+                                  feedDataHistory['pakanHijau']![index]['data'];
+
+                              String? updatedData = await showDialog<String>(
+                                context: context,
+                                builder: (context) {
+                                  return EditDataDialog(
+                                    id: feedDataHistory['pakanHijau']![index]
+                                            ['date']
+                                        .toString(),
+                                    initialData: initialData,
+                                    title: formattedDate(
+                                        feedDataHistory['pakanHijau']![index]
+                                            ['date']),
+                                  );
                                 },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
+                              );
+
+                              if (updatedData != null &&
+                                  updatedData.isNotEmpty) {
+                                setState(() {
+                                  feedDataHistory['pakanHijau']![index]
+                                      ['data'] = updatedData;
+                                });
+                              }
+                            },
+                            onDelete: (index) {
+                              setState(() {
+                                feedDataHistory['pakanHijau']!.removeAt(index);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 25),
+                          const Divider(
+                            color: Colors.black12,
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 15),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9E2B5),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: Color(0xFF8F3505),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Hari Ini, ${formattedDate(DateTime.now())}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF8F3505),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          ConditionsSection(
+                              healthStatus: widget.healthStatus,
+                              stressLevelHistory: stressLevelHistory,
+                              addEditStressLevelDateNow: () async {
+                                String updatedData =
+                                    stressLevelController.text.trim();
+
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    stressLevelHistory.add({
+                                      'date': DateTime.now(),
+                                      'data': updatedData,
+                                    });
+                                  });
+                                }
+                              },
+                              healthStatusHistory: healthStatusHistory,
+                              addEditHealthStatusDateNow: () async {
+                                String updatedData =
+                                    healthStatusController.text.trim();
+
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    healthStatusHistory.add({
+                                      'date': DateTime.now(),
+                                      'data': updatedData,
+                                    });
+                                  });
+
+                                  ShowAddEditDataResultDialog.show(
+                                      context, true,
+                                      customMessage:
+                                          'Data kesehatan berhasil ditambahkan!');
+                                } else {
+                                  ShowAddEditDataResultDialog.show(
+                                      context, false,
+                                      customMessage:
+                                          'Gagal menambahkan data kesehatan!');
+                                }
+                              },
+                              editHealthStatus: (index) async {
+                                String updatedData =
+                                    healthStatusController.text.trim();
+
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    healthStatusHistory[index]['data'] =
+                                        updatedData;
+                                  });
+
+                                  ShowResultDialog.show(context, true,
+                                      customMessage:
+                                          'Data kesehatan berhasil diperbarui!');
+                                } else {
+                                  ShowResultDialog.show(context, false,
+                                      customMessage:
+                                          'Gagal memperbarui data kesehatan!');
+                                }
+
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  Navigator.of(context).pop();
+                                });
+                              },
+                              editStressLevel: (index) async {
+                                String updatedData =
+                                    stressLevelController.text.trim();
+
+                                if (updatedData.isNotEmpty) {
+                                  setState(() {
+                                    stressLevelHistory[index]['data'] =
+                                        updatedData;
+                                  });
+
+                                  ShowResultDialog.show(context, true,
+                                      customMessage:
+                                          'Tingkat stres berhasil diperbarui!');
+                                } else {
+                                  ShowResultDialog.show(context, false,
+                                      customMessage:
+                                          'Gagal memperbarui tingkat stres!');
+                                }
+
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  Navigator.of(context).pop();
+                                });
+                              },
+                              deleteStressLevel: (index) {
+                                setState(() {
+                                  stressLevelHistory.removeAt(index);
+                                });
+
+                                Navigator.of(context).pop();
+
+                                ShowResultDialog.show(context, true,
+                                    customMessage:
+                                        'Tingkat stres berhasil dihapus!');
+                              },
+                              deleteHealthStatus: (index) {
+                                setState(() {
+                                  healthStatusHistory.removeAt(index);
+                                });
+
+                                Navigator.of(context).pop();
+
+                                ShowResultDialog.show(context, true,
+                                    customMessage:
+                                        'Data kesehatan berhasil dihapus!');
+                              }),
+                          const SizedBox(height: 20),
+                          PopulationStructureSection(
+                            birahiHistory: birahiHistory,
+                            addEditBirahiDateNow: () async {
+                              String updatedData = birahiController.text.trim();
+
+                              if (updatedData.isNotEmpty) {
+                                setState(() {
+                                  birahiHistory.add({
+                                    'date': DateTime.now(),
+                                    'data': updatedData,
+                                  });
+                                });
+
+                                ShowAddEditDataResultDialog.show(context, true,
+                                    customMessage:
+                                        'Data birahi berhasil ditambahkan!');
+                              } else {
+                                ShowAddEditDataResultDialog.show(context, false,
+                                    customMessage:
+                                        'Gagal menambahkan data birahi!');
+                              }
+                            },
+                            addEditStatusDateNow: () async {
+                              String updatedData = statusController.text.trim();
+
+                              if (updatedData.isNotEmpty) {
+                                setState(() {
+                                  statusHistory.add({
+                                    'date': DateTime.now(),
+                                    'data': updatedData,
+                                  });
+                                });
+
+                                ShowAddEditDataResultDialog.show(context, true,
+                                    customMessage:
+                                        'Data status berhasil ditambahkan!');
+                              } else {
+                                ShowAddEditDataResultDialog.show(context, false,
+                                    customMessage:
+                                        'Gagal menambahkan data status!');
+                              }
+                            },
+                            statusHistory: statusHistory,
+                            editBirahi: (index) async {
+                              String initialData = birahiHistory[index]['data'];
+
+                              String? updatedData = await showDialog<String>(
+                                context: context,
+                                builder: (context) {
+                                  return EditDataDialog(
+                                    id: birahiHistory[index]['date'].toString(),
+                                    initialData: initialData,
+                                    title: 'Hello',
+                                  );
+                                },
+                              );
+
+                              if (updatedData != null &&
+                                  updatedData.isNotEmpty) {
+                                setState(() {
+                                  birahiHistory[index]['data'] = updatedData;
+                                });
+                              }
+                            },
+                            editStatus: (index) async {
+                              String initialData = statusHistory[index]['data'];
+
+                              String? updatedData = await showDialog<String>(
+                                context: context,
+                                builder: (context) {
+                                  return EditDataDialog(
+                                    id: statusHistory[index]['date'].toString(),
+                                    initialData: initialData,
+                                    title:
+                                        statusHistory[index]['date'].toString(),
+                                  );
+                                },
+                              );
+
+                              if (updatedData != null &&
+                                  updatedData.isNotEmpty) {
+                                setState(() {
+                                  statusHistory[index]['data'] = updatedData;
+                                });
+                              }
+                            },
+                            deleteBirahi: (index) {
+                              setState(() {
+                                birahiHistory.removeAt(index);
+                              });
+                            },
+                            deleteStatus: (index) {
+                              setState(() {
+                                statusHistory.removeAt(index);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          if (widget.healthStatus.toUpperCase() == 'SAKIT') ...[
+                            const Text(
+                              'CATATAN :',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.brown,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              readOnly: userRole.role == 'doctor' ||
+                                  userRole.role == 'admin',
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                labelStyle: const TextStyle(
+                                  color: Color(0xFF8F3505),
+                                ),
+                                hintStyle: TextStyle(
+                                  color:
+                                      const Color(0xFF8F3505).withOpacity(0.5),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
                                       color: Color(0xFF8F3505)),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 15, horizontal: 20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
                                 ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Edit NFC Tag',
-                                      style: TextStyle(
-                                        color: Color(0xFF8F3505),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Icon(
-                                      Icons.edit,
-                                      color: Color(0xFF8F3505),
-                                    ),
-                                  ],
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF8F3505)),
                                 ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF8F3505)),
+                                ),
+                                hintText: userRole.role == 'doctor' ||
+                                        userRole.role == 'admin'
+                                    ? 'Catatan hanya bisa diisi oleh peternak!'
+                                    : 'Masukkan catatan...',
                               ),
                             ),
-                          if (!widget.isConnectedToNFCTag)
-                            Flexible(
-                              flex: 1,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (context) {
-                                    return AddEditNFCTag(
-                                        id: widget.id,
-                                        isConnectedToNFCTag:
-                                            widget.isConnectedToNFCTag);
-                                  }));
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.green),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 15, horizontal: 20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Sambung NFC Tag',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Icon(
-                                      Icons.add,
-                                      color: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          const SizedBox(width: 10),
-                          Flexible(
-                            flex: 1,
-                            child: ElevatedButton(
-                              onPressed: () {},
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                              onPressed: () {
+                                _showNotesHistory();
+                              },
                               style: ElevatedButton.styleFrom(
                                 elevation: 0,
-                                backgroundColor: Colors.red,
+                                backgroundColor:
+                                    const Color(0xFF8F3505).withOpacity(0.1),
                                 minimumSize: const Size(double.infinity, 50),
                                 side:
-                                    const BorderSide(color: Color(0xFFFF3939)),
+                                    const BorderSide(color: Color(0xFF8F3505)),
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 15, horizontal: 20),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Keluarkan Sapi',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Icon(
-                                    Icons.exit_to_app,
-                                    color: Colors.white,
-                                  ),
-                                ],
+                              child: const Text(
+                                'RIWAYAT CATATAN',
+                                style: TextStyle(
+                                  color: Color(0xFF8F3505),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'DIAGNOSIS DAN PENGOBATAN :',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.brown,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              readOnly: userRole.role == 'admin' ||
+                                  userRole.role == 'user',
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                labelStyle: const TextStyle(
+                                  color: Color(0xFF8F3505),
+                                ),
+                                hintStyle: TextStyle(
+                                  color:
+                                      const Color(0xFF8F3505).withOpacity(0.5),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF8F3505)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF8F3505)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF8F3505)),
+                                ),
+                                hintText: userRole.role == 'admin' ||
+                                        userRole.role == 'user'
+                                    ? 'Diagnosis dan pengobatan hanya bisa diisi oleh dokter!'
+                                    : 'Masukkan diagnosis dan pengobatan...',
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                              onPressed: () {
+                                _showTreatmentHistory();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                backgroundColor:
+                                    const Color(0xFF8F3505).withOpacity(0.1),
+                                minimumSize: const Size(double.infinity, 50),
+                                side:
+                                    const BorderSide(color: Color(0xFF8F3505)),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 15, horizontal: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: const Text(
+                                'RIWAYAT PENGOBATAN',
+                                style: TextStyle(
+                                  color: Color(0xFF8F3505),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (widget.healthStatus.toUpperCase() == 'SEHAT')
+                            Container(
+                                padding: const EdgeInsets.all(10.0),
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color(0xFF4caf4f).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Catatan: Karena sapi dalam kondisi sehat, maka kolom catatan dan diagnosis disembunyikan!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFF2d8a30),
+                                    fontSize: 14,
+                                  ),
+                                )),
+                          const SizedBox(height: 30),
+                          if (userRole.role != 'doctor') ...[
+                            Row(
+                              children: [
+                                if (widget.isConnectedToNFCTag)
+                                  Flexible(
+                                    flex: 1,
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        Navigator.push(context,
+                                            MaterialPageRoute(
+                                                builder: (context) {
+                                          return AddEditNFCTag(
+                                              id: widget.id,
+                                              isConnectedToNFCTag:
+                                                  widget.isConnectedToNFCTag);
+                                        }));
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(
+                                            color: Color(0xFF8F3505)),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 15, horizontal: 20),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                        ),
+                                      ),
+                                      child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            'Edit NFC Tag',
+                                            style: TextStyle(
+                                              color: Color(0xFF8F3505),
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          Icon(
+                                            Icons.edit,
+                                            color: Color(0xFF8F3505),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                if (!widget.isConnectedToNFCTag)
+                                  Flexible(
+                                    flex: 1,
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        Navigator.push(context,
+                                            MaterialPageRoute(
+                                                builder: (context) {
+                                          return AddEditNFCTag(
+                                              id: widget.id,
+                                              isConnectedToNFCTag:
+                                                  widget.isConnectedToNFCTag);
+                                        }));
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(
+                                            color: Colors.green),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 15, horizontal: 20),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                        ),
+                                      ),
+                                      child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              'Sambung NFC Tag',
+                                              style: TextStyle(
+                                                color: Colors.green,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow
+                                                  .ellipsis, // Tambahkan untuk memotong teks jika terlalu panjang
+                                            ),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Icon(
+                                            Icons.add,
+                                            color: Colors.green,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  flex: 1,
+                                  child: ElevatedButton(
+                                    onPressed: () {},
+                                    style: ElevatedButton.styleFrom(
+                                      elevation: 0,
+                                      backgroundColor: Colors.red,
+                                      minimumSize:
+                                          const Size(double.infinity, 50),
+                                      side: const BorderSide(
+                                          color: Color(0xFFFF3939)),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 15, horizontal: 20),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            'Keluarkan Sapi',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            overflow: TextOverflow
+                                                .ellipsis, // Memotong teks jika terlalu panjang
+                                          ),
+                                        ),
+                                        SizedBox(width: 10),
+                                        Icon(
+                                          Icons.exit_to_app,
+                                          color: Colors.white,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          if (userRole.role == 'doctor')
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                backgroundColor:
+                                    const Color(0xFF4caf4f).withOpacity(0.2),
+                                minimumSize: const Size(double.infinity, 50),
+                                side: const BorderSide(color: Colors.green),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 15, horizontal: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: const Text(
+                                'SELESAI DIAGNOSIS',
+                                style: TextStyle(
+                                  color: Color(0xFF2d8a30),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 10),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                    ],
-                    if (userRole.role == 'doctor')
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor:
-                              const Color(0xFF4caf4f).withOpacity(0.2),
-                          minimumSize: const Size(double.infinity, 50),
-                          side: const BorderSide(color: Colors.green),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text(
-                          'SELESAI DIAGNOSIS',
-                          style: TextStyle(
-                            color: Color(0xFF2d8a30),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 10),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
