@@ -47,10 +47,15 @@ class _LoginPageState extends State<LoginPage> {
           email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
     } else if (email == 'admin@gmail.com') {
       userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
-    } else if(email == 'a') {
+    } else if(email == 'u') {
       userRole.login(email, 'user', 'Atha Rafifi Azmi', '081234567890', '');
     }
-    
+    else if (email == 'd') {
+      userRole.login(
+          email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
+    } else if (email == 'a') {
+      userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
+    }
     else {
       try {
         // Tentukan waktu timeout dalam detik
@@ -79,11 +84,14 @@ class _LoginPageState extends State<LoginPage> {
           );
           return;
         }
-      } on TimeoutException catch (e) {
-        return;
+      } on TimeoutException {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Request timed out')),
+        );
       } catch (e) {
-        // Menangani error lainnya
-        return;
+        ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: $e')),
+        );
       } finally {
         setState(() {
           isLoading = false; // Selesai loading

@@ -14,15 +14,19 @@ class MultiChartContainer extends StatefulWidget {
   final Function(int) onEdit;
   final Function(int) onDelete;
   final String id;
+  double predictionSusu = 0.0;
 
-  const MultiChartContainer(
+  MultiChartContainer(
       {super.key,
       required this.label,
       required this.chartsData,
       required this.historyData,
       required this.onEdit,
       required this.onDelete,
-      required this.id});
+      required this.id,
+      this.predictionSusu = 0.0
+      });
+      
 
   @override
   State<MultiChartContainer> createState() => _MultiChartContainerState();
@@ -32,6 +36,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
   late List<String> chartTitles;
   int currentIndex = 0;
   late Map<String, TextEditingController> inputControllers;
+  
 
   get http => null;
 
@@ -133,13 +138,11 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
 
 
     return SingleChildScrollView(
-      // Add a scroll view to handle overflow
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Wrap the PageView inside a Container or SizedBox for height constraint
           SizedBox(
-            height: 400, // Adjust this height as per your design
+            height: 400,
             child: PageView.builder(
               itemCount: chartTitles.length,
               itemBuilder: (context, index) {
@@ -148,6 +151,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                 return CustomLineChart(
                   title: formatTitle(title),
                   datas: data,
+                  predictionPointWidget: widget.predictionSusu,
                 );
               },
               onPageChanged: (index) {

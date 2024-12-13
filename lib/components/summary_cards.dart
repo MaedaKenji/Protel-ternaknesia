@@ -14,7 +14,6 @@ class SummaryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final userRole = Provider.of<UserRole>(context);
 
-    // Define a map of summary cards for each role
     final Map<String, List<SummaryCard>> summaryCardRole = {
       'user': [
         SummaryCard(
@@ -36,10 +35,13 @@ class SummaryCards extends StatelessWidget {
         const SummaryCard(title: '5', subtitle: 'Sapi dalam pengobatan'),
       ],
       'admin': [
-        const SummaryCard(title: '80,3L', subtitle: 'Perolehan susu hari ini'),
-        const SummaryCard(title: '18', subtitle: 'Sapi yang telah diperah'),
-        const SummaryCard(
-            title: '20', subtitle: 'Sapi yang telah diberi pakan'),
+        SummaryCard(
+            title: data[0]['title'] + ' L',
+            subtitle: 'Perolehan susu hari ini'),
+        SummaryCard(
+            title: data[1]['title'], subtitle: 'Sapi yang telah diperah'),
+        SummaryCard(
+            title: data[2]['title'], subtitle: 'Sapi yang telah diberi pakan'),
       ],
     };
 

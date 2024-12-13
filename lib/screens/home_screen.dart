@@ -53,13 +53,11 @@ class _HomeScreenState extends State<HomeScreen> {
   double predictedNextMonth = 0;
   bool isLoading = false;
 
-
   @override
   void initState() {
-    super.initState();    
+    super.initState();
     _refreshData();
   }
-
 
   String _monthYear(DateTime date) {
     const monthNames = [
@@ -105,11 +103,12 @@ class _HomeScreenState extends State<HomeScreen> {
       };
     }).toList();
     // lihat hasil akhir
-  for (var item in susuBulanan) {
-    print('Bulan: ${item['bulan']}, Total Produksi: ${item['totalProduksi']} liter');
+    for (var item in susuBulanan) {
+      print(
+          'Bulan: ${item['bulan']}, Total Produksi: ${item['totalProduksi']} liter');
+    }
   }
-  }
-  
+
   final List<Map<String, dynamic>> sickIndicated = [
     {
       'id': '001',
@@ -276,7 +275,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     ];
- 
   }
 
   List<BarChartGroupData> milkProductionPerMonthDynamics() {
@@ -294,7 +292,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     });
   }
-
 
   List<BarChartGroupData> sickCowPerMonthData() {
     return [
@@ -345,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
-Future<String> _fetchWithTimeout(String url) async {
+  Future<String> _fetchWithTimeout(String url) async {
     try {
       final response =
           await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
@@ -482,7 +479,9 @@ Future<String> _fetchWithTimeout(String url) async {
             hijauanWeight = double.tryParse(
                     (data['data']['hijauan_weight'] ?? '-1').toString()) ??
                 0.0;
-            sentratWeight = double.tryParse((data['data']['sentrat_weight'] ?? '-1').toString()) ?? 0.0;
+            sentratWeight = double.tryParse(
+                    (data['data']['sentrat_weight'] ?? '-1').toString()) ??
+                0.0;
           });
         } else {
           throw Exception('Failed to fetch data');
@@ -490,9 +489,7 @@ Future<String> _fetchWithTimeout(String url) async {
       } else {
         throw Exception('Failed to fetch data');
       }
-    } catch (e) {
-      
-    }
+    } catch (e) {}
   }
 
   Future<void> fetchSusuBulanan() async {
@@ -502,16 +499,17 @@ Future<String> _fetchWithTimeout(String url) async {
 
     try {
       // Simulasi fetching data dari API atau logika perhitungan
-      final response = await http.get(Uri.parse(
-          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/predict/monthly'),)
+      final response = await http
+          .get(
+            Uri.parse(
+                '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/predict/monthly'),
+          )
           .timeout(const Duration(seconds: 5));
-      
 
       final responseData = json.decode(response.body);
       double newPrediction = 0;
       if (responseData['success'] == true) {
         newPrediction = responseData['nextMonthPrediction'];
-        
       } else {
         newPrediction = -1;
       }
@@ -644,12 +642,13 @@ Future<String> _fetchWithTimeout(String url) async {
                                 child: Row(
                                   children: [
                                     CircleAvatar(
-                                    backgroundImage: userRole.role == 'user'
-                                        ? const AssetImage('assets/images/farmer.png')
-                                            : userRole.role == 'admin'
+                                        backgroundImage: userRole.role == 'user'
                                             ? const AssetImage(
-                                                'assets/images/admin.png')
-                                            : const AssetImage(
+                                                'assets/images/farmer.png')
+                                            : userRole.role == 'admin'
+                                                ? const AssetImage(
+                                                    'assets/images/admin.png')
+                                                : const AssetImage(
                                                     'assets/images/doctor.png'),
                                         radius: 30),
                                     const SizedBox(width: 16),
@@ -704,39 +703,44 @@ Future<String> _fetchWithTimeout(String url) async {
                             ),
                             const SizedBox(height: 8),
                             if (userRole.role != 'admin')
-                          CustomLineChart(
+                              CustomLineChart(
                                   title: 'Hasil Perolehan Susu ',
-                                  datas: milkProductionData),
+                                  datas: milkProductionData,
+                                  predictionPointWidget: 50,
+                                  ),
                             CustomLineChart(
                               title: 'Berat Pangan Hijauan',
                               datas: greenFodderData,
                               otherInfo: 'Pakan Hijauan Terbaik saat ini :',
                               valueInfo: hijauanWeight,
+                              predictionPointWidget: 0.0,
+
                             ),
                             CustomLineChart(
                               title: 'Berat Pangan Sentrat',
                               datas: concentratedFodderData,
                               otherInfo: 'Pakan Sentrat Terbaik saat ini :',
                               valueInfo: sentratWeight,
+                              predictionPointWidget: 0.0,
                             ),
                             CustomLineChart(
                               title: 'Contoh Data dari Server',
                               datas: exampleServerData,
+                              predictionPointWidget: 0.0,
                             ),
                             CustomBarChart(
-                            title: 'Produksi Susu per Bulan',
-                            data: milkProductionPerMonth(),
-                            predictedNextMonth: 0,
+                              title: 'Produksi Susu per Bulan',
+                              data: milkProductionPerMonth(),
+                              predictedNextMonth: 0,
                             ),
                             // SUSU BULANAN DINAMIS
                             CustomBarChart(
-                            title: 'Produksi Susu per Bulan',
-                            data: milkProductionPerMonthDynamics(),
-                            predictedNextMonth: predictedNextMonth,
+                              title: 'Produksi Susu per Bulan',
+                              data: milkProductionPerMonthDynamics(),
+                              predictedNextMonth: predictedNextMonth,
                             ),
-                      ])),
+                          ])),
                     ),
-                  
                   if (userRole.role == 'doctor' || userRole.role == 'dokter')
                     Expanded(
                       child: Padding(
@@ -820,8 +824,7 @@ Future<String> _fetchWithTimeout(String url) async {
                             CustomBarChart(
                                 title: 'Jumlah Sapi Sakit per Bulan',
                                 data: sickCowPerMonthData(),
-                                predictedNextMonth: 0
-                                ),
+                                predictedNextMonth: 0),
                           ],
                         ),
                       ),

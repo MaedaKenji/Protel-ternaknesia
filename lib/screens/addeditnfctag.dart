@@ -68,10 +68,10 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
 
   @override
   void dispose() {
+    _nfcCodeController.clear(); 
     _animationController.dispose();
     _nfcCodeController.dispose();
     _nfcId = null;
-    _nfcCodeController.clear(); // Clear TextField
     super.dispose();
   }
 

@@ -30,7 +30,7 @@ def train_model():
 # Model untuk prediksi susu
 model = train_model()
 
-# Endpoint untuk prediksi perolehan susu harian
+
 @app.route('/predict_daily_milk', methods=['POST'])
 def predict_daily_milk():
     # Ambil data dari request
@@ -51,7 +51,7 @@ def predict_daily_milk():
     # Kembalikan hasil prediksi dalam format JSON
     return jsonify({'predicted_daily_milk': predicted_milk})
 
-# Endpoint untuk prediksi perolehan susu bulanan
+
 @app.route('/predict_monthly_milk', methods=['POST'])
 def predict_monthly_milk():
     # Ambil data dari request

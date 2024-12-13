@@ -42,6 +42,11 @@ class _DataSapiPageState extends State<DataSapiPage> {
   List<double> pakanSentrat = [];
   List<String> historyData = ['70 Kg', '65 Kg', '72 Kg', '68 Kg'];
   int _currentChartIndex = 0;
+  Map<String, List<Map<String, dynamic>>> milkProductionAndWeightHistoryDynamic = {
+    'produksiSusu': [],
+    'beratBadan': [],
+  };
+
 
   bool isLoading = true;
   String errorMessage = '';
@@ -488,39 +493,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
     );
   }
 
-  Future<http.Response> fetchData() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = '';
-    });
-
-    try {
-      final url = Uri.parse(
-          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        return response;
-      } else {
-        setState(() {
-          errorMessage =
-              'Gagal memuat data. Status code: ${response.statusCode}';
-        });
-        throw Exception(
-            'Failed to fetch data. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Terjadi kesalahan: $e';
-      });
-      rethrow;
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
   Map<String, Map<String, List<FlSpot>>> processFeedData(
       List<Map<String, dynamic>> feedHijauan,
       List<Map<String, dynamic>> feedSentrate) {
@@ -651,34 +623,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
     });
   }
 
-  Future<void> _refreshData() async {
-    try {
-      final response = await fetchData();
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
-
-        final recentWeights = List<Map<String, dynamic>>.from(
-            responseBody['recent_weights'] ?? []);
-        final recentMilkProduction = List<Map<String, dynamic>>.from(
-            responseBody['recent_milk_production'] ?? []);
-        final recentFeedHijauan = List<Map<String, dynamic>>.from(
-            responseBody['recent_feed_hijauan'] ?? []);
-        final recentFeedSentrate = List<Map<String, dynamic>>.from(
-            responseBody['recent_feed_sentrate'] ?? []);
-
-        setState(() {
-          feedData = processFeedData(recentFeedHijauan, recentFeedSentrate);
-          milkAndWeightData =
-              processMilkAndWeightData(recentMilkProduction, recentWeights);
-        });
-      } else {
-        throw Exception(
-            'Failed to fetch data. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-    }
-  }
-
   void _showNotesHistory() async {
     final List<Map<String, dynamic>> historyData = [
       {'date': DateTime(2024, 11, 28), 'data': 'Diare'},
@@ -787,8 +731,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
     {'date': DateTime(2024, 12, 1), 'data': 'Ya'},
   ];
 
-  final Map<String, List<Map<String, dynamic>>> milkProductionAndWeightHistory =
-      {
+  final Map<String, List<Map<String, dynamic>>> milkProductionAndWeightHistory =  {
     'produksiSusu': [
       {'date': DateTime(2024, 11, 28), 'data': '50 L'},
       {'date': DateTime(2024, 11, 29), 'data': '52 L'},
@@ -821,6 +764,105 @@ class _DataSapiPageState extends State<DataSapiPage> {
   String formattedDate(DateTime date) {
     return MaterialLocalizations.of(context).formatShortDate(date);
   }
+
+  Future<http.Response> fetchData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final url = Uri.parse(
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      print("response: " + response.body);
+      final data = json.decode(response.body);
+      // I/flutter (19892): response: 
+      // {"id":7,"cow_id":"1","gender":"Jantan","age":12,"health_record":true,
+      // "stress_level":null,"birahi":null,
+      // ","diagnosis_history":[],"treatment_history":[],"health_record_history":[],"stress_level_history":[],
+      // "birahi_history":[],
+      // "note_history":[],
+      // "recent_weights":[{"date":"2023-10-25T17:00:00.000Z","weight":"500"},
+      // {"date":"2023-10-20T17:00:00.000Z","weight":"490"},{"date":"2023-10-15T17:00:00.000Z","weight":"480"},
+      // {"date":"2023-10-10T17:00:00.000Z","weight":"470"},{"date":"2023-10-09T17:00:00.000Z","weight":"460"}]
+      // ,"recent_milk_production":[{"date":"2024-11-15T17:00:00.000Z","production_amount":"10"},
+      // {"date":"2023-10-19T17:00:00.000Z","production_amount":"70"},
+      // {"date":"2023-10-18T17:00:00.000Z","production_amount":
+      //"note":null,"iskandang":true,"nfc_id":"3a:ad:ef:b0
+
+       // Transform `recent_milk_production`
+        List<Map<String, dynamic>> milkProduction = (data['recent_milk_production'] as List).map((item) {
+          return {
+            'date': DateTime.parse(item['tanggal']),
+            'data': '${item['produksi']} L',
+          };
+        }).toList();
+
+        // Transform `recent_weights`
+        List<Map<String, dynamic>> weightHistory = (data['recent_weights'] as List).map((item) {
+          return {
+            'date': DateTime.parse(item['tanggal']),
+            'data': '${item['berat']} Kg',
+          };
+        }).toList();
+
+        setState(() {
+          milkProductionAndWeightHistoryDynamic = {
+            'produksiSusu': milkProduction,
+            'beratBadan': weightHistory,
+          };
+        });
+
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        setState(() {
+          errorMessage =
+              'Gagal memuat data. Status code: ${response.statusCode}';
+        });
+        throw Exception(
+            'Failed to fetch data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Terjadi kesalahan: $e';
+      });
+      rethrow;
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _refreshData() async {
+    try {
+      final response = await fetchData();
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+
+        final recentWeights = List<Map<String, dynamic>>.from(
+            responseBody['recent_weights'] ?? []);
+        final recentMilkProduction = List<Map<String, dynamic>>.from(
+            responseBody['recent_milk_production'] ?? []);
+        final recentFeedHijauan = List<Map<String, dynamic>>.from(
+            responseBody['recent_feed_hijauan'] ?? []);
+        final recentFeedSentrate = List<Map<String, dynamic>>.from(
+            responseBody['recent_feed_sentrate'] ?? []);
+
+        setState(() {
+          feedData = processFeedData(recentFeedHijauan, recentFeedSentrate);
+          milkAndWeightData =
+              processMilkAndWeightData(recentMilkProduction, recentWeights);
+        });
+      } else {
+        throw Exception(
+            'Failed to fetch data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {}
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -867,6 +909,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
                             historyData: milkProductionAndWeightHistory,
                             chartsData: milkAndWeightData,
                             id: widget.id,
+                            predictionSusu: 100,
                             onEdit: (index) async {
                               Navigator.of(context).pop();
 

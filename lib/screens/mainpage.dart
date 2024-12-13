@@ -27,6 +27,12 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     final userRole = Provider.of<UserRole>(context);
 
+    // Tentukan jumlah item berdasarkan role
+    final maxIndex = (userRole.role == 'user' ? 3 : 2);
+    if (_currentIndex > maxIndex) {
+      _currentIndex = maxIndex;
+    }
+
     final List<Widget> pages = [
       const HomeScreen(),
       if (userRole.role == 'user') const NFCPage(),
@@ -48,7 +54,7 @@ class _MainPageState extends State<MainPage> {
             label: 'Home',
           ),
           if (userRole.role == 'user')
-          const BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.nfc),
               label: 'Input',
             ),

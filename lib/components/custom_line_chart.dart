@@ -8,14 +8,15 @@ class CustomLineChart extends StatefulWidget {
   String? otherInfo;
   double? valueInfo;
   final Map<String, List<FlSpot>> datas;
+  double? predictionPointWidget;
 
-  CustomLineChart({
-    super.key,
-    required this.title,
-    this.otherInfo,
-    this.valueInfo,
-    required this.datas,
-  });
+  CustomLineChart(
+      {super.key,
+      required this.title,
+      this.otherInfo,
+      this.valueInfo,
+      required this.datas,
+      required this.predictionPointWidget});
 
   @override
   State<CustomLineChart> createState() => _CustomLineChartState();
@@ -23,6 +24,7 @@ class CustomLineChart extends StatefulWidget {
 
 class _CustomLineChartState extends State<CustomLineChart> {
   late String selectedMonth;
+  double predictionPointValue = 0.0;
 
   @override
   void initState() {
@@ -47,8 +49,9 @@ class _CustomLineChartState extends State<CustomLineChart> {
     FlSpot? lastPoint = lastDataPoints.isNotEmpty ? lastDataPoints.last : null;
 
     FlSpot? predictionPoint;
+    predictionPointValue = widget.predictionPointWidget ?? 0.0;
     if (lastPoint != null && widget.title == 'Produksi Susu') {
-      predictionPoint = FlSpot(lastPoint.x + 1, lastPoint.y * 1.1);
+      predictionPoint = FlSpot(lastPoint.x + 1, predictionPointValue);
     }
 
     // Tentukan lebar grafik berdasarkan jumlah titik data
@@ -123,8 +126,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                     scrollDirection:
                         Axis.horizontal, // This allows horizontal scroll
                     child: SizedBox(
-                      width:
-                          chartWidth, // Gunakan chartWidth yang sudah dihitung
+                      width: chartWidth,
                       child: LineChart(
                         LineChartData(
                           gridData: const FlGridData(show: true),
@@ -190,7 +192,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                               LineChartBarData(
                                 spots: [lastPoint!, predictionPoint],
                                 isCurved: true,
-                                color: Color(0xFFC35804),
+                                color: const Color(0xFFC35804),
                                 barWidth: 3,
                                 isStrokeCapRound: true,
                                 dotData: const FlDotData(show: true),
