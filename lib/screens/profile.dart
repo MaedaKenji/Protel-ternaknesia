@@ -160,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     label: 'Role',
                     controller: _roleController,
                   ),
-                  if (userRole.role != 'doctor') ...[
+                  if (userRole.role == 'user') ...[
                     const SizedBox(height: 20),
                     _buildInfoRow(
                       icon: Icons.location_on,

@@ -704,17 +704,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 8),
                             if (userRole.role != 'admin')
                               CustomLineChart(
-                                  title: 'Hasil Perolehan Susu ',
-                                  datas: milkProductionData,
-                                  predictionPointWidget: 50,
-                                  ),
+                                title: 'Hasil Perolehan Susu ',
+                                datas: milkProductionData,
+                                predictionPointWidget: 50,
+                              ),
                             CustomLineChart(
                               title: 'Berat Pangan Hijauan',
                               datas: greenFodderData,
                               otherInfo: 'Pakan Hijauan Terbaik saat ini :',
                               valueInfo: hijauanWeight,
                               predictionPointWidget: 0.0,
-
                             ),
                             CustomLineChart(
                               title: 'Berat Pangan Sentrat',
