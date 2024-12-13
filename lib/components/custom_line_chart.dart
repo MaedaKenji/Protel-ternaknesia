@@ -179,7 +179,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                           maxY: maxY,
                           lineBarsData: [
                             LineChartBarData(
-                              spots: lastDataPoints,
+                              spots: lastDataPoints ?? [],
                               isCurved: true,
                               color: const Color(0xFFE6B87D),
                               barWidth: 3,

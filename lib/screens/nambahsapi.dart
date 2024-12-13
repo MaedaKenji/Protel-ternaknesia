@@ -81,7 +81,6 @@ class _TambahSapiPageState extends State<TambahSapiPage> {
           _showErrorDialog('An unexpected error occurred');
         }
       } catch (error) {
-        print("Error: ${error.toString()}");
         _showErrorDialog('Failed to submit data. Please try again.');
       }
     } else {

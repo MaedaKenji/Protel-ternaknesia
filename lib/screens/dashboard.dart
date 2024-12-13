@@ -44,9 +44,6 @@ class _DataWidgetState extends State<DataWidget> {
       };
     } else {
       throw Exception('Failed to load cow data');
-      // print(response.body);
-
-      // return {};
     }
   }
 

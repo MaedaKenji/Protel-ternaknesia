@@ -34,7 +34,6 @@ class _LoginPageState extends State<LoginPage> {
     final userRole = Provider.of<UserRole>(context, listen: false);
     final String username = _usernameController.text;
     final String password = _passwordController.text;
-    print('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}');
 
     setState(() {
       isLoading = true; // Mulai loading
@@ -48,7 +47,11 @@ class _LoginPageState extends State<LoginPage> {
           email, 'doctor', 'Dr. Agus Fuad Hasan', '081234567890', '');
     } else if (email == 'admin@gmail.com') {
       userRole.login(email, 'admin', 'Admin Ternaknesia', '081234567890', '');
-    } else {
+    } else if(email == 'a') {
+      userRole.login(email, 'user', 'Atha Rafifi Azmi', '081234567890', '');
+    }
+    
+    else {
       try {
         // Tentukan waktu timeout dalam detik
         final response = await http
@@ -65,10 +68,8 @@ class _LoginPageState extends State<LoginPage> {
           },
         );
 
-        print(response.statusCode);
         if (response.statusCode == 200) {
           final Map<String, dynamic> responseBody = json.decode(response.body);
-          print(responseBody);
 
           userRole.login(email, responseBody['role'], responseBody['username'],
               responseBody['phone'], responseBody['cage_location']);
@@ -79,12 +80,9 @@ class _LoginPageState extends State<LoginPage> {
           return;
         }
       } on TimeoutException catch (e) {
-        // Menangani error timeout
-        print('Timeout error: $e');
         return;
       } catch (e) {
         // Menangani error lainnya
-        print('Error: $e');
         return;
       } finally {
         setState(() {

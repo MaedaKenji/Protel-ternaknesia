@@ -9,6 +9,24 @@
 			"name": "ternaknesia",
 			"database": "ternaknesia",
 			"username": "postgres"
+		},
+		{
+			"previewLimit": 50,
+			"server": "localhost",
+			"port": 5433,
+			"driver": "PostgreSQL",
+			"name": "Docker postgres",
+			"database": "ternaknesia",
+			"username": "postgres"
+		},
+		{
+			"previewLimit": 50,
+			"server": "localhost",
+			"port": 5433,
+			"driver": "PostgreSQL",
+			"name": "ternaknesia_relational",
+			"database": "ternaknesia_relational",
+			"username": "postgres"
 		}
 	],
 	"java.configuration.updateBuildConfiguration": "interactive"

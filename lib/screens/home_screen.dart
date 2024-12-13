@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -48,125 +47,19 @@ class _HomeScreenState extends State<HomeScreen> {
       const FlSpot(14.0, 0.0),
     ],
   };
+  List<Map<String, dynamic>> susuBulanan = [];
   double? hijauanWeight;
   double? sentratWeight;
+  double predictedNextMonth = 0;
   bool isLoading = false;
+
 
   @override
   void initState() {
-    super.initState();
-    // _futureSummaryData = _fetchSummaryData(); // Inisialisasi _futureSummaryData
+    super.initState();    
     _refreshData();
-    // _futureSummaryData = _fetchSummaryData();
   }
 
-  Future<List<Map<String, String>>> _fetchSummaryData() async {
-    final baseUrl = dotenv.env['BASE_URL']!;
-    final port = dotenv.env['PORT']!;
-    final endpoints = {
-      'susu': '/api/cows/data/susu',
-      'sapi_diperah': '/api/cows/data/sapi_diperah',
-      'sapi_diberi_pakan': '/api/cows/data/sapi_diberi_pakan',
-    };
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final responses = await Future.wait([
-        _fetchWithTimeout('$baseUrl:$port${endpoints['susu']}'),
-        _fetchWithTimeout('$baseUrl:$port${endpoints['sapi_diperah']}'),
-        _fetchWithTimeout('$baseUrl:$port${endpoints['sapi_diberi_pakan']}'),
-      ]);
-
-      return [
-        {
-          'title': responses[0],
-          'subtitle': responses[0] == '' || responses[0] == 'Error'
-              ? 'Tidak ada data dari server'
-              : 'Perolehan susu hari ini',
-        },
-        {
-          'title': responses[1],
-          'subtitle': responses[1] == '' || responses[1] == 'Error'
-              ? 'Tidak ada data dari server'
-              : 'Sapi yang telah diperah',
-        },
-        {
-          'title': responses[2],
-          'subtitle': responses[2] == '' || responses[2] == 'Error'
-              ? 'Tidak ada data dari server'
-              : 'Sapi yang telah diberi pakan',
-        },
-      ];
-    } catch (e) {
-      return [
-        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
-        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
-        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
-      ];
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<Map<String, Map<String, List<FlSpot>>>> _fetchChartData() async {
-    final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
-    final port = dotenv.env['PORT'] ?? '8080';
-    final url = '$baseUrl:$port/api/data/chart';
-
-    try {
-      final response =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final rawData =
-            List<Map<String, dynamic>>.from(json.decode(response.body));
-
-        Map<String, Map<String, List<FlSpot>>> chartData = {
-          'Hijauan': {},
-          'Sentrate': {},
-          'Milk': {},
-        };
-
-        for (var entry in rawData) {
-          final date = DateTime.parse(entry['date']);
-          final monthYear = _monthYear(date);
-          final day = date.day.toDouble() - 1;
-
-          chartData['Hijauan']?[monthYear] ??= [];
-          chartData['Sentrate']?[monthYear] ??= [];
-          chartData['Milk']?[monthYear] ??= [];
-
-          chartData['Hijauan']?[monthYear]
-              ?.add(FlSpot(day, (entry['hijauan'] as num).toDouble()));
-          chartData['Sentrate']?[monthYear]
-              ?.add(FlSpot(day, (entry['sentrate'] as num).toDouble()));
-          chartData['Milk']?[monthYear]
-              ?.add(FlSpot(day, (entry['milk'] as num).toDouble()));
-        }
-
-        return chartData;
-      } else {
-        print('Error: Status code ${response.statusCode}');
-        return {
-          'Error': {
-            'Error': [const FlSpot(0, 0)]
-          }
-        };
-      }
-    } catch (e) {
-      print('Error fetching chart data: $e');
-      return {
-        'Error': {
-          'Error': [const FlSpot(0, 0)]
-        }
-      };
-    }
-  }
 
   String _monthYear(DateTime date) {
     const monthNames = [
@@ -196,8 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
         concentratedFodderData = fetchedData['Sentrate'] ?? {};
       });
     } catch (e) {
-      print('Error assigning fetched data: $e');
-
       setState(() {
         milkProductionData = {};
         greenFodderData = {};
@@ -206,78 +97,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-// Gak bisa dipake global
-  Future<String> _fetchWithTimeout(String url) async {
-    try {
-      final response =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
-      final value = json.decode(response.body)['value'].toString();
-      return value;
-    } catch (e) {
-      if (e is TimeoutException) {
-        print('Timeout while fetching $url');
-        return '0';
-      }
-      print('Error while fetching $url: $e');
-      return 'Error';
-    }
+  void parseSusuBulanan(List<dynamic> jsonData) {
+    susuBulanan = jsonData.map((item) {
+      return {
+        'bulan': item['bulan'] as String,
+        'totalProduksi': item['totalProduksi'] as double,
+      };
+    }).toList();
+    // lihat hasil akhir
+  for (var item in susuBulanan) {
+    print('Bulan: ${item['bulan']}, Total Produksi: ${item['totalProduksi']} liter');
   }
-
-  Future<void> fetchBestCombination() async {
-    try {
-      final response = await http
-          .get(
-            Uri.parse(
-                '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cluster'),
-          )
-          .timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print(data['data']['hijauan_weight']);
-
-        if (data['success'] == true && data['data'] != null) {
-          setState(() {
-            hijauanWeight = data['data']['hijauan_weight'] ?? 0;
-            sentratWeight = data['data']['sentrat_weight'] ?? 0;
-          });
-        } else {
-          throw Exception('Failed to fetch data');
-        }
-      } else {
-        throw Exception('Failed to fetch data');
-      }
-    } catch (e) {
-      print('Error fetching data: $e');
-    }
   }
-
-  Future<void> _refreshData() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final summaryData = await _fetchSummaryData();
-
-      setState(() {
-        _futureSummaryData = Future.value(summaryData);
-      });
-
-      // _futureSummaryData = Future.value(summaryData);
-
-      await assignFetchedData();
-      await fetchBestCombination();
-      // await _fetchSummaryData();
-    } catch (e) {
-      print("Error during refresh: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
+  
   final List<Map<String, dynamic>> sickIndicated = [
     {
       'id': '001',
@@ -397,6 +229,73 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
+  List<BarChartGroupData> milkProductionPerMonthDynamic() {
+    return [
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: susuBulanan[0]['totalProduksi'],
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 250,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 900,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 3,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: 100,
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      ),
+    ];
+ 
+  }
+
+  List<BarChartGroupData> milkProductionPerMonthDynamics() {
+    return List.generate(susuBulanan.length, (index) {
+      return BarChartGroupData(
+        x: index,
+        barRods: [
+          BarChartRodData(
+            borderRadius: const BorderRadius.all(Radius.circular(0)),
+            toY: susuBulanan[index]['totalProduksi'], // Nilai Y sesuai data
+            color: const Color(0xFFE6B87D),
+            width: 20,
+          ),
+        ],
+      );
+    });
+  }
+
+
   List<BarChartGroupData> sickCowPerMonthData() {
     return [
       BarChartGroupData(
@@ -444,6 +343,216 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     ];
+  }
+
+Future<String> _fetchWithTimeout(String url) async {
+    try {
+      final response =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
+      final value = json.decode(response.body)['value'].toString();
+      return value;
+    } catch (e) {
+      if (e is TimeoutException) {
+        return '0';
+      }
+      return 'Error';
+    }
+  }
+
+  Future<List<Map<String, String>>> _fetchSummaryData() async {
+    final baseUrl = dotenv.env['BASE_URL']!;
+    final port = dotenv.env['PORT']!;
+    final endpoints = {
+      'susu': '/api/cows/data/susu',
+      'sapi_diperah': '/api/cows/data/sapi_diperah',
+      'sapi_diberi_pakan': '/api/cows/data/sapi_diberi_pakan',
+    };
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final responses = await Future.wait([
+        _fetchWithTimeout('$baseUrl:$port${endpoints['susu']}'),
+        _fetchWithTimeout('$baseUrl:$port${endpoints['sapi_diperah']}'),
+        _fetchWithTimeout('$baseUrl:$port${endpoints['sapi_diberi_pakan']}'),
+      ]);
+
+      return [
+        {
+          'title': responses[0],
+          'subtitle': responses[0] == '' || responses[0] == 'Error'
+              ? 'Tidak ada data dari server'
+              : 'Perolehan susu hari ini',
+        },
+        {
+          'title': responses[1],
+          'subtitle': responses[1] == '' || responses[1] == 'Error'
+              ? 'Tidak ada data dari server'
+              : 'Sapi yang telah diperah',
+        },
+        {
+          'title': responses[2],
+          'subtitle': responses[2] == '' || responses[2] == 'Error'
+              ? 'Tidak ada data dari server'
+              : 'Sapi yang telah diberi pakan',
+        },
+      ];
+    } catch (e) {
+      return [
+        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
+        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
+        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
+      ];
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<Map<String, Map<String, List<FlSpot>>>> _fetchChartData() async {
+    final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
+    final port = dotenv.env['PORT'] ?? '8080';
+    final url = '$baseUrl:$port/api/data/chart';
+
+    try {
+      final response =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final rawData =
+            List<Map<String, dynamic>>.from(json.decode(response.body));
+
+        Map<String, Map<String, List<FlSpot>>> chartData = {
+          'Hijauan': {},
+          'Sentrate': {},
+          'Milk': {},
+        };
+
+        for (var entry in rawData) {
+          final date = DateTime.parse(entry['date']);
+          final monthYear = _monthYear(date);
+          final day = date.day.toDouble() - 1;
+
+          chartData['Hijauan']?[monthYear] ??= [];
+          chartData['Sentrate']?[monthYear] ??= [];
+          chartData['Milk']?[monthYear] ??= [];
+
+          chartData['Hijauan']?[monthYear]
+              ?.add(FlSpot(day, (entry['hijauan'] as num).toDouble()));
+          chartData['Sentrate']?[monthYear]
+              ?.add(FlSpot(day, (entry['sentrate'] as num).toDouble()));
+          chartData['Milk']?[monthYear]
+              ?.add(FlSpot(day, (entry['milk'] as num).toDouble()));
+        }
+
+        return chartData;
+      } else {
+        return {
+          'Error': {
+            'Error': [const FlSpot(0, 0)]
+          }
+        };
+      }
+    } catch (e) {
+      return {
+        'Error': {
+          'Error': [const FlSpot(0, 0)]
+        }
+      };
+    }
+  }
+
+  Future<void> fetchBestCombination() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse(
+                '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cluster'),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['success'] == true && data['data'] != null) {
+          setState(() {
+            hijauanWeight = double.tryParse(
+                    (data['data']['hijauan_weight'] ?? '-1').toString()) ??
+                0.0;
+            sentratWeight = double.tryParse((data['data']['sentrat_weight'] ?? '-1').toString()) ?? 0.0;
+          });
+        } else {
+          throw Exception('Failed to fetch data');
+        }
+      } else {
+        throw Exception('Failed to fetch data');
+      }
+    } catch (e) {
+      
+    }
+  }
+
+  Future<void> fetchSusuBulanan() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Simulasi fetching data dari API atau logika perhitungan
+      final response = await http.get(Uri.parse(
+          '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/predict/monthly'),)
+          .timeout(const Duration(seconds: 5));
+      
+
+      final responseData = json.decode(response.body);
+      double newPrediction = 0;
+      if (responseData['success'] == true) {
+        newPrediction = responseData['nextMonthPrediction'];
+        
+      } else {
+        newPrediction = -1;
+      }
+
+      parseSusuBulanan(responseData['data']);
+
+      setState(() {
+        predictedNextMonth = newPrediction;
+      });
+
+      print('Predicted next month value updated: $predictedNextMonth');
+    } catch (e) {
+      print('Error fetching predicted next month: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final summaryData = await _fetchSummaryData();
+
+      setState(() {
+        _futureSummaryData = Future.value(summaryData);
+      });
+      fetchSusuBulanan();
+      await assignFetchedData();
+      await fetchBestCombination();
+    } catch (e) {
+      print("Error during refresh: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -616,9 +725,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             CustomBarChart(
                             title: 'Produksi Susu per Bulan',
-                            data: milkProductionPerMonth()),
+                            data: milkProductionPerMonth(),
+                            predictedNextMonth: 0,
+                            ),
+                            // SUSU BULANAN DINAMIS
+                            CustomBarChart(
+                            title: 'Produksi Susu per Bulan',
+                            data: milkProductionPerMonthDynamics(),
+                            predictedNextMonth: predictedNextMonth,
+                            ),
                       ])),
                     ),
+                  
                   if (userRole.role == 'doctor' || userRole.role == 'dokter')
                     Expanded(
                       child: Padding(
@@ -701,7 +819,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 20),
                             CustomBarChart(
                                 title: 'Jumlah Sapi Sakit per Bulan',
-                                data: sickCowPerMonthData()),
+                                data: sickCowPerMonthData(),
+                                predictedNextMonth: 0
+                                ),
                           ],
                         ),
                       ),

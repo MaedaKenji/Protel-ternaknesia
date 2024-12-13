@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest # Ganti dengan versi spesifik jika perlu, misalnya "postgres:15"
+    container_name: postgres_ternaknesia
+    restart: always
+    environment:
+      POSTGRES_USER: postgres # Username untuk PostgreSQL
+      POSTGRES_PASSWORD: agus # Password untuk PostgreSQL
+      POSTGRES_DB: my_database # Nama database default
+    ports:
+      - "5432:5432" # Map port PostgreSQL (host:container)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persistensi data
+      # - ./init-scripts:/docker-entrypoint-initdb.d # Jalankan skrip SQL saat startup
+
+
+volumes:
+  postgres_data: # Volume untuk menyimpan data PostgreSQL
+    driver: local
+

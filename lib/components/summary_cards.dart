@@ -12,7 +12,6 @@ class SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(data);
     final userRole = Provider.of<UserRole>(context);
 
     // Define a map of summary cards for each role

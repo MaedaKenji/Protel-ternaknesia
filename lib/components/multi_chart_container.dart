@@ -76,7 +76,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
-      print(e);
     }
   }
 
@@ -104,7 +103,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
         setState(() {
           inputControllers[chartTitles[currentIndex]]!.text = data;
         });
-        print("Data baru: $data akan mulai mengirim ke server");
         _sendDataToServer({chartTitles[currentIndex]: data});
       }
     });
@@ -132,7 +130,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
     final List<Map<String, dynamic>> currentHistoryData =
         widget.historyData[currentTitle] ?? [];
     final formattedTitle = formatTitle(currentTitle);
-    print("$formattedTitle adalah: $currentData");
+
 
     return SingleChildScrollView(
       // Add a scroll view to handle overflow

@@ -4,11 +4,13 @@ import 'package:fl_chart/fl_chart.dart';
 class CustomBarChart extends StatelessWidget {
   final String title;
   final List<BarChartGroupData> data;
+  final double predictedNextMonth; // Tambahkan variabel baru
 
   const CustomBarChart({
     super.key,
     required this.title,
     required this.data,
+    required this.predictedNextMonth, // Tambahkan ke konstruktor
   });
 
   @override
@@ -18,7 +20,7 @@ class CustomBarChart extends StatelessWidget {
       barRods: [
         if (title == 'Produksi Susu per Bulan')
           BarChartRodData(
-            toY: 500,
+            toY: predictedNextMonth,
             color: Color(0xFFC35804),
             width: 22,
             borderRadius: const BorderRadius.only(

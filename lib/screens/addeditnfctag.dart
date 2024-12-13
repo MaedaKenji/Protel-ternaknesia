@@ -64,7 +64,6 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    print(_nfcId);
   }
 
   @override
@@ -307,7 +306,7 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
           _nfcCodeController.text =
               nfcId; // Update nilai TextField dengan nfcId
         });
-        print(_nfcId);
+
 
         // Menampilkan notifikasi sukses
         ScaffoldMessenger.of(context).showSnackBar(
@@ -336,15 +335,8 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
           'nfc_id': nfcId,
         }),
       );
-
-      if (response.statusCode == 200) {
-        print('NFC ID updated successfully: $nfcId');
-      } else {
-        print(
-            'Failed to update NFC ID (status ${response.statusCode}): ${response.body}');
-      }
     } catch (e) {
-      print('Error updating NFC ID: $e');
+      throw Exception('Gagal memperbarui ID NFC: $e');
     }
   }
 
