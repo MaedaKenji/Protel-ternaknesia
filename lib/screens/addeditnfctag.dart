@@ -297,6 +297,7 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
       // Ekstraksi identifier dari data NFC
       if (nfcData.containsKey('nfca')) {
         List<int> identifier = nfcData['nfca']['identifier'];
+        print('NFC ID: $identifier');
         String nfcId = identifier
             .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
             .join(':');

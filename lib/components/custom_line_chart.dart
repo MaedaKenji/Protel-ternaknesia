@@ -1,4 +1,4 @@
-import 'dart:ffi';
+// import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -9,6 +9,7 @@ class CustomLineChart extends StatefulWidget {
   double? valueInfo;
   final Map<String, List<FlSpot>> datas;
   double? predictionPointWidget;
+  final Function(FlSpot?)? onLastPointUpdated;
 
   CustomLineChart(
       {super.key,
@@ -16,7 +17,8 @@ class CustomLineChart extends StatefulWidget {
       this.otherInfo,
       this.valueInfo,
       required this.datas,
-      required this.predictionPointWidget});
+      required this.predictionPointWidget,
+      this.onLastPointUpdated});
 
   @override
   State<CustomLineChart> createState() => _CustomLineChartState();
@@ -30,7 +32,24 @@ class _CustomLineChartState extends State<CustomLineChart> {
   void initState() {
     super.initState();
     selectedMonth =
-        widget.datas.isNotEmpty ? widget.datas.keys.first : 'Default';
+        widget.datas.keys.isNotEmpty ? widget.datas.keys.first : 'Default';
+    if (widget.datas[selectedMonth]?.isNotEmpty ?? false) {
+      _updateLastPoint(); // Panggil hanya jika data ada
+    }
+  }
+
+  void _updateLastPoint() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      List<FlSpot>? lastDataPoints = widget.datas[selectedMonth];
+      FlSpot? lastPoint = (lastDataPoints != null && lastDataPoints.isNotEmpty)
+          ? lastDataPoints.last
+          : null;
+
+      // Panggil callback jika tersedia
+      if (widget.onLastPointUpdated != null) {
+        widget.onLastPointUpdated!(lastPoint);
+      }
+    });
   }
 
   @override
@@ -97,9 +116,10 @@ class _CustomLineChartState extends State<CustomLineChart> {
               ),
               const SizedBox(width: 8),
               DropdownButton<String>(
-                value: widget.datas.containsKey(selectedMonth)
+                value: widget.datas.isNotEmpty &&
+                        widget.datas.containsKey(selectedMonth)
                     ? selectedMonth
-                    : widget.datas.keys.firstOrNull ?? 'Default',
+                    : 'Default',
                 icon:
                     const Icon(Icons.arrow_drop_down, color: Color(0xFFC35804)),
                 items: widget.datas.keys.map((String month) {
@@ -111,14 +131,17 @@ class _CustomLineChartState extends State<CustomLineChart> {
                     ),
                   );
                 }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedMonth = newValue ??
-                        (widget.datas.keys.isNotEmpty
-                            ? widget.datas.keys.first
-                            : 'Default');
-                  });
-                },
+                onChanged: widget.datas.isNotEmpty
+                    ? (String? newValue) {
+                        if (newValue != null &&
+                            widget.datas.containsKey(newValue)) {
+                          setState(() {
+                            selectedMonth = newValue;
+                            _updateLastPoint();
+                          });
+                        }
+                      }
+                    : null, // Nonaktifkan dropdown jika tidak ada data
               ),
             ],
           ),
