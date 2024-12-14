@@ -15,6 +15,10 @@ class MultiChartContainer extends StatefulWidget {
   final Function(int) onDelete;
   final String id;
   double predictionSusu = 0.0;
+  double susuSaatIni = 0;
+  double beratSaatIni = 0;
+  double pakanHijauSaatIni = 0;
+  double pakanSentratSaatIni = 0;
 
   MultiChartContainer(
       {super.key,

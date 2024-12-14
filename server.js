@@ -16,6 +16,7 @@ const Cow = require('./models/cow');
 const User = require('./models/user');
 const Record = require('./models/record');
 const RecordBulanan = require('./models/recordBulanan');
+const { nextFrame } = require('@tensorflow/tfjs');
 
 // Constants
 const nowUtcPlus7 = moment.tz("Asia/Bangkok").format();
@@ -37,7 +38,6 @@ function isSameDay(date1, date2) {
 
 
 // PostgreSQL connection setup 
-// const pool = new Pool({ host: process.env.PGHOST, user: process.env.PGUSER, password: process.env.PGPASSWORD, database: process.env.PGDATABASE, port: process.env.PGPORT, });
 const pool = new Pool({
   host: process.env.PGHOST,
   user: process.env.PGUSER,
@@ -68,6 +68,7 @@ app.use(cors({
 app.get('/api/cattles-relational', async (req, res) => {
   try {
     const result = await poolTernaknesiaRelational.query('SELECT * FROM cows');
+    console.log(result.rows);
 
     const weightResult = await poolTernaknesiaRelational.query('SELECT * FROM public.berat_badan ORDER BY cow_id, tanggal ASC');
 
@@ -82,7 +83,7 @@ app.get('/api/cattles-relational', async (req, res) => {
 
     const healthMap = new Map();
     healthResult.rows.forEach(health => {
-      healthMap.set(health.cow_id, health.status_kesehatan); 
+      healthMap.set(health.cow_id, health.status_kesehatan);
     });
 
     const hitungProduktivitas = async (cow_id) => {
@@ -113,6 +114,7 @@ app.get('/api/cattles-relational', async (req, res) => {
       isProductive: await hitungProduktivitas(cow.cow_id),
       isConnectedToNFCTag: cow.nfc_id !== null,
     })));
+
 
     res.json(formattedResult);
 
@@ -179,6 +181,105 @@ async function classifyCow(cowId, weight, healthStatus) {
   }
 }
 
+app.get('/api/cows/dokter-home', async (req, res) => {
+  try {
+    const result = await poolTernaknesiaRelational.query(`
+WITH 
+latest_kesehatan AS (
+    SELECT 
+        cow_id, 
+        tanggal AS kesehatan_tanggal, 
+        status_kesehatan,
+        ROW_NUMBER() OVER (PARTITION BY cow_id ORDER BY tanggal DESC) AS rn
+    FROM public.kesehatan
+),
+latest_catatan AS (
+    SELECT 
+        cow_id, 
+        tanggal AS catatan_tanggal, 
+        catatan,
+        ROW_NUMBER() OVER (PARTITION BY cow_id ORDER BY tanggal DESC) AS rn
+    FROM public.catatan
+)
+SELECT 
+    c.cow_id,
+    c.gender,
+    c.umur,
+    c.nfc_id,
+    lc.catatan AS catatan_terakhir,
+    lk.status_kesehatan AS kesehatan_terakhir,
+    lk.kesehatan_tanggal AS tanggal_kesehatan_terakhir
+FROM 
+    public.cows c
+JOIN 
+    latest_kesehatan lk ON c.cow_id = lk.cow_id AND lk.rn = 1 AND lk.status_kesehatan = 'sakit'
+LEFT JOIN 
+    latest_catatan lc ON c.cow_id = lc.cow_id AND lc.rn = 1
+ORDER BY 
+    c.cow_id ASC;
+`);
+
+    // Format the result
+    const formattedResponse = result.rows.map((row) => ({
+      id: row.cow_id.toString(), // Format ID to 3 digits with leading zeros
+      gender: row.gender, // Capitalize first letter
+      info: row.catatan_terakhir || 'Tidak ada catatan', // Default if no notes available
+      checked: false, // Default value as per example
+      isConnectedToNFCTag: row.nfc_id !== null, // Determine connection to NFC tag
+      age: row.umur.toString(), // Convert age in months to years
+    }));
+
+    res.json(formattedResponse);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+app.get('/api/cows/dokter-home', async (req, res) => {
+  try {
+    const result = await poolTernaknesiaRelational.query(` 
+WITH 
+latest_kesehatan AS (
+    SELECT 
+        cow_id, 
+        tanggal AS kesehatan_tanggal, 
+        status_kesehatan,
+        ROW_NUMBER() OVER (PARTITION BY cow_id ORDER BY tanggal DESC) AS rn
+    FROM public.kesehatan
+),
+latest_catatan AS (
+    SELECT 
+        cow_id, 
+        tanggal AS catatan_tanggal, 
+        catatan,
+        ROW_NUMBER() OVER (PARTITION BY cow_id ORDER BY tanggal DESC) AS rn
+    FROM public.catatan
+)
+SELECT 
+    c.cow_id,
+    c.gender,
+    c.umur,
+	c.nfc_id,
+    lc.catatan AS catatan_terakhir,
+    lk.status_kesehatan AS kesehatan_terakhir,
+    lk.kesehatan_tanggal AS tanggal_kesehatan_terakhir
+FROM 
+    public.cows c
+JOIN 
+    latest_kesehatan lk ON c.cow_id = lk.cow_id AND lk.rn = 1 AND lk.status_kesehatan = 'sakit'
+LEFT JOIN 
+    latest_catatan lc ON c.cow_id = lc.cow_id AND lc.rn = 1
+ORDER BY 
+    c.cow_id ASC;
+`);
+
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 app.get('/api/cows', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -224,7 +325,7 @@ app.get('/api/cowsASLI', async (req, res) => {
 app.get('/api/cows/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const cowQuery = 'SELECT * FROM cows WHERE cow_id = $1';
     const cowResult = await poolTernaknesiaRelational.query(cowQuery, [id]);
     const cow = cowResult.rows[0];
@@ -268,8 +369,8 @@ app.get('/api/cows/:id', async (req, res) => {
       LIMIT 5
     `;
     const feedSentrateResult = await poolTernaknesiaRelational.query(feedSentrateQuery, [id]);
-    
-    
+
+
     res.json({
       ...cow,
       recent_weights: weightResult.rows,
@@ -281,6 +382,91 @@ app.get('/api/cows/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+app.get('/api/cows/predict-milk/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Ambil data produksi susu dari database
+    const result = await poolTernaknesiaRelational.query(
+      'SELECT id, cow_id, tanggal, produksi FROM produksi_susu WHERE cow_id = $1 ORDER BY tanggal DESC LIMIT 3',
+      [id]
+    );
+
+    if (result.rows.length < 3) {
+      return res.status(400).json({ message: 'Not enough data for prediction. At least 3 records are required.' });
+    }
+
+    // Format data untuk dikirim ke Flask
+    const last_3_days = result.rows.map((row) => row.produksi);
+
+
+    const flaskResponse = await axios.post('http://localhost:5000/predict_daily_milk', {
+      last_3_days: last_3_days,
+    });
+
+    // Gabungkan data asli dengan hasil prediksi
+    const predicted_daily_milk = flaskResponse.data.predicted_daily_milk;
+    console.log(predicted_daily_milk);
+
+    res.json({
+      data: result.rows,
+      predicted_daily_milk: predicted_daily_milk,
+    });
+  } catch (err) {
+    console.error('Error:', err.message);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+app.get('/coba', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        COALESCE(b.cow_id, p.cow_id) AS cow_id,
+        b.tanggal AS berat_badan_tanggal,
+        b.berat,
+        p.tanggal AS produksi_susu_tanggal,
+        p.produksi
+      FROM 
+        public.berat_badan b
+      FULL OUTER JOIN 
+        public.produksi_susu p 
+      ON 
+        b.cow_id = p.cow_id AND b.tanggal = p.tanggal
+      WHERE 
+        COALESCE(b.cow_id, p.cow_id) = 1
+      ORDER BY 
+        COALESCE(b.tanggal, p.tanggal) DESC;
+    `;
+
+    // Eksekusi query di Node.js
+    const rows = await poolTernaknesiaRelational.query(query).then(res => res.rows);
+    Fc
+    // Proses data
+    const milkAndWeightData = processMilkAndWeightData(rows);
+
+    // Kirim data JSON ke klien
+    res.json(milkAndWeightData);
+
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+
+app.get('/api/cows/milk-production/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await poolTernaknesiaRelational.query('SELECT * FROM produksi_susu WHERE cow_id = $1', [id]);
+    console.log(result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+}
+)
 
 app.get('/api/cows/:id/ASLI', async (req, res) => {
   try {
@@ -423,7 +609,7 @@ app.get('/api/cows/data/sapi_diperah', async (req, res) => {
     const result = await pool.query(query);
     res.json({ value: result.rows[0].cows_milked });
   } catch (err) {
-    
+
     res.status(500).send('Server error');
   }
 });
@@ -441,7 +627,7 @@ app.get('/api/cows/data/sapi_diberi_pakan', async (req, res) => {
     const result = await pool.query(query);
     res.json({ value: result.rows[0].cows_fed });
   } catch (err) {
-    
+
     res.status(500).send('Server error');
   }
 });
@@ -461,9 +647,9 @@ app.get('/api/cows/data/susu', async (req, res) => {
       return res.json({ value: 0 });
     }
     res.json({ value: result.rows[0].total_milk });
-    
+
   } catch (err) {
-    
+
     res.status(500).send('Server error');
   }
 });
@@ -520,7 +706,7 @@ app.get('/api/data/chart', async (req, res) => {
 
     res.json(formattedResult); // Kirimkan data ke frontend
   } catch (err) {
-    
+
     res.status(500).send('Server error');
   }
 });
@@ -611,7 +797,7 @@ app.get('/api/cluster', (req, res) => {
 app.get('/api/dbscan', (req, res) => {
   exec('python dbscan.py', (err, stdout, stderr) => {
     if (err) {
-      
+
       return res.status(500).json({ error: 'Error executing DBSCAN analysis.' });
     }
 
@@ -622,7 +808,7 @@ app.get('/api/dbscan', (req, res) => {
       }
       res.json({ success: true, data: bestCombinations });
     } catch (parseError) {
-      
+
       res.status(500).json({ error: 'Invalid JSON from Python script.' });
     }
   });
@@ -714,7 +900,7 @@ app.get('/api/predict/monthlyAsli2', async (req, res) => {
       success: true,
       data,
     });
-    
+
   } catch (error) {
     res.status(500).json({ error: 'Error while predicting monthly milk production' });
   }
@@ -757,7 +943,7 @@ app.post('/api/classify/cattle', async (req, res) => {
 
     res.json(classifiedCattle); // Mengembalikan data sapi dengan prediksi
   } catch (error) {
-    
+
     res.status(500).json({ error: 'Error while classifying cattle productivity' });
   }
 });
@@ -801,7 +987,7 @@ app.post('/api/register', async (req, res) => {
     // Mengirimkan response sukses dengan ID user yang baru
     res.status(201).json({ id: result.rows[0].id, message: 'User registered successfully' });
   } catch (err) {
-    
+
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -836,7 +1022,7 @@ app.post('/api/login', async (req, res) => {
     // Jika password cocok, login berhasil
     res.status(200).json({ message: 'Login successful', userId: user.id, username: user.username, role: user.role, email: user.email, phone: user.phone, cage_location: user.cage_location });
   } catch (err) {
-    
+
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -852,6 +1038,49 @@ app.use((err, req, res, next) => {
     message: 'Terjadi kesalahan pada server',
   });
 });
+
+// ---------------------------------------------------------FUNGSI---------------------------------------------------------------
+// Fungsi untuk memproses data hasil query
+const processMilkAndWeightData = (rows) => {
+  // Struktur hasil akhir
+  const result = {
+    produksiSusu: {},
+    beratBadan: {}
+  };
+
+  rows.forEach(row => {
+    // Format tanggal ke bulan dan tahun
+    const produksiMonth = row.produksi_susu_tanggal
+      ? new Date(row.produksi_susu_tanggal).toLocaleString('id-ID', { month: 'long', year: 'numeric' })
+      : null;
+    const beratMonth = row.berat_badan_tanggal
+      ? new Date(row.berat_badan_tanggal).toLocaleString('id-ID', { month: 'long', year: 'numeric' })
+      : null;
+
+    // Proses data produksi susu
+    if (produksiMonth) {
+      if (!result.produksiSusu[produksiMonth]) result.produksiSusu[produksiMonth] = [];
+      const produksiIndex = result.produksiSusu[produksiMonth].length;
+      result.produksiSusu[produksiMonth].push({
+        x: produksiIndex,
+        y: parseFloat(row.produksi)
+      });
+    }
+
+    // Proses data berat badan
+    if (beratMonth) {
+      if (!result.beratBadan[beratMonth]) result.beratBadan[beratMonth] = [];
+      const beratIndex = result.beratBadan[beratMonth].length;
+      result.beratBadan[beratMonth].push({
+        x: beratIndex,
+        y: parseFloat(row.berat)
+      });
+    }
+  });
+
+  return result;
+};
+
 
 // Cek nilai dari BASE_URL
 console.log(`Configured BASE_URL: ${process.env.BASE_URL}`);

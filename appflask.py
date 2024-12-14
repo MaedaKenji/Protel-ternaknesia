@@ -16,8 +16,10 @@ app = Flask(__name__)
 # scaler = joblib.load('scaler_produksi_susu_bulanan.pkl')
 # print(sys.version)
 
-model = tf.keras.models.load_model('lstm_produksi_susu_bulanan.keras')
-scaler = joblib.load('scaler_produksi_susu_bulanan.pkl')
+model_bulanan = tf.keras.models.load_model('lstm_produksi_susu_bulanan.keras')
+scaler_bulanan = joblib.load('scaler_produksi_susu_bulanan.pkl')
+model_harian = tf.keras.models.load_model('lstm_produksi_susu_harian.keras')
+scaler_harian = joblib.load('scaler_produksi_susu_harian.pkl')
 
 # last_3_months = np.array([100, 200, 300])
 # print(last_3_months)
@@ -65,6 +67,71 @@ linear_model = train_linear_model()
 
 @app.route('/predict_daily_milk', methods=['POST'])
 def predict_daily_milk():
+    try:
+        data = request.get_json()
+        if not data or 'last_3_days' not in data:
+            return jsonify({'error': 'Invalid input, expected "last_3_days" with 3 values.'}), 400
+        
+        # print(data['last_3_days'])
+        
+        model = model_harian
+        scaler = scaler_harian
+
+        last_3_days = np.array(data['last_3_days'])
+        print(last_3_days)
+        last_3_days_scaled = scaler.transform(last_3_days.reshape(-1, 1))
+        print(f"Last 3 days scaled: {last_3_days_scaled}")
+        last_3_days_scaled = last_3_days_scaled.reshape(-1, 1)
+        print(f"last_3_days_scaled: {last_3_days_scaled}")
+        last_3_days_scaled = last_3_days_scaled.reshape(1, 3, 1)
+        print(f"last_3_days_scaled: {last_3_days_scaled}")
+
+        input_data = last_3_days_scaled
+        prediction_scaled = model.predict(input_data)
+        prediction = scaler.inverse_transform(prediction_scaled)
+        print(f"Prediction: {prediction}")
+        return jsonify({'predicted_daily_milk': float(prediction[0][0])})
+
+    
+    except Exception as e:
+        import traceback
+        print(f"Error occurred: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+    
+
+@app.route('/predict_monthly_milk', methods=['POST'])
+def predict_monthly_milk():
+    data = request.get_json()
+    scaler = joblib.load('scaler_produksi_susu_bulanan.pkl')
+
+    try:
+        # Ambil data dari request
+        data = request.get_json()
+        if not data or 'last_3_months' not in data:
+            return jsonify({'error': 'Invalid input, expected "last_3_months" with 3 values.'}), 400
+
+        model = model_bulanan
+        scaler = scaler_bulanan
+        
+        last_3_months = np.array(data['last_3_months'])        
+        last_3_months_scaled = scaler.transform(last_3_months.reshape(-1, 1))
+        last_3_months_scaled = last_3_months_scaled.reshape(-1, 1)
+        last_3_months_scaled = last_3_months_scaled.reshape(1,3,1)
+        
+        input_data = last_3_months_scaled.reshape(1, 3, 1)
+        prediction_scaled = model.predict(input_data)
+        prediction = scaler.inverse_transform(prediction_scaled)
+
+        # Kembalikan hasil prediksi
+        return jsonify({'next_month_prediction': float(prediction[0][0])})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/predict_daily_milk_ASLI', methods=['POST'])
+def predict_daily_milkasli():
     data = request.get_json()
 
     features = np.array([
@@ -77,76 +144,6 @@ def predict_daily_milk():
     predicted_milk = linear_model.predict(features)[0]
 
     return jsonify({'predicted_daily_milk': predicted_milk})
-
-@app.route('/predict_monthly_milk', methods=['POST'])
-def predict_monthly_milk():
-    data = request.get_json()
-    if not data or 'last_3_months' not in data:
-        return jsonify({'error': 'Invalid input, expected "last_3_months" with 3 values.'}), 400
-    scaler = joblib.load('scaler_produksi_susu_bulanan.pkl')
-
-
-    print("\n\n\n")
-    print("---------------------------------------------------------")
-    # Ambil input data (3 bulan terakhir)
-    last_3_months = np.array(data['last_3_months'])
-    last_3_months = np.array([100, 200, 300])
-    last_3_months = np.array([100, 200, 300])
-
-    print(last_3_months)
-
-    if len(last_3_months) != 3:
-        return jsonify({'error': 'Input must contain exactly 3 months of data.'}), 400
-    print("-------------------------------------------------------------------")
-    print("\n\n\n")
-    last_3_months_scaled = scaler.transform(last_3_months.reshape(-1, 1))
-    print(last_3_months_scaled)
-    last_3_months_scaled = last_3_months_scaled.reshape(-1, 1)
-    print(last_3_months)
-    last_3_months_scaled = last_3_months_scaled.reshape(1, 3,1)
-    print(last_3_months_scaled)
-    try:
-        # Ambil data dari request
-        data = request.get_json()
-        if not data or 'last_3_months' not in data:
-            return jsonify({'error': 'Invalid input, expected "last_3_months" with 3 values.'}), 400
-
-        
-        
-        print("\n\n\n")
-        print("---------------------------------------------------------")
-        # Ambil input data (3 bulan terakhir)
-        last_3_months = np.array(data['last_3_months'])
-        last_3_months = np.array([100, 200, 300])
-        last_3_months = np.array([100, 200, 300])
-
-        print(last_3_months)
-
-        if len(last_3_months) != 3:
-            return jsonify({'error': 'Input must contain exactly 3 months of data.'}), 400
-        print("-------------------------------------------------------------------")
-        print("\n\n\n")
-        last_3_months_scaled = scaler.transform(last_3_months.reshape(-1, 1))
-        print(last_3_months_scaled)
-        last_3_months_scaled = last_3_months_scaled.reshape(-1, 1)
-        print(last_3_months)
-        last_3_months_scaled = last_3_months_scaled.reshape(1,3,1)
-        print(last_3_months_scaled)
-        
-        
-
-        
-        input_data = last_3_months_scaled.reshape(1, 3, 1)
-
-        # Prediksi
-        prediction_scaled = model.predict(input_data)
-        prediction = scaler.inverse_transform(prediction_scaled)
-
-        # Kembalikan hasil prediksi
-        return jsonify({'next_month_prediction': float(prediction[0][0])})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 
 
 @app.route('/predict_monthly_milkasli', methods=['POST'])

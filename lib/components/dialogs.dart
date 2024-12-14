@@ -59,7 +59,6 @@ class NewDataDialog extends StatelessWidget {
                 decoration: const InputDecoration(
                   isDense: true,
                   labelText: "Masukkan Data",
-                  // suffixText: "Kg/L",
                   labelStyle: TextStyle(color: Color(0xFFC35804)),
                   suffixStyle: TextStyle(color: Color(0xFFC35804)),
                   fillColor: Color(0xFFF9E2B5),
@@ -190,7 +189,6 @@ class EditDataDialog extends StatelessWidget {
                 decoration: const InputDecoration(
                   isDense: true,
                   labelText: "Masukkan Data Baru",
-                  // suffixText: "Kg/L",
                   labelStyle: TextStyle(color: Color(0xFFC35804)),
                   suffixStyle: TextStyle(color: Color(0xFFC35804)),
                   fillColor: Color(0xFFF9E2B5),

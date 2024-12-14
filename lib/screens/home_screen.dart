@@ -22,10 +22,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // ignore: unused_field
-  Future<List<Map<String, String>>> _futureSummaryData = Future.value([]);
-  Map<String, List<FlSpot>> milkProductionData = {};
-  Map<String, List<FlSpot>> greenFodderData = {};
-  Map<String, List<FlSpot>> concentratedFodderData = {};
   final Map<String, List<FlSpot>> exampleServerData = {
     'September 2023': [
       const FlSpot(29.0, 15.0),
@@ -47,7 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
       const FlSpot(14.0, 0.0),
     ],
   };
+  Future<List<Map<String, String>>> _futureSummaryData = Future.value([]);
+  Map<String, List<FlSpot>> milkProductionData = {};
+  Map<String, List<FlSpot>> greenFodderData = {};
+  Map<String, List<FlSpot>> concentratedFodderData = {};
   List<Map<String, dynamic>> susuBulanan = [];
+  List<Map<String, dynamic>> sickIndicatedDinamis = [];
   double? hijauanWeight;
   double? sentratWeight;
   double predictedNextMonth = 0;
@@ -101,12 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'bulan': item['bulan'] as String,
         'totalProduksi': item['totalProduksi'] as double,
       };
-    }).toList();
-    // lihat hasil akhir
-    for (var item in susuBulanan) {
-      print(
-          'Bulan: ${item['bulan']}, Total Produksi: ${item['totalProduksi']} liter');
-    }
+    }).toList();    
   }
 
   final List<Map<String, dynamic>> sickIndicated = [
@@ -520,9 +516,12 @@ class _HomeScreenState extends State<HomeScreen> {
         predictedNextMonth = newPrediction;
       });
 
-      print('Predicted next month value updated: $predictedNextMonth');
     } catch (e) {
-      print('Error fetching predicted next month: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal memuat data'),
+        ),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -530,7 +529,82 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> fetchSickIndicatedDinamis() async {
+    final response = await http
+        .get(
+          Uri.parse(
+              '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/predict/monthly'),
+        )
+        .timeout(const Duration(seconds: 5));
+      print("response: " + response.body);
+    String apiUrl =
+        '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/dokter-home'; // Ganti dengan URL API Anda
+    try {
+      final response = await http.get(Uri.parse(apiUrl)).timeout(
+          const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("data: " + data.toString());
+
+        // Asumsikan API mengembalikan list of maps
+        setState(() {
+          sickIndicatedDinamis = List<Map<String, dynamic>>.from(data);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal memuat data'),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal memuat data'),
+        ),
+      );
+    }
+  }
+
   Future<void> _refreshData() async {
+    final RoleRole = Provider.of<UserRole>(context, listen: false).role;
+    
+    
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final summaryData = await _fetchSummaryData();
+
+      setState(() {
+        _futureSummaryData = Future.value(summaryData);
+      });
+
+      fetchSusuBulanan();
+      await assignFetchedData();
+      await fetchBestCombination();
+
+      // Cek apakah userRole disertakan, jika ya lakukan pengecekan role
+      if ( RoleRole == 'dokter' || RoleRole == 'doctor') {
+        await fetchSickIndicatedDinamis();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal memuat data'),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+
+  Future<void> _refreshData2() async {
     setState(() {
       isLoading = true;
     });
@@ -545,7 +619,11 @@ class _HomeScreenState extends State<HomeScreen> {
       await assignFetchedData();
       await fetchBestCombination();
     } catch (e) {
-      print("Error during refresh: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal memuat data'),
+        ),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -704,17 +782,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 8),
                             if (userRole.role != 'admin')
                               CustomLineChart(
-                                  title: 'Hasil Perolehan Susu ',
-                                  datas: milkProductionData,
-                                  predictionPointWidget: 50,
-                                  ),
+                                title: 'Hasil Perolehan Susu ',
+                                datas: milkProductionData,
+                                predictionPointWidget: 50,
+                              ),
                             CustomLineChart(
                               title: 'Berat Pangan Hijauan',
                               datas: greenFodderData,
                               otherInfo: 'Pakan Hijauan Terbaik saat ini :',
                               valueInfo: hijauanWeight,
                               predictionPointWidget: 0.0,
-
                             ),
                             CustomLineChart(
                               title: 'Berat Pangan Sentrat',
@@ -723,17 +800,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               valueInfo: sentratWeight,
                               predictionPointWidget: 0.0,
                             ),
-                            CustomLineChart(
-                              title: 'Contoh Data dari Server',
-                              datas: exampleServerData,
-                              predictionPointWidget: 0.0,
-                            ),
-                            CustomBarChart(
-                              title: 'Produksi Susu per Bulan',
-                              data: milkProductionPerMonth(),
-                              predictedNextMonth: 0,
-                            ),
-                            // SUSU BULANAN DINAMIS
                             CustomBarChart(
                               title: 'Produksi Susu per Bulan',
                               data: milkProductionPerMonthDynamics(),
@@ -773,7 +839,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Color(0xFF8F3505),
                               ),
                             ),
-                            for (var cattle in sickIndicated)
+                            for (var cattle in sickIndicatedDinamis)
+                              
                               _buildCattleCard(
                                 context,
                                 id: cattle['id'],
@@ -792,34 +859,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 },
                               ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Sapi Sakit & Dalam Pengobatan :',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF8F3505),
-                              ),
-                            ),
-                            for (var cattle in sickCowAndTreatment)
-                              _buildCattleCard(
-                                context,
-                                id: cattle['id'],
-                                gender: cattle['gender'],
-                                info: cattle['info'],
-                                checked: cattle['checked'] ?? false,
-                                onPressed: () {
-                                  return DataSapiPage(
-                                    id: cattle['id'],
-                                    gender: cattle['gender'],
-                                    age: cattle['age'],
-                                    healthStatus: 'SAKIT',
-                                    isProductive: true,
-                                    isConnectedToNFCTag:
-                                        cattle['isConnectedToNFCTag'],
-                                  );
-                                },
-                              ),
+
+                            // const SizedBox(height: 20),
+                            // const Text(
+                            //   'Sapi Sakit & Dalam Pengobatan :',
+                            //   style: TextStyle(
+                            //     fontSize: 18,
+                            //     fontWeight: FontWeight.w800,
+                            //     color: Color(0xFF8F3505),
+                            //   ),
+                            // ),
+                            // for (var cattle in sickCowAndTreatment)
+                            //   _buildCattleCard(
+                            //     context,
+                            //     id: cattle['id'],
+                            //     gender: cattle['gender'],
+                            //     info: cattle['info'],
+                            //     checked: cattle['checked'] ?? false,
+                            //     onPressed: () {
+                            //       return DataSapiPage(
+                            //         id: cattle['id'],
+                            //         gender: cattle['gender'],
+                            //         age: cattle['age'],
+                            //         healthStatus: 'SAKIT',
+                            //         isProductive: true,
+                            //         isConnectedToNFCTag:
+                            //             cattle['isConnectedToNFCTag'],
+                            //       );
+                            //     },
+                            //   ),
+
                             const SizedBox(height: 20),
                             CustomBarChart(
                                 title: 'Jumlah Sapi Sakit per Bulan',

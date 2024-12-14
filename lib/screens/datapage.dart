@@ -104,7 +104,6 @@ class _DataPageState extends State<DataPage> {
     if (response.statusCode == 200) {
       // Jika server mengembalikan respons 200 OK, maka parse JSON
       List<dynamic> data = json.decode(response.body);
-      // Mengonversi JSON ke daftar objek Cattle
       return data.map((item) => Cattle.fromJson(item)).toList();
     } else {
       // Jika respons tidak 200 OK, lemparkan exception
