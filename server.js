@@ -68,10 +68,7 @@ app.use(cors({
 app.get('/api/cattles-relational', async (req, res) => {
   try {
     const result = await poolTernaknesiaRelational.query('SELECT * FROM cows');
-    console.log(result.rows);
-
     const weightResult = await poolTernaknesiaRelational.query('SELECT * FROM public.berat_badan ORDER BY cow_id, tanggal ASC');
-
     const healthResult = await poolTernaknesiaRelational.query(
       'SELECT DISTINCT ON (cow_id) * FROM public.kesehatan ORDER BY cow_id, tanggal DESC'
     );
@@ -115,11 +112,12 @@ app.get('/api/cattles-relational', async (req, res) => {
       isConnectedToNFCTag: cow.nfc_id !== null,
     })));
 
+    // Sort by cow_id
+    formattedResult.sort((a, b) => a.id - b.id);
 
     res.json(formattedResult);
 
   } catch (err) {
-    console.error('Error executing query on ternaknesia_relational', err.stack);
     res.status(500).json({ message: 'Error fetching data from ternaknesia_relational' });
   }
 });
@@ -161,7 +159,6 @@ app.get('/api/cattles-relational/predict/:cow_id', async (req, res) => {
 
     res.json({ produktif: prediction[0] === 1 });
   } catch (err) {
-    console.error('Error executing query', err.stack);
     res.status(500).json({ message: 'Error fetching data' });
   }
 });
@@ -176,10 +173,71 @@ async function classifyCow(cowId, weight, healthStatus) {
 
     return response.data.is_productive; // Adjust based on the actual response structure
   } catch (error) {
-    console.error(`Error classifying cow ID ${cowId}:`, error);
     return false; // Default to false if there's an error
   }
 }
+
+app.get('/api/cows/dokter-home', async (req, res) => {
+  try {
+    const result = await poolTernaknesiaRelational.query(`
+
+`);
+
+    // Format the result
+    const formattedResponse = result.rows.map((row) => ({
+      id: row.cow_id.toString(), // Format ID to 3 digits with leading zeros
+      gender: row.gender, // Capitalize first letter
+      info: row.catatan_terakhir || 'Tidak ada catatan', // Default if no notes available
+      checked: false, // Default value as per example
+      isConnectedToNFCTag: row.nfc_id !== null, // Determine connection to NFC tag
+      age: row.umur.toString(), // Convert age in months to years
+    }));
+
+    res.json(formattedResponse);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+app.post('/api/cows/update-nfc', async (req, res) => {
+  const { cow_id, nfc_id } = req.body;
+
+  
+
+  // Validasi input
+  if (!cow_id || !nfc_id) {
+    return res.status(400).json({ error: 'cow_id and nfc_id are required' });
+  }
+
+  try {
+    // Query update nfc_id
+    const query = `
+      UPDATE cows
+      SET nfc_id = $1
+      WHERE cow_id = $2
+      RETURNING *;
+    `;
+    const values = [nfc_id, cow_id];
+
+    const result = await poolTernaknesiaRelational.query(query, values);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Cow not found' });
+    }
+
+    // Response berhasil
+    console.log('NFC ID updated successfully');
+    res.status(200).json({
+      message: 'NFC ID updated successfully',
+      cow: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error updating NFC ID:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 app.get('/api/cows/dokter-home', async (req, res) => {
   try {
@@ -407,7 +465,6 @@ app.get('/api/cows/predict-milk/:id', async (req, res) => {
 
     // Gabungkan data asli dengan hasil prediksi
     const predicted_daily_milk = flaskResponse.data.predicted_daily_milk;
-    console.log(predicted_daily_milk);
 
     res.json({
       data: result.rows,
@@ -460,7 +517,6 @@ app.get('/api/cows/milk-production/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await poolTernaknesiaRelational.query('SELECT * FROM produksi_susu WHERE cow_id = $1', [id]);
-    console.log(result.rows);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -545,7 +601,6 @@ app.post('/api/cows/tambahsapi', async (req, res) => {
       [id, new Date(), weight]
     );
 
-    console.log('Data bobot:', insertWeightResult.rows[0]);
 
     res.status(201).json({ message: 'Cow added', cow: result.rows[0] });
   } catch (err) {
@@ -553,6 +608,53 @@ app.post('/api/cows/tambahsapi', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+app.post('/api/cows/tambahdata/:id', async (req, res) => {
+  const { id } = req.params; // cow_id
+  const data = req.body; // Data dalam bentuk {key: value}
+  const key = Object.keys(data)[0];
+  const value = data[key];
+
+
+  try {
+    // Cek key untuk menentukan tabel dan kolom yang tepat
+    if (key === 'produksiSusu') {
+      
+      // Menambahkan data ke tabel milk_production
+      const result = await poolTernaknesiaRelational.query(
+        'INSERT INTO produksi_susu (cow_id, tanggal, produksi) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Milk production data added', data: result.rows[0] });
+    } else if (key === 'beratBadan') {
+      // Menambahkan data ke tabel body_weight
+      const result = await poolTernaknesiaRelational.query(
+        'INSERT INTO berat_badan (cow_id, tanggal, berat) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Body weight data added', data: result.rows[0] });
+    } else if (key === 'pakanHijau') {
+      // Menambahkan data ke tabel feed_hijauan
+      const result = await poolTernaknesiaRelational.query(
+        'INSERT INTO pakan_hijauan (cow_id, tanggal, pakan) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Feed hijauan data added', data: result.rows[0] });
+    } else if (key === 'pakanSentrat') {
+      // Menambahkan data ke tabel feed_sentrate
+      const result = await poolTernaknesiaRelational.query(
+        'INSERT INTO pakan_sentrat (cow_id, tanggal, pakan) VALUES ($1, NOW(), $2) RETURNING *',
+        [id, value]
+      );
+      res.status(201).json({ message: 'Feed sentrate data added', data: result.rows[0] });
+    } else {
+      res.status(400).json({ message: 'Invalid data key' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 
 app.post('/api/cows/tambahdata/:id', async (req, res) => {
   const { id } = req.params; // cow_id
@@ -603,6 +705,21 @@ app.get('/api/cows/data/sapi_diperah', async (req, res) => {
   try {
     const query = `
       SELECT COUNT(DISTINCT cow_id) AS cows_milked
+      FROM produksi_susu
+      WHERE tanggal = CURRENT_DATE;
+    `;
+    const result = await poolTernaknesiaRelational.query(query);
+    res.json({ value: result.rows[0].cows_milked });
+  } catch (err) {
+
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/cows/data/sapi_diperah', async (req, res) => {
+  try {
+    const query = `
+      SELECT COUNT(DISTINCT cow_id) AS cows_milked
       FROM milk_production
       WHERE date = CURRENT_DATE;
     `;
@@ -619,13 +736,35 @@ app.get('/api/cows/data/sapi_diberi_pakan', async (req, res) => {
     const query = `
       SELECT COUNT(DISTINCT cow_id) AS cows_fed
       FROM (
-        SELECT cow_id FROM feed_hijauan WHERE date = CURRENT_DATE
+        SELECT cow_id FROM pakan_hijauan WHERE tanggal = CURRENT_DATE
         UNION
-        SELECT cow_id FROM feed_sentrate WHERE date = CURRENT_DATE
+        SELECT cow_id FROM pakan_sentrat WHERE tanggal = CURRENT_DATE
       ) AS fed_cows;
     `;
-    const result = await pool.query(query);
+    const result = await poolTernaknesiaRelational.query(query);
     res.json({ value: result.rows[0].cows_fed });
+  } catch (err) {
+
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/cows/data/susu', async (req, res) => {
+  try {
+    const query = `
+      SELECT SUM(produksi) AS total_milk
+      FROM produksi_susu
+      WHERE tanggal = CURRENT_DATE;
+    `;
+    const result = await poolTernaknesiaRelational.query(query);
+    if (result.rows.length === 0) {
+      return res.json({ value: 0 });
+    }
+    if (result.rows[0].total_milk === null) {
+      return res.json({ value: 0 });
+    }
+    res.json({ value: result.rows[0].total_milk });
+
   } catch (err) {
 
     res.status(500).send('Server error');
@@ -656,6 +795,62 @@ app.get('/api/cows/data/susu', async (req, res) => {
 
 
 //-----------------------------------------------CHART-------------------------
+app.get('/api/data/chart', async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        date,
+        COALESCE(SUM(hijauan_amount), 0) AS hijauan,
+        COALESCE(SUM(sentrate_amount), 0) AS sentrate,
+        COALESCE(SUM(milk_amount), 0) AS milk
+      FROM (
+        SELECT
+          tanggal AS date,
+          SUM(pakan) AS hijauan_amount,
+          0 AS sentrate_amount,
+          0 AS milk_amount
+        FROM pakan_hijauan
+        GROUP BY date
+        UNION ALL
+        SELECT
+          tanggal AS date,
+          0 AS hijauan_amount,
+          SUM(pakan) AS sentrate_amount,
+          0 AS milk_amount
+        FROM pakan_sentrat
+        GROUP BY date
+        UNION ALL
+        SELECT
+          tanggal AS date,
+          0 AS hijauan_amount,
+          0 AS sentrate_amount,
+          SUM(produksi) AS milk_amount
+        FROM produksi_susu
+        GROUP BY date
+      ) AS aggregated_data
+      GROUP BY date
+      ORDER BY date ASC;
+    `;
+
+    const result = await poolTernaknesiaRelational.query(query);
+
+
+    // Format hasil query agar cocok dengan format frontend
+    const formattedResult = result.rows.map(row => ({
+      date: row.date, // Tanggal
+      hijauan: parseFloat(row.hijauan), // Total hijauan
+      sentrate: parseFloat(row.sentrate), // Total sentrat
+      milk: parseFloat(row.milk), // Total susu
+    }));
+
+    res.json(formattedResult); // Kirimkan data ke frontend
+  } catch (err) {
+
+    res.status(500).send('Server error');
+  }
+});
+
+
 app.get('/api/data/chart', async (req, res) => {
   try {
     const query = `
@@ -776,6 +971,33 @@ app.post('/api/records', async (req, res) => {
 
 
 // ---------------------------------------------------ANALYTICS--------------------------------------------------------------------
+app.get('/api/cluster', async (req, res) => {
+  try {
+    const flaskResponse = await axios.get("http://localhost:5000/get-optimal-feed");
+
+    const data = flaskResponse.data;
+
+    if (data['status'] == 'success') {
+      const optimalFeed = {
+        'success': true,
+        'data': {
+          'hijauan_weight': data['optimal_pakan_hijauan'],
+          'sentrat_weight': data['optimal_pakan_sentrat'],
+          'max_milk_production': data['max_milk_production']
+        }
+      };
+
+      res.json(optimalFeed);
+    } else {
+      res.status(500).json({ error: 'Error while predicting monthly milk production' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error while predicting monthly milk production' });
+  }
+});
+
+
+
 app.get('/api/cluster', (req, res) => {
   exec('python kmeans.py', (err, stdout, stderr) => {
     if (err) {

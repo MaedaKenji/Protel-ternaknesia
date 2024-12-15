@@ -6,6 +6,8 @@ import 'package:ternaknesia/components/custom_line_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ternaknesia/components/dialogs.dart';
 import 'package:ternaknesia/provider/user_role.dart';
+import 'package:http/http.dart' as http;
+
 
 class MultiChartContainer extends StatefulWidget {
   final String label;
@@ -38,9 +40,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
   late List<String> chartTitles;
   int currentIndex = 0;
   late Map<String, TextEditingController> inputControllers;
-
-  get http => null;
-
   FlSpot? lastSpot; // Variabel untuk menyimpan nilai terakhir
 
   // Callback untuk menangani nilai terakhir
@@ -74,6 +73,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
     try {
       final url = Uri.parse(
           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/tambahdata/${widget.id}');
+
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -86,7 +86,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal mengirim data ke server")),
+          const SnackBar(content: Text("Gagal mengirim data ke server dari multi chart")),
         );
       }
     } catch (e) {

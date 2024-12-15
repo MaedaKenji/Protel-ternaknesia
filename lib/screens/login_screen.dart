@@ -131,7 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'TERNAKNESIA',
+                  'SAPPY',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 24,

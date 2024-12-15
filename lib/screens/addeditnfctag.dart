@@ -257,7 +257,6 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
     _showNfcDialog();
 
     try {
-      // Memulai sesi NFC untuk membaca tag NFC
       await NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
           // Proses tag NFC saat terdeteksi
@@ -294,7 +293,6 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
 
   void _onNfcRead(Map<String, dynamic> nfcData) async {
     try {
-      // Ekstraksi identifier dari data NFC
       if (nfcData.containsKey('nfca')) {
         List<int> identifier = nfcData['nfca']['identifier'];
         print('NFC ID: $identifier');
@@ -302,14 +300,15 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
             .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
             .join(':');
 
+        await updateNfcId(widget.id, nfcId);
+
         setState(() {
-          _nfcId = nfcId; // Simpan ID NFC ke dalam state
+          _nfcId = nfcId; 
           _nfcCodeController.text =
-              nfcId; // Update nilai TextField dengan nfcId
+              nfcId; 
         });
 
 
-        // Menampilkan notifikasi sukses
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('NFC ID berhasil diperbarui: $nfcId')),
         );

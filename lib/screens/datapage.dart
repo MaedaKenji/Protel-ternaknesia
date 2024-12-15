@@ -60,7 +60,7 @@ class _DataPageState extends State<DataPage> {
   String searchQuery = '';
   Future<List<Cattle>>? cattleData;
 
-  bool useStaticData = true;
+  bool useStaticData = false;
 
   final List<Map<String, dynamic>> _staticCattleData = [
     {

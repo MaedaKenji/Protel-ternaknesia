@@ -100,9 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
     susuBulanan = jsonData.map((item) {
       return {
         'bulan': item['bulan'] as String,
-        'totalProduksi': item['totalProduksi'] as double,
+        'totalProduksi': item['totalProduksi'].toDouble(),
       };
-    }).toList();    
+    }).toList();
   }
 
   final List<Map<String, dynamic>> sickIndicated = [
@@ -469,18 +469,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         if (data['success'] == true && data['data'] != null) {
           setState(() {
-            hijauanWeight = double.tryParse(
-                    (data['data']['hijauan_weight'] ?? '-1').toString()) ??
-                0.0;
-            sentratWeight = double.tryParse(
-                    (data['data']['sentrat_weight'] ?? '-1').toString()) ??
-                0.0;
+            hijauanWeight = double.parse(
+                (data['data']['hijauan_weight'] ?? 0).toStringAsFixed(2));
+            sentratWeight = double.parse(
+                (data['data']['sentrat_weight'] ?? 0).toStringAsFixed(2));
           });
         } else {
-          throw Exception('Failed to fetch data');
+          setState(() {
+            hijauanWeight = 0;
+            sentratWeight = 0;
+          });
         }
       } else {
         throw Exception('Failed to fetch data');
@@ -515,7 +515,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         predictedNextMonth = newPrediction;
       });
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -536,12 +535,12 @@ class _HomeScreenState extends State<HomeScreen> {
               '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/predict/monthly'),
         )
         .timeout(const Duration(seconds: 5));
-      print("response: " + response.body);
+    print("response: " + response.body);
     String apiUrl =
         '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/dokter-home'; // Ganti dengan URL API Anda
     try {
-      final response = await http.get(Uri.parse(apiUrl)).timeout(
-          const Duration(seconds: 5));
+      final response =
+          await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -569,8 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _refreshData() async {
     final RoleRole = Provider.of<UserRole>(context, listen: false).role;
-    
-    
+
     setState(() {
       isLoading = true;
     });
@@ -587,7 +585,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await fetchBestCombination();
 
       // Cek apakah userRole disertakan, jika ya lakukan pengecekan role
-      if ( RoleRole == 'dokter' || RoleRole == 'doctor') {
+      if (RoleRole == 'dokter' || RoleRole == 'doctor') {
         await fetchSickIndicatedDinamis();
       }
     } catch (e) {
@@ -602,7 +600,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
   }
-
 
   Future<void> _refreshData2() async {
     setState(() {
@@ -784,7 +781,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               CustomLineChart(
                                 title: 'Hasil Perolehan Susu ',
                                 datas: milkProductionData,
-                                predictionPointWidget: 50,
+                                predictionPointWidget: 0.0,
                               ),
                             CustomLineChart(
                               title: 'Berat Pangan Hijauan',
@@ -840,7 +837,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             for (var cattle in sickIndicatedDinamis)
-                              
                               _buildCattleCard(
                                 context,
                                 id: cattle['id'],

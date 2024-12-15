@@ -12,16 +12,6 @@ class DataWidget extends StatefulWidget {
 }
 
 class _DataWidgetState extends State<DataWidget> {
-  // Replace these with your actual data fetching logic
-  // Example: Fetching data from a database
-  // Future<Map<String, dynamic>> fetchData() async {
-  //   await Future.delayed(const Duration(seconds: 1)); // Simulate delay
-  //   return {
-  //     'susu': ,
-  //     'sapi_diperah': 18,
-  //     'sapi_pakan': 20,
-  //   };
-  // }
   Future<Map<String, dynamic>> fetchData() async {
     const String url = '${AppConfig.serverUrl}/api/cows/today';
     final response = await http.get(Uri.parse(url));

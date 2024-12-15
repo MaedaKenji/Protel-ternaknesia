@@ -5,7 +5,7 @@ require('dotenv').config();
 
 // URL dari API
 const apiUrl = `${process.env.BASE_URL}:${process.env.PORT}/api/cows/tambahdata`;
-console.log(apiUrl);
+apiUrl);
 
 // Fungsi untuk melakukan push data ke API
 async function pushDataCow(id) {
@@ -37,7 +37,7 @@ async function pushDataCow(id) {
             };
 
             // Kirim request POST ke API dengan data yang telah dibuat
-            console.log(`${apiUrl}/${id}`);
+            `${apiUrl}/${id}`);
             const response = await fetch(`${apiUrl}/${id}`, {
                 method: 'POST',
                 headers: {
@@ -51,7 +51,7 @@ async function pushDataCow(id) {
             }
 
             const result = await response.json();
-            console.log(`Data ${i + 1} berhasil dikirim:`, result);
+            
         }
     } catch (error) {
         console.error('Error:', error);

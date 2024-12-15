@@ -2,36 +2,169 @@ import numpy as np
 import pandas as pd
 from flask import Flask, jsonify, request
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from tensorflow.keras.models import load_model
+
 import joblib
-import sys
 import tensorflow as tf
+import os
+import psycopg2
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from scipy.optimize import differential_evolution
+
+
+class MilkProductionOptimizer:
+    def __init__(self, db_params):
+        # Parameter koneksi database
+        self.db_params = db_params
+
+        # Inisiasi variabel untuk model dan scaler
+        self.model = None
+        self.scaler = None
+        self.optimal_feed = None
+        self.max_milk_production = None
+
+    def fetch_data(self):
+        # Query untuk mengambil data
+        query = """
+        SELECT 
+          pakan_hijauan.cow_id,
+          pakan_hijauan.pakan as pakan_hijauan,
+          pakan_sentrat.pakan as pakan_sentrat,
+          produksi_susu.produksi as produksi_susu
+        FROM 
+          pakan_hijauan
+          LEFT JOIN pakan_sentrat 
+            ON pakan_hijauan.cow_id = pakan_sentrat.cow_id
+          LEFT JOIN produksi_susu 
+            ON pakan_sentrat.cow_id = produksi_susu.cow_id
+        LIMIT 10
+        """
+
+        # Koneksi dan ambil data
+        try:
+            conn = psycopg2.connect(**self.db_params)
+            df = pd.read_sql(query, conn)
+            conn.close()
+            return df
+        except Exception as e:
+            print(f"Error fetching data: {e}")
+            return None
+
+    def train_model(self):
+        # Ambil data dari database
+        data = self.fetch_data()
+
+        if data is None or data.empty:
+            raise ValueError("Tidak ada data untuk dilatih")
+
+        # Pisahkan fitur dan target
+        X = data[['pakan_hijauan', 'pakan_sentrat']]
+        y = data['produksi_susu']
+
+        # Bagi data training dan testing
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+        # Scaling
+        self.scaler = StandardScaler()
+        X_train_scaled = self.scaler.fit_transform(X_train)
+        X_test_scaled = self.scaler.transform(X_test)
+
+        # Inisiasi dan latih model
+        self.model = RandomForestRegressor(n_estimators=100, random_state=42)
+        self.model.fit(X_train_scaled, y_train)
+
+        # Evaluasi model
+        train_score = self.model.score(X_train_scaled, y_train)
+        test_score = self.model.score(X_test_scaled, y_test)
+
+        print(f"Model Performance:")
+        print(f"R² Score (Training): {train_score:.4f}")
+        print(f"R² Score (Testing): {test_score:.4f}")
+
+        return train_score, test_score
+
+    def optimize_feed_combination(self):
+        if self.model is None or self.scaler is None:
+            raise ValueError(
+                "Model belum dilatih. Jalankan train_model() terlebih dahulu.")
+
+        # Fungsi objektif untuk optimasi
+        def objective_function(x):
+            # Transformasi input yang akan dioptimasi
+            input_scaled = self.scaler.transform(np.array(x).reshape(1, -1))
+            # Prediksi produksi susu (negatif karena kita mencari maksimum)
+            return -self.model.predict(input_scaled)[0]
+
+        # Ambil data untuk batasan
+        data = self.fetch_data()
+
+        # Batasan untuk pakan hijauan dan sentrat
+        bounds = [
+            (data['pakan_hijauan'].min(), data['pakan_hijauan'].max()),
+            (data['pakan_sentrat'].min(), data['pakan_sentrat'].max())
+        ]
+
+        # Gunakan Differential Evolution untuk optimasi
+        result = differential_evolution(
+            objective_function,
+            bounds,
+            strategy='best1bin',
+            popsize=15,
+            tol=1e-7
+        )
+
+        # Simpan hasil
+        self.optimal_feed = result.x
+        self.max_milk_production = -result.fun
+
+        return self.optimal_feed, self.max_milk_production
+
+    def save_model(self, model_path='milk_production_model.pkl', scaler_path='milk_production_scaler.pkl'):
+        # Simpan model dan scaler
+        joblib.dump(self.model, model_path)
+        joblib.dump(self.scaler, scaler_path)
+
+    def predict_milk_production(self, pakan_hijauan, pakan_sentrat):
+        # Load model dan scaler jika belum ada
+        if self.model is None or self.scaler is None:
+            try:
+                self.model = joblib.load('milk_production_model.pkl')
+                self.scaler = joblib.load('milk_production_scaler.pkl')
+            except FileNotFoundError:
+                raise ValueError("Model belum dilatih atau disimpan")
+
+        # Transformasi input
+        input_data = np.array([[pakan_hijauan, pakan_sentrat]])
+        input_scaled = self.scaler.transform(input_data)
+
+        # Prediksi
+        prediction = self.model.predict(input_scaled)
+        return prediction[0]
+
 
 
 app = Flask(__name__)
 
-# model = load_model('lstm_produksi_susu_bulanan.keras')
-# scaler = joblib.load('scaler_produksi_susu_bulanan.pkl')
-# print(sys.version)
+# Konfigurasi koneksi database
+DB_PARAMS = {
+    'dbname': 'ternaknesia_relational',
+    'user': 'postgres',
+    'password': 'agus',
+    'host': 'localhost',
+    'port': '5432'
+}
+
+optimizer = MilkProductionOptimizer(DB_PARAMS)
+
 
 model_bulanan = tf.keras.models.load_model('lstm_produksi_susu_bulanan.keras')
 scaler_bulanan = joblib.load('scaler_produksi_susu_bulanan.pkl')
 model_harian = tf.keras.models.load_model('lstm_produksi_susu_harian.keras')
 scaler_harian = joblib.load('scaler_produksi_susu_harian.pkl')
-
-# last_3_months = np.array([100, 200, 300])
-# print(last_3_months)
-
-# print("-------------------------------------------------------------------")
-# print("\n\n\n")
-# last_3_months_scaled = scaler.transform(last_3_months.reshape(-1, 1))
-# print(last_3_months_scaled)
-# last_3_months_scaled = last_3_months_scaled.reshape(-1, 1)
-# print(last_3_months)
-# last_3_months_scaled = last_3_months_scaled.reshape(1, 3, 1)
-# print(last_3_months_scaled)
 
 
 # =========================
@@ -72,31 +205,27 @@ def predict_daily_milk():
         if not data or 'last_3_days' not in data:
             return jsonify({'error': 'Invalid input, expected "last_3_days" with 3 values.'}), 400
         
-        # print(data['last_3_days'])
+        
         
         model = model_harian
         scaler = scaler_harian
 
         last_3_days = np.array(data['last_3_days'])
-        print(last_3_days)
         last_3_days_scaled = scaler.transform(last_3_days.reshape(-1, 1))
-        print(f"Last 3 days scaled: {last_3_days_scaled}")
+        
         last_3_days_scaled = last_3_days_scaled.reshape(-1, 1)
-        print(f"last_3_days_scaled: {last_3_days_scaled}")
+        
         last_3_days_scaled = last_3_days_scaled.reshape(1, 3, 1)
-        print(f"last_3_days_scaled: {last_3_days_scaled}")
+        
 
         input_data = last_3_days_scaled
         prediction_scaled = model.predict(input_data)
         prediction = scaler.inverse_transform(prediction_scaled)
-        print(f"Prediction: {prediction}")
+        
         return jsonify({'predicted_daily_milk': float(prediction[0][0])})
 
     
     except Exception as e:
-        import traceback
-        print(f"Error occurred: {str(e)}")
-        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
     
@@ -222,12 +351,83 @@ def get_clusters():
 @app.route('/predict_productivity', methods=['POST'])
 def predict_productivity():
     input_data = request.get_json()
-    print(input_data)
     input_df = pd.DataFrame([input_data])
     input_scaled = scaler.transform(input_df)
     prediction = logistic_model.predict(input_scaled)
 
     return jsonify({"is_productive": bool(prediction[0])})
+
+
+# =========================
+# Bagian 3: Kombinasi Pakan
+# =========================
+
+@app.route('/train-model', methods=['POST'])
+def train_model():
+    try:
+        # Latih model
+        train_score, test_score = optimizer.train_model()
+
+        # Optimasi kombinasi pakan
+        optimal_feed, max_production = optimizer.optimize_feed_combination()
+
+        # Simpan model
+        optimizer.save_model()
+
+        return jsonify({
+            'status': 'success',
+            'train_score': train_score,
+            'test_score': test_score,
+            'optimal_pakan_hijauan': optimal_feed[0],
+            'optimal_pakan_sentrat': optimal_feed[1],
+            'max_milk_production': max_production
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+
+@app.route('/predict-milk-production', methods=['POST'])
+def predict_milk_production():
+    try:
+        # Ambil data dari request
+        data = request.get_json()
+        pakan_hijauan = data.get('pakan_hijauan')
+        pakan_sentrat = data.get('pakan_sentrat')
+
+        # Validasi input
+        if pakan_hijauan is None or pakan_sentrat is None:
+            return jsonify({'status': 'error', 'message': 'Pakan hijauan dan sentrat harus diisi'}), 400
+
+        # Prediksi
+        prediction = optimizer.predict_milk_production(
+            pakan_hijauan, pakan_sentrat)
+
+        return jsonify({
+            'status': 'success',
+            'pakan_hijauan': pakan_hijauan,
+            'pakan_sentrat': pakan_sentrat,
+            'predicted_milk_production': prediction
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/get-optimal-feed', methods=['GET'])
+def get_optimal_feed():
+    try:
+        # Jika belum ada optimasi, lakukan training terlebih dahulu
+        if optimizer.optimal_feed is None:
+            optimizer.train_model()
+            optimizer.optimize_feed_combination()
+
+        return jsonify({
+            'status': 'success',
+            'optimal_pakan_hijauan': optimizer.optimal_feed[0],
+            'optimal_pakan_sentrat': optimizer.optimal_feed[1],
+            'max_milk_production': optimizer.max_milk_production
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 # =========================

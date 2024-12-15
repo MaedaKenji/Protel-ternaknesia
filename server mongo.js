@@ -34,9 +34,9 @@ function isSameDay(date1, date2) {
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log('Connected to MongoDB');
-    console.log('Database Name:', mongoose.connection.name);
-    console.log('Server & Database Up and Running');
+    'Connected to MongoDB');
+    'Database Name:', mongoose.connection.name);
+    'Server & Database Up and Running');
   })
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -44,7 +44,7 @@ mongoose.connect(process.env.MONGODB_URI)
 const pool = new Pool({ host: process.env.PGHOST, user: process.env.PGUSER, password: process.env.PGPASSWORD, database: process.env.PGDATABASE, port: process.env.PGPORT, });
 
 // Test the connection 
-pool.connect((err) => { if (err) { console.error('PostgreSQL connection error:', err); } else { console.log('Connected to PostgreSQL'); } });
+pool.connect((err) => { if (err) { console.error('PostgreSQL connection error:', err); } else { 'Connected to PostgreSQL'); } });
 
 
 
@@ -54,9 +54,9 @@ app.use(cors({
 
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log(email, password);
+  email, password);
   const user2 = await User.findOne({ email });
-  console.log(user2);
+  user2);
 
   try {
     const user = await User.findOne({ email });
@@ -130,7 +130,7 @@ app.post('/api/cows/tambahdata/:id', async (req, res) => {
   try {
     // Dapatkan data berdasarkan `id` sapi
     let cow = await Cow.findOne({ id: req.params.id });
-    console.log('API masuk')
+    'API masuk')
 
     // Jika sapi tidak ditemukan, buat sapi baru
     if (!cow) {
@@ -185,7 +185,7 @@ app.get('/api/cows/today', async (req, res) => {
     let beratPakanKonsentrat = 0;
     // const timeNow = new Date();
     const timeNow = moment.tz("Asia/Bangkok").format
-    console.log(timeNow);
+    timeNow);
 
 
     const allSusu = data.map(cow => {
@@ -276,15 +276,15 @@ app.get('/api/cows/today/bulanan/susu', async (req, res) => {
     let beratPakanHijauan = 0;
     let beratPakanKonsentrat = 0;
     const timeNow = moment.tz("Asia/Bangkok").format
-    console.log(timeNow);
-    console.log(data);
+    timeNow);
+    data);
 
     const monthlyMilkResults = {};
 
     data.forEach(cow => {
-      console.log(cow);
+      cow);
       if (cow.totalMilk === undefined) {
-        console.log('Cow has no milk data');
+        'Cow has no milk data');
       }
       else {
       cow.totalMilk.forEach(entry => {
@@ -338,7 +338,7 @@ app.post('/api/records', async (req, res) => {
   try {
     const { hasilPerah, jumlahSapiSehat, beratHijauan, beratSentrat } = req.body;
     const timeNow = new Date(Date.now() + 7 * 60 * 60 * 1000);;
-    // console.log(timeNow);
+    // timeNow);
 
     // Cek record terakhir
     let record = await Record.findOne();
@@ -405,8 +405,8 @@ app.use((err, req, res, next) => {
 });
 
 // Cek nilai dari BASE_URL
-console.log(`Configured BASE_URL: ${process.env.BASE_URL}`);
-console.log(`Please check if BASE_URL is correct`);
+`Configured BASE_URL: ${process.env.BASE_URL}`);
+`Please check if BASE_URL is correct`);
 
 // Check if server is running
 app.get('/', (req, res) => {
@@ -414,5 +414,5 @@ app.get('/', (req, res) => {
 });
 
 // Start server with full URL
-app.listen(PORT, SERVER_URL, () => console.log(`Server listening on ${SERVER_URL} \nConnecting to database...`));
-console.log('Port:', PORT);
+app.listen(PORT, SERVER_URL, () => `Server listening on ${SERVER_URL} \nConnecting to database...`));
+'Port:', PORT);

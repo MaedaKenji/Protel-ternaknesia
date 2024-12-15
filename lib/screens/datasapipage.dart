@@ -27,7 +27,6 @@ class DataSapiPage extends StatefulWidget {
   double pakanHijauSaatIni = 0;
   double pakanSentratSaatIni = 0;
 
-
   DataSapiPage({
     super.key,
     required this.id,
@@ -57,12 +56,11 @@ class _DataSapiPageState extends State<DataSapiPage> {
     'beratBadan': {},
   };
   Map<String, List<Map<String, dynamic>>>
-     
       milkProductionAndWeightHistoryDynamic = {
     'produksiSusu': [],
     'beratBadan': [],
   };
-    Map<String, Map<String, List<FlSpot>>> dinamisFeedData = {
+  Map<String, Map<String, List<FlSpot>>> dinamisFeedData = {
     'pakanHijau': {},
     'pakanSentrat': {}
   };
@@ -70,8 +68,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
     'pakanHijau': [],
     'pakanSentrat': [],
   };
-
-
 
   TextEditingController stressLevelController = TextEditingController();
   TextEditingController healthStatusController = TextEditingController();
@@ -145,18 +141,19 @@ class _DataSapiPageState extends State<DataSapiPage> {
       ],
     },
   };
-  final Map<String, List<Map<String, dynamic>>> milkProductionAndWeightHistory =  {
+  final Map<String, List<Map<String, dynamic>>> milkProductionAndWeightHistory =
+      {
     'produksiSusu': [
-      {'date': DateTime(2024, 11, 28), 'data': '50 L'},
-      {'date': DateTime(2024, 11, 29), 'data': '52 L'},
-      {'date': DateTime(2024, 11, 30), 'data': '55 L'},
-      {'date': DateTime(2024, 12, 1), 'data': '48 L'},
+      // {'date': DateTime(2024, 11, 28), 'data': '50 L'},
+      // {'date': DateTime(2024, 11, 29), 'data': '52 L'},
+      // {'date': DateTime(2024, 11, 30), 'data': '55 L'},
+      // {'date': DateTime(2024, 12, 1), 'data': '48 L'},
     ],
     'beratBadan': [
-      {'date': DateTime(2024, 11, 28), 'data': '70 Kg'},
-      {'date': DateTime(2024, 11, 29), 'data': '68 Kg'},
-      {'date': DateTime(2024, 11, 30), 'data': '72 Kg'},
-      {'date': DateTime(2024, 12, 1), 'data': '75 Kg'},
+      // {'date': DateTime(2024, 11, 28), 'data': '70 Kg'},
+      // {'date': DateTime(2024, 11, 29), 'data': '68 Kg'},
+      // {'date': DateTime(2024, 11, 30), 'data': '72 Kg'},
+      // {'date': DateTime(2024, 12, 1), 'data': '75 Kg'},
     ],
   };
 
@@ -554,7 +551,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal mengirim data ke server")),
+          const SnackBar(content: Text("Gagal mengirim data ke server di data page")),
         );
       }
     } catch (e) {
@@ -573,14 +570,14 @@ class _DataSapiPageState extends State<DataSapiPage> {
     };
 
     feedHijauan.sort((a, b) {
-      DateTime dateA = DateTime.parse(a['date']);
-      DateTime dateB = DateTime.parse(b['date']);
+      DateTime dateA = DateTime.parse(a['tanggal']);
+      DateTime dateB = DateTime.parse(b['tanggal']);
       return dateA.compareTo(dateB);
     });
 
     for (var feed in feedHijauan) {
-      DateTime date = DateTime.parse(feed['date']);
-      double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
+      DateTime date = DateTime.parse(feed['tanggal']);
+      double amount = double.tryParse(feed['pakan']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
       feedData['pakanHijau'] ??= {};
@@ -590,14 +587,14 @@ class _DataSapiPageState extends State<DataSapiPage> {
     }
 
     feedSentrate.sort((a, b) {
-      DateTime dateA = DateTime.parse(a['date']);
-      DateTime dateB = DateTime.parse(b['date']);
+      DateTime dateA = DateTime.parse(a['tanggal']);
+      DateTime dateB = DateTime.parse(b['tanggal']);
       return dateA.compareTo(dateB);
     });
 
     for (var feed in feedSentrate) {
-      DateTime date = DateTime.parse(feed['date']);
-      double amount = double.tryParse(feed['amount']?.toString() ?? '0') ?? 0;
+      DateTime date = DateTime.parse(feed['tanggal']);
+      double amount = double.tryParse(feed['pakan']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
       feedData['pakanSentrat'] ??= {};
@@ -618,15 +615,15 @@ class _DataSapiPageState extends State<DataSapiPage> {
     };
 
     milkProduction.sort((a, b) {
-      DateTime dateA = DateTime.parse(a['date']);
-      DateTime dateB = DateTime.parse(b['date']);
+      DateTime dateA = DateTime.parse(a['tanggal']);
+      DateTime dateB = DateTime.parse(b['tanggal']);
       return dateA.compareTo(dateB);
     });
 
     for (var milk in milkProduction) {
-      DateTime date = DateTime.parse(milk['date']);
+      DateTime date = DateTime.parse(milk['tanggal']);
       double productionAmount =
-          double.tryParse(milk['production_amount']?.toString() ?? '0') ?? 0;
+          double.tryParse(milk['produksi']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
       milkAndWeightData['produksiSusu'] ??= {};
@@ -636,15 +633,15 @@ class _DataSapiPageState extends State<DataSapiPage> {
     }
 
     weights.sort((a, b) {
-      DateTime dateA = DateTime.parse(a['date']);
-      DateTime dateB = DateTime.parse(b['date']);
+      DateTime dateA = DateTime.parse(a['tanggal']);
+      DateTime dateB = DateTime.parse(b['tanggal']);
       return dateA.compareTo(dateB);
     });
 
     for (var weight in weights) {
-      DateTime date = DateTime.parse(weight['date']);
+      DateTime date = DateTime.parse(weight['tanggal']);
       double weightValue =
-          double.tryParse(weight['weight']?.toString() ?? '0') ?? 0;
+          double.tryParse(weight['berat']?.toString() ?? '0') ?? 0;
       String monthWithYear = _getMonthWithYear(date);
 
       milkAndWeightData['beratBadan'] ??= {};
@@ -808,10 +805,19 @@ class _DataSapiPageState extends State<DataSapiPage> {
       // Simpan nilai prediksi susu ke widget.predictionSusu
       setState(() {
         widget.predictionSusu = predicted_daily_milk;
-        widget.beratSaatIni = data['recent_weights'][0]['berat'];
-        widget.susuSaatIni = data['recent_milk_production'][0]['produksi'];
-        widget.pakanHijauSaatIni = data['recent_feed_hijauan'][0]['pakan'];
-        widget.pakanSentratSaatIni = data['recent_feed_sentrate'][0]['pakan'];
+        widget.beratSaatIni =
+            double.parse(data['recent_weights'][0]['berat'].toStringAsFixed(2));
+
+        widget.susuSaatIni = double.parse(
+            data['recent_milk_production'][0]['produksi'].toStringAsFixed(2));
+        widget.pakanHijauSaatIni = double.parse(
+            data['recent_feed_hijauan'][0]['pakan'].toStringAsFixed(2));
+        widget.pakanSentratSaatIni = double.parse(
+            data['recent_feed_sentrate'][0]['pakan'].toStringAsFixed(2));
+        widget.beratSaatIni = data['recent_weights'][0]['berat'].toDouble();
+        // widget.susuSaatIni = data['recent_milk_production'][0]['produksi'].toDouble();
+        // widget.pakanHijauSaatIni = data['recent_feed_hijauan'][0]['pakan'].toDouble();
+        // widget.pakanSentratSaatIni = data['recent_feed_sentrate'][0]['pakan'].toDouble();
       });
 
       // Proses data produksi susu dan berat badan untuk dikirimkan ke UI
@@ -831,7 +837,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
         };
       }).toList();
 
-      // Proses data pakan hijau dan pakan sentrat
       List<Map<String, dynamic>> pakanHijauData = [];
       if (data['recent_feed_hijauan'] != null) {
         pakanHijauData = (data['recent_feed_hijauan'] as List).map((item) {
@@ -862,8 +867,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
         dinamisFeedData = processFeed(pakanHijauData, pakanSentratData);
         dinamisFeedDataHistory['pakanHijau']!.addAll(pakanHijauData);
         dinamisFeedDataHistory['pakanSentrat']!.addAll(pakanSentratData);
-
-
       });
       return response;
     } catch (e) {
@@ -877,7 +880,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
       });
     }
   }
-  
+
   Map<String, Map<String, List<FlSpot>>> processMilkAndWeightData2(
     List<Map<String, dynamic>> milkProduction,
     List<Map<String, dynamic>> weightHistory,
@@ -911,6 +914,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
 
     return result;
   }
+
   Map<String, Map<String, List<FlSpot>>> processFeed(
     List<Map<String, dynamic>> feedDataHijauan,
     List<Map<String, dynamic>> feedDataSentrat,
@@ -920,7 +924,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
       'pakanSentrat': {},
     };
 
-    // Proses pakan hijauan
     for (var item in feedDataHijauan) {
       String monthYear = DateFormat('MMMM yyyy').format(item['date']);
       if (!result['pakanHijau']!.containsKey(monthYear)) {
@@ -955,7 +958,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
       final url = Uri.parse(
           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/${widget.id}');
       final response = await http.get(url).timeout(const Duration(seconds: 5));
-      // print("response: " + response.body);
       final data = json.decode(response.body);
 
       final urlString =
@@ -977,37 +979,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
           'data': '${item['produksi']} L',
         };
       }).toList();
-      // I/flutter (19892): response:
-      // {"id":7,"cow_id":"1","gender":"Jantan","age":12,"health_record":true,
-      // "stress_level":null,"birahi":null,
-      // ","diagnosis_history":[],"treatment_history":[],"health_record_history":[],"stress_level_history":[],
-      // "birahi_history":[],
-      // "note_history":[],
-      // "recent_weights":[{"date":"2023-10-25T17:00:00.000Z","weight":"500"},
-      // {"date":"2023-10-20T17:00:00.000Z","weight":"490"},{"date":"2023-10-15T17:00:00.000Z","weight":"480"},
-      // {"date":"2023-10-10T17:00:00.000Z","weight":"470"},{"date":"2023-10-09T17:00:00.000Z","weight":"460"}]
-      // ,"recent_milk_production":[{"date":"2024-11-15T17:00:00.000Z","production_amount":"10"},
-      // {"date":"2023-10-19T17:00:00.000Z","production_amount":"70"},
-      // {"date":"2023-10-18T17:00:00.000Z","production_amount":
-      //"note":null,"iskandang":true,"nfc_id":"3a:ad:ef:b0
 
-      // Transform `recent_milk_production`
-      List<Map<String, dynamic>> milkProduction =
-          (data['recent_milk_production'] as List).map((item) {
-        return {
-          'date': DateTime.parse(item['tanggal']),
-          'data': '${item['produksi']} L',
-        };
-      }).toList();
-
-      List<Map<String, dynamic>> weightHistory =
-          (data['recent_weights'] as List).map((item) {
-        return {
-          'date': DateTime.parse(item['tanggal']),
-          'data': '${item['berat']} Kg',
-        };
-      }).toList();
-      // Transform `recent_weights`
       List<Map<String, dynamic>> weightHistory =
           (data['recent_weights'] as List).map((item) {
         return {
@@ -1124,8 +1096,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                             chartsData: milkAndWeightDataDinamis,
                             id: widget.id,
                             predictionSusu: widget.predictionSusu,
-                            
-                            
                             onEdit: (index) async {
                               Navigator.of(context).pop();
 
@@ -1170,7 +1140,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                             thickness: 1,
                           ),
                           const SizedBox(height: 25),
-
                           const Text(
                             'PAKAN YANG DIBERIKAN',
                             style: TextStyle(
@@ -1220,8 +1189,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                               });
                             },
                           ),
-                          
-
                           const SizedBox(height: 25),
                           const Divider(
                             color: Colors.black12,

@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ternaknesia/config/config.dart';
-// import 'package:ternaknesia/services/api_service.dart';
 import 'dart:convert';
 
 class LineChartSample2 extends StatefulWidget {

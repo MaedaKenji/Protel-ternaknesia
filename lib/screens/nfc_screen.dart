@@ -105,6 +105,8 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
     },
   ];
 
+  
+
   void _startNfcScan() async {
     setState(() {});
 
@@ -117,9 +119,8 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
           final dynamic nfcData = tag.data;
 
           if (nfcData is Map<String, dynamic>) {
-            _onNfcRead(nfcData); // Call the function without awaiting
+            _onNfcRead(nfcData);
           } else {
-            // Handle unexpected data format
             throw Exception('Unexpected NFC data format.');
           }
 
@@ -131,6 +132,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
             navigatorKey.currentState?.pop();
           }
 
+          await Future.delayed(const Duration(seconds: 5));
           await NfcManager.instance.stopSession();
         },
       );
@@ -163,22 +165,20 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
           // Cari di dataSapi
           final Map<String, dynamic> matchedCowSapi = dataSapi.firstWhere(
             (sapi) => sapi['id'] == matchedCowNFC['cow_id'],
-            orElse: () => {}, // Kembalikan map kosong jika tidak ditemukan
+            orElse: () => {},
           );
 
           if (matchedCowSapi.isNotEmpty) {
-            // Tutup pop-up dialog dan hentikan sesi NFC sebelum navigasi
             if (navigatorKey.currentState?.canPop() ?? false) {
-              navigatorKey.currentState?.pop(); // Close pop-up dialog
+              navigatorKey.currentState?.pop();
             }
-            await NfcManager.instance.stopSession(); // Cancel NFC scan
+            await NfcManager.instance.stopSession();
 
             // Konversi data ke String
             final String id = matchedCowSapi['id'].toString();
             final String gender = matchedCowSapi['gender'].toString();
             final String age = matchedCowSapi['age'].toString();
-            final String healthStatus =
-                matchedCowSapi['healthStatus'].toString();
+            final String healthStatus = matchedCowSapi['healthStatus'].toString();
 
             // Navigasi ke DataSapiPage dengan data String
             Navigator.push(
@@ -199,6 +199,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
             if (navigatorKey.currentState?.canPop() ?? false) {
               navigatorKey.currentState?.pop(); // Close pop-up dialog
             }
+            await Future.delayed(const Duration(seconds: 5));
             await NfcManager.instance.stopSession(); // Cancel NFC scan
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -212,6 +213,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
           if (navigatorKey.currentState?.canPop() ?? false) {
             navigatorKey.currentState?.pop(); // Close pop-up dialog
           }
+          await Future.delayed(const Duration(seconds: 5));
           await NfcManager.instance.stopSession(); // Cancel NFC scan
 
           ScaffoldMessenger.of(context).showSnackBar(
