@@ -83,22 +83,24 @@ app.get('/api/cattles-relational', async (req, res) => {
     });
 
     const hitungProduktivitas = async (cow_id) => {
-      const dataBerat = await poolTernaknesiaRelational.query('SELECT * FROM berat_badan WHERE cow_id = $1 ORDER BY tanggal ASC', [cow_id]);
+      const dataSusu = await poolTernaknesiaRelational.query('SELECT * FROM produksi_susu WHERE cow_id = $1 ORDER BY tanggal ASC', [cow_id]);
+      console.log(dataSusu.rows);
 
       const derivatif = [];
-      for (let i = 1; i < dataBerat.rows.length; i++) {
-        const beratSekarang = dataBerat.rows[i].berat;
-        const beratSebelum = dataBerat.rows[i - 1].berat;
-        const tanggalSekarang = new Date(dataBerat.rows[i].tanggal);
-        const tanggalSebelum = new Date(dataBerat.rows[i - 1].tanggal);
+      for (let i = 1; i < dataSusu.rows.length; i++) {
+        const beratSekarang = dataSusu.rows[i].produksi;
+        const beratSebelum = dataSusu.rows[i - 1].produksi;
+        const tanggalSekarang = new Date(dataSusu.rows[i].tanggal);
+        const tanggalSebelum = new Date(dataSusu.rows[i - 1].tanggal);
         const selisihHari = (tanggalSekarang - tanggalSebelum) / (1000 * 3600 * 24);
         const derivatifSekarang = (beratSekarang - beratSebelum) / selisihHari;
         derivatif.push(derivatifSekarang);
       }
 
       const rataRataDerivatif = derivatif.reduce((a, b) => a + b, 0) / derivatif.length;
+      console.log(`Rata-rata derivatif untuk cow_id ${cow_id}: ${rataRataDerivatif}`);
 
-      return rataRataDerivatif < -0.5 ? false : true;
+      return rataRataDerivatif > 0 ? true : false;
     };
 
     const formattedResult = await Promise.all(result.rows.map(async cow => ({
@@ -161,20 +163,6 @@ app.get('/api/cattles-relational/predict/:cow_id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching data' });
   }
 });
-
-async function classifyCow(cowId, weight, healthStatus) {
-  try {
-    const response = await axios.post('http://your-flask-api-url/classify', {
-      cow_id: cowId,
-      weight: weight,
-      health_status: healthStatus,
-    });
-
-    return response.data.is_productive; // Adjust based on the actual response structure
-  } catch (error) {
-    return false; // Default to false if there's an error
-  }
-}
 
 app.get('/api/cows/dokter-home', async (req, res) => {
   try {
@@ -1148,26 +1136,26 @@ app.post('/api/predict/daily', async (req, res) => {
   }
 });
 
-app.post('/api/classify/cattle', async (req, res) => {
-  try {
-    const cattleData = req.body; // Data sapi dari client
-    const classifiedCattle = [];
+// app.post('/api/classify/cattle', async (req, res) => {
+//   try {
+//     const cattleData = req.body; // Data sapi dari client
+//     const classifiedCattle = [];
 
-    for (const cow of cattleData) {
-      // Kirim data sapi satu per satu ke Flask API
-      const flaskResponse = await axios.post("http://localhost:5000/predict_productivity", cow);
-      classifiedCattle.push({
-        ...cow,
-        is_productive: flaskResponse.data.is_productive
-      });
-    }
+//     for (const cow of cattleData) {
+//       // Kirim data sapi satu per satu ke Flask API
+//       const flaskResponse = await axios.post("http://localhost:5000/predict_productivity", cow);
+//       classifiedCattle.push({
+//         ...cow,
+//         is_productive: flaskResponse.data.is_productive
+//       });
+//     }
 
-    res.json(classifiedCattle); // Mengembalikan data sapi dengan prediksi
-  } catch (error) {
+//     res.json(classifiedCattle); // Mengembalikan data sapi dengan prediksi
+//   } catch (error) {
 
-    res.status(500).json({ error: 'Error while classifying cattle productivity' });
-  }
-});
+//     res.status(500).json({ error: 'Error while classifying cattle productivity' });
+//   }
+// });
 
 
 app.post('/api/data/nfc', async (req, res) => {

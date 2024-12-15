@@ -113,402 +113,402 @@ class _DataPageState extends State<DataPage> {
   
 
   
-  Future<List<Cattle>> fetchCattleDataTapiRibetIniMauBuatBaruVersiRelationalTable() async {
-    try {
-      final url =
-          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
+  // Future<List<Cattle>> fetchCattleDataTapiRibetIniMauBuatBaruVersiRelationalTable() async {
+  //   try {
+  //     final url =
+  //         Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 5),
-          onTimeout: () {
-        throw Exception('Request timed out');
-      });
+  //     final response = await http.get(url).timeout(const Duration(seconds: 5),
+  //         onTimeout: () {
+  //       throw Exception('Request timed out');
+  //     });
 
-      if (response.statusCode == 200) {
-        List<dynamic> cattleJson = json.decode(response.body);
+  //     if (response.statusCode == 200) {
+  //       List<dynamic> cattleJson = json.decode(response.body);
 
-        // Sort data berdasarkan cow_id
-        cattleJson.sort((a, b) => (int.tryParse(a['cow_id'].toString()) ?? 0)
-            .compareTo(int.tryParse(b['cow_id'].toString()) ?? 0));
+  //       // Sort data berdasarkan cow_id
+  //       cattleJson.sort((a, b) => (int.tryParse(a['cow_id'].toString()) ?? 0)
+  //           .compareTo(int.tryParse(b['cow_id'].toString()) ?? 0));
 
 
-        // Prepare filtered data by extracting only the relevant fields without randomization
-        final filteredData = cattleJson.map((json) {
-          return {
-            'hijauan_weight':
-                json['hijauan_weight'], // Passing the original value
-            'sentrat_weight':
-                json['sentrat_weight'], // Passing the original value
-            'stress_level': json['stress_level'], // Passing the original value
-            'health_status':
-                json['health_status'], // Passing the original value
-            'milk_production':
-                json['milk_production'], // Passing the original value
-          };
-        }).toList();
+  //       // Prepare filtered data by extracting only the relevant fields without randomization
+  //       final filteredData = cattleJson.map((json) {
+  //         return {
+  //           'hijauan_weight':
+  //               json['hijauan_weight'], // Passing the original value
+  //           'sentrat_weight':
+  //               json['sentrat_weight'], // Passing the original value
+  //           'stress_level': json['stress_level'], // Passing the original value
+  //           'health_status':
+  //               json['health_status'], // Passing the original value
+  //           'milk_production':
+  //               json['milk_production'], // Passing the original value
+  //         };
+  //       }).toList();
 
-        // Kirim data yang sudah difilter ke API Flask
-        final classifyUrl = Uri.parse(
-            '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
-        final classifyResponse = await http.post(
-          classifyUrl,
-          body: json.encode(filteredData),
-          headers: {'Content-Type': 'application/json'},
-        );
+  //       // Kirim data yang sudah difilter ke API Flask
+  //       final classifyUrl = Uri.parse(
+  //           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
+  //       final classifyResponse = await http.post(
+  //         classifyUrl,
+  //         body: json.encode(filteredData),
+  //         headers: {'Content-Type': 'application/json'},
+  //       );
 
-        if (classifyResponse.statusCode == 200) {
-          // Hasil klasifikasi dari backend
-          List<dynamic> classifiedData = json.decode(classifyResponse.body);
+  //       if (classifyResponse.statusCode == 200) {
+  //         // Hasil klasifikasi dari backend
+  //         List<dynamic> classifiedData = json.decode(classifyResponse.body);
 
-          // Add 'isProductive' from classified data into the original cattleJson
-          return cattleJson.map((originalJson) {
-            // Assuming classifyData is a list and the order matches with cattleJson
-            final isProductive = classifiedData.isNotEmpty
-                ? classifiedData.first['is_productive'] ?? false
-                : false; // Default value if empty or not available
+  //         // Add 'isProductive' from classified data into the original cattleJson
+  //         return cattleJson.map((originalJson) {
+  //           // Assuming classifyData is a list and the order matches with cattleJson
+  //           final isProductive = classifiedData.isNotEmpty
+  //               ? classifiedData.first['is_productive'] ?? false
+  //               : false; // Default value if empty or not available
 
-            return Cattle(
-              id: (originalJson['cow_id'] is String)
-                  ? originalJson['cow_id']
-                  : "0",
-              weight: (originalJson['weight'] is int)
-                  ? originalJson['weight']
-                  : (originalJson['weight'] is String &&
-                          originalJson['weight'].isNotEmpty)
-                      ? int.tryParse(originalJson['weight']) ?? 0
-                      : 0,
-              age: originalJson['age'] ?? 0, // Default age
-              gender: originalJson['gender'] ?? 'Unknown', // Default gender
-              healthStatus:
-                  (originalJson['health_record'] == true) ? "SEHAT" : "SAKIT",
-              isProductive: isProductive, // Adding 'isProductive' directly
-              isConnectedToNFCTag: originalJson['is_connected_to_nfc_tag'] ??
-                  false, // Keep original NFC connection status
-            );
-          }).toList();
-        } else {
-          throw Exception('Failed to classify cattle productivity');
-        }
-      } else {
-        throw Exception(
-            'Failed to load cattle data with status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error loading cattle data: $e');
-    }
-  }
+  //           return Cattle(
+  //             id: (originalJson['cow_id'] is String)
+  //                 ? originalJson['cow_id']
+  //                 : "0",
+  //             weight: (originalJson['weight'] is int)
+  //                 ? originalJson['weight']
+  //                 : (originalJson['weight'] is String &&
+  //                         originalJson['weight'].isNotEmpty)
+  //                     ? int.tryParse(originalJson['weight']) ?? 0
+  //                     : 0,
+  //             age: originalJson['age'] ?? 0, // Default age
+  //             gender: originalJson['gender'] ?? 'Unknown', // Default gender
+  //             healthStatus:
+  //                 (originalJson['health_record'] == true) ? "SEHAT" : "SAKIT",
+  //             isProductive: isProductive, // Adding 'isProductive' directly
+  //             isConnectedToNFCTag: originalJson['is_connected_to_nfc_tag'] ??
+  //                 false, // Keep original NFC connection status
+  //           );
+  //         }).toList();
+  //       } else {
+  //         throw Exception('Failed to classify cattle productivity');
+  //       }
+  //     } else {
+  //       throw Exception(
+  //           'Failed to load cattle data with status code: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Error loading cattle data: $e');
+  //   }
+  // }
 
   
-  Future<List<Cattle>> fetchCattleDataRandom() async {
-    try {
-      final url =
-          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
+  // Future<List<Cattle>> fetchCattleDataRandom() async {
+  //   try {
+  //     final url =
+  //         Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 5),
-          onTimeout: () {
-        throw Exception('Request timed out');
-      });
+  //     final response = await http.get(url).timeout(const Duration(seconds: 5),
+  //         onTimeout: () {
+  //       throw Exception('Request timed out');
+  //     });
 
-      if (response.statusCode == 200) {
-        List<dynamic> cattleJson = json.decode(response.body);
+  //     if (response.statusCode == 200) {
+  //       List<dynamic> cattleJson = json.decode(response.body);
 
-        // Sort data berdasarkan cow_id
-        cattleJson.sort((a, b) => (int.tryParse(a['cow_id'].toString()) ?? 0)
-            .compareTo(int.tryParse(b['cow_id'].toString()) ?? 0));
+  //       // Sort data berdasarkan cow_id
+  //       cattleJson.sort((a, b) => (int.tryParse(a['cow_id'].toString()) ?? 0)
+  //           .compareTo(int.tryParse(b['cow_id'].toString()) ?? 0));
 
-        final random = Random();
+  //       final random = Random();
 
-        // Hanya ambil kolom yang relevan untuk prediksi dan pastikan urutannya sesuai
-        final filteredData = cattleJson.map((json) {
-          return {
-            'hijauan_weight': json['hijauan_weight'] is int
-                ? json['hijauan_weight']
-                : (json['hijauan_weight'] as double?)?.toInt() ??
-                    random.nextInt(21) + 20,
-            'sentrat_weight': json['sentrat_weight'] is int
-                ? json['sentrat_weight']
-                : (json['sentrat_weight'] as double?)?.toInt() ??
-                    random.nextInt(16) + 10,
-            'stress_level': json['stress_level'] is int
-                ? json['stress_level']
-                : (json['stress_level'] as double?)?.toInt() ??
-                    random.nextInt(21) + 20,
-            'health_status': json['health_status'] is int
-                ? json['health_status']
-                : (json['health_status'] as double?)?.toInt() ??
-                    random.nextInt(21) + 70,
-            'milk_production': json['milk_production'] is int
-                ? json['milk_production']
-                : (json['milk_production'] as double?)?.toInt() ??
-                    random.nextInt(11) + 25,
-          };
-        }).toList();
+  //       // Hanya ambil kolom yang relevan untuk prediksi dan pastikan urutannya sesuai
+  //       final filteredData = cattleJson.map((json) {
+  //         return {
+  //           'hijauan_weight': json['hijauan_weight'] is int
+  //               ? json['hijauan_weight']
+  //               : (json['hijauan_weight'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 20,
+  //           'sentrat_weight': json['sentrat_weight'] is int
+  //               ? json['sentrat_weight']
+  //               : (json['sentrat_weight'] as double?)?.toInt() ??
+  //                   random.nextInt(16) + 10,
+  //           'stress_level': json['stress_level'] is int
+  //               ? json['stress_level']
+  //               : (json['stress_level'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 20,
+  //           'health_status': json['health_status'] is int
+  //               ? json['health_status']
+  //               : (json['health_status'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 70,
+  //           'milk_production': json['milk_production'] is int
+  //               ? json['milk_production']
+  //               : (json['milk_production'] as double?)?.toInt() ??
+  //                   random.nextInt(11) + 25,
+  //         };
+  //       }).toList();
 
-        // Kirim data yang sudah difilter ke API Flask
-        final classifyUrl = Uri.parse(
-            '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
-        final classifyResponse = await http.post(
-          classifyUrl,
-          body: json.encode(filteredData),
-          headers: {'Content-Type': 'application/json'},
-        );
+  //       // Kirim data yang sudah difilter ke API Flask
+  //       final classifyUrl = Uri.parse(
+  //           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
+  //       final classifyResponse = await http.post(
+  //         classifyUrl,
+  //         body: json.encode(filteredData),
+  //         headers: {'Content-Type': 'application/json'},
+  //       );
 
-        if (classifyResponse.statusCode == 200) {
-          // Hasil klasifikasi dari backend
-          List<dynamic> classifiedData = json.decode(classifyResponse.body);
+  //       if (classifyResponse.statusCode == 200) {
+  //         // Hasil klasifikasi dari backend
+  //         List<dynamic> classifiedData = json.decode(classifyResponse.body);
 
-          // Add 'isProductive' from classified data into the original cattleJson
-          return cattleJson.map((originalJson) {
-            // Assuming classifyData is a list and the order matches with cattleJson
-            final isProductive = classifiedData.isNotEmpty
-                ? classifiedData.first['is_productive'] ?? false
-                : false; // Default value if empty or not available
+  //         // Add 'isProductive' from classified data into the original cattleJson
+  //         return cattleJson.map((originalJson) {
+  //           // Assuming classifyData is a list and the order matches with cattleJson
+  //           final isProductive = classifiedData.isNotEmpty
+  //               ? classifiedData.first['is_productive'] ?? false
+  //               : false; // Default value if empty or not available
 
-            return Cattle(
-              id: (originalJson['cow_id'] is String)
-                  ? originalJson['cow_id']
-                  : "0",
-              weight: (originalJson['weight'] is int)
-                  ? originalJson['weight']
-                  : (originalJson['weight'] is String &&
-                          originalJson['weight'].isNotEmpty)
-                      ? int.tryParse(originalJson['weight']) ?? 0
-                      : 0,
-              age: originalJson['age'] ?? 0, // Default age
-              gender: originalJson['gender'] ?? 'Unknown', // Default gender
-              healthStatus:
-                  (originalJson['health_record'] == true) ? "SEHAT" : "SAKIT",
-              isProductive: isProductive, // Adding 'isProductive' directly
-              isConnectedToNFCTag: originalJson['is_connected_to_nfc_tag'] ??
-                  false, // Keep original NFC connection status
-            );
-          }).toList();
-        } else {
-          throw Exception('Failed to classify cattle productivity');
-        }
-      } else {
-        throw Exception(
-            'Failed to load cattle data with status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error loading cattle data: $e');
-    }
-  }
+  //           return Cattle(
+  //             id: (originalJson['cow_id'] is String)
+  //                 ? originalJson['cow_id']
+  //                 : "0",
+  //             weight: (originalJson['weight'] is int)
+  //                 ? originalJson['weight']
+  //                 : (originalJson['weight'] is String &&
+  //                         originalJson['weight'].isNotEmpty)
+  //                     ? int.tryParse(originalJson['weight']) ?? 0
+  //                     : 0,
+  //             age: originalJson['age'] ?? 0, // Default age
+  //             gender: originalJson['gender'] ?? 'Unknown', // Default gender
+  //             healthStatus:
+  //                 (originalJson['health_record'] == true) ? "SEHAT" : "SAKIT",
+  //             isProductive: isProductive, // Adding 'isProductive' directly
+  //             isConnectedToNFCTag: originalJson['is_connected_to_nfc_tag'] ??
+  //                 false, // Keep original NFC connection status
+  //           );
+  //         }).toList();
+  //       } else {
+  //         throw Exception('Failed to classify cattle productivity');
+  //       }
+  //     } else {
+  //       throw Exception(
+  //           'Failed to load cattle data with status code: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Error loading cattle data: $e');
+  //   }
+  // }
 
-  Future<List<Cattle>> fetchCattleData3() async {
-    try {
-      final url =
-          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
+  // Future<List<Cattle>> fetchCattleData3() async {
+  //   try {
+  //     final url =
+  //         Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 5),
-          onTimeout: () {
-        throw Exception('Request timed out');
-      });
+  //     final response = await http.get(url).timeout(const Duration(seconds: 5),
+  //         onTimeout: () {
+  //       throw Exception('Request timed out');
+  //     });
 
-      if (response.statusCode == 200) {
-        List<dynamic> cattleJson = json.decode(response.body);
+  //     if (response.statusCode == 200) {
+  //       List<dynamic> cattleJson = json.decode(response.body);
 
-        // Sort data berdasarkan cow_id
-        cattleJson.sort((a, b) => (int.tryParse(a['cow_id'].toString()) ?? 0)
-            .compareTo(int.tryParse(b['cow_id'].toString()) ?? 0));
+  //       // Sort data berdasarkan cow_id
+  //       cattleJson.sort((a, b) => (int.tryParse(a['cow_id'].toString()) ?? 0)
+  //           .compareTo(int.tryParse(b['cow_id'].toString()) ?? 0));
 
-        final random = Random();
+  //       final random = Random();
 
-        // Hanya ambil kolom yang relevan untuk prediksi dan pastikan urutannya sesuai
-        final filteredData = cattleJson.map((json) {
-          return {
-            'hijauan_weight': json['hijauan_weight'] is int
-                ? json['hijauan_weight']
-                : (json['hijauan_weight'] as double?)?.toInt() ??
-                    random.nextInt(21) + 20,
-            'sentrat_weight': json['sentrat_weight'] is int
-                ? json['sentrat_weight']
-                : (json['sentrat_weight'] as double?)?.toInt() ??
-                    random.nextInt(16) + 10,
-            'stress_level': json['stress_level'] is int
-                ? json['stress_level']
-                : (json['stress_level'] as double?)?.toInt() ??
-                    random.nextInt(21) + 20,
-            'health_status': json['health_status'] is int
-                ? json['health_status']
-                : (json['health_status'] as double?)?.toInt() ??
-                    random.nextInt(21) + 70,
-            'milk_production': json['milk_production'] is int
-                ? json['milk_production']
-                : (json['milk_production'] as double?)?.toInt() ??
-                    random.nextInt(11) + 25,
-          };
-        }).toList();
+  //       // Hanya ambil kolom yang relevan untuk prediksi dan pastikan urutannya sesuai
+  //       final filteredData = cattleJson.map((json) {
+  //         return {
+  //           'hijauan_weight': json['hijauan_weight'] is int
+  //               ? json['hijauan_weight']
+  //               : (json['hijauan_weight'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 20,
+  //           'sentrat_weight': json['sentrat_weight'] is int
+  //               ? json['sentrat_weight']
+  //               : (json['sentrat_weight'] as double?)?.toInt() ??
+  //                   random.nextInt(16) + 10,
+  //           'stress_level': json['stress_level'] is int
+  //               ? json['stress_level']
+  //               : (json['stress_level'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 20,
+  //           'health_status': json['health_status'] is int
+  //               ? json['health_status']
+  //               : (json['health_status'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 70,
+  //           'milk_production': json['milk_production'] is int
+  //               ? json['milk_production']
+  //               : (json['milk_production'] as double?)?.toInt() ??
+  //                   random.nextInt(11) + 25,
+  //         };
+  //       }).toList();
 
-        // Kirim data yang sudah difilter ke API Flask
-        final classifyUrl = Uri.parse(
-            '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
-        final classifyResponse = await http.post(
-          classifyUrl,
-          body: json.encode(filteredData),
-          headers: {'Content-Type': 'application/json'},
-        );
+  //       // Kirim data yang sudah difilter ke API Flask
+  //       final classifyUrl = Uri.parse(
+  //           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
+  //       final classifyResponse = await http.post(
+  //         classifyUrl,
+  //         body: json.encode(filteredData),
+  //         headers: {'Content-Type': 'application/json'},
+  //       );
 
-        if (classifyResponse.statusCode == 200) {
-          // Hasil klasifikasi dari backend
-          List<dynamic> classifiedData = json.decode(classifyResponse.body);
+  //       if (classifyResponse.statusCode == 200) {
+  //         // Hasil klasifikasi dari backend
+  //         List<dynamic> classifiedData = json.decode(classifyResponse.body);
 
-          // Map the classified data and combine it with original cattleJson data
-          return cattleJson.map((originalJson) {
-            final classifiedJson = classifiedData.firstWhere(
-                (classified) =>
-                    int.tryParse(classified['cow_id'].toString()) ==
-                    int.tryParse(originalJson['cow_id'].toString()),
-                orElse: () => {}); // Safely handle cases if no match is found
+  //         // Map the classified data and combine it with original cattleJson data
+  //         return cattleJson.map((originalJson) {
+  //           final classifiedJson = classifiedData.firstWhere(
+  //               (classified) =>
+  //                   int.tryParse(classified['cow_id'].toString()) ==
+  //                   int.tryParse(originalJson['cow_id'].toString()),
+  //               orElse: () => {}); // Safely handle cases if no match is found
 
-            return Cattle(
-              id: (originalJson['cow_id'] is String)
-                  ? originalJson['cow_id']
-                  : "0",
-              weight: (originalJson['weight'] is int)
-                  ? originalJson['weight']
-                  : (originalJson['weight'] is String &&
-                          originalJson['weight'].isNotEmpty)
-                      ? int.tryParse(originalJson['weight']) ?? 0
-                      : 0,
-              age: originalJson['age'] ?? 0, // Default age
-              gender: originalJson['gender'] ?? 'Unknown', // Default gender
-              healthStatus:
-                  (originalJson['health_record'] == true) ? "SEHAT" : "SAKIT",
-              isProductive: classifiedJson['is_productive'] ??
-                  false, // Classified productivity
-              isConnectedToNFCTag: classifiedJson['is_connected_to_nfc_tag'] ??
-                  false, // Classified NFC
-            );
-          }).toList();
-        } else {
-          throw Exception('Failed to classify cattle productivity');
-        }
-      } else {
-        throw Exception(
-            'Failed to load cattle data with status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error loading cattle data: $e');
-    }
-  }
+  //           return Cattle(
+  //             id: (originalJson['cow_id'] is String)
+  //                 ? originalJson['cow_id']
+  //                 : "0",
+  //             weight: (originalJson['weight'] is int)
+  //                 ? originalJson['weight']
+  //                 : (originalJson['weight'] is String &&
+  //                         originalJson['weight'].isNotEmpty)
+  //                     ? int.tryParse(originalJson['weight']) ?? 0
+  //                     : 0,
+  //             age: originalJson['age'] ?? 0, // Default age
+  //             gender: originalJson['gender'] ?? 'Unknown', // Default gender
+  //             healthStatus:
+  //                 (originalJson['health_record'] == true) ? "SEHAT" : "SAKIT",
+  //             isProductive: classifiedJson['is_productive'] ??
+  //                 false, // Classified productivity
+  //             isConnectedToNFCTag: classifiedJson['is_connected_to_nfc_tag'] ??
+  //                 false, // Classified NFC
+  //           );
+  //         }).toList();
+  //       } else {
+  //         throw Exception('Failed to classify cattle productivity');
+  //       }
+  //     } else {
+  //       throw Exception(
+  //           'Failed to load cattle data with status code: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Error loading cattle data: $e');
+  //   }
+  // }
 
-  Future<List<Cattle>> fetchCattleData2() async {
-    try {
-      final url =
-          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
+  // Future<List<Cattle>> fetchCattleData2() async {
+  //   try {
+  //     final url =
+  //         Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 5),
-          onTimeout: () {
-        throw Exception('Request timed out');
-      });
+  //     final response = await http.get(url).timeout(const Duration(seconds: 5),
+  //         onTimeout: () {
+  //       throw Exception('Request timed out');
+  //     });
 
-      if (response.statusCode == 200) {
-        List<dynamic> cattleJson = json.decode(response.body);
+  //     if (response.statusCode == 200) {
+  //       List<dynamic> cattleJson = json.decode(response.body);
 
-        // Sort data berdasarkan cow_id
-        cattleJson.sort(
-            (a, b) => int.parse(a['cow_id']).compareTo(int.parse(b['cow_id'])));
+  //       // Sort data berdasarkan cow_id
+  //       cattleJson.sort(
+  //           (a, b) => int.parse(a['cow_id']).compareTo(int.parse(b['cow_id'])));
 
-        final random = Random();
+  //       final random = Random();
 
-        // Hanya ambil kolom yang relevan untuk prediksi dan pastikan urutannya sesuai
-        final filteredData = cattleJson.map((json) {
-          return {
-            'hijauan_weight': json['hijauan_weight'] is int
-                ? json['hijauan_weight']
-                : (json['hijauan_weight'] as double?)?.toInt() ??
-                    random.nextInt(21) + 20,
-            'sentrat_weight': json['sentrat_weight'] is int
-                ? json['sentrat_weight']
-                : (json['sentrat_weight'] as double?)?.toInt() ??
-                    random.nextInt(16) + 10,
-            'stress_level': json['stress_level'] is int
-                ? json['stress_level']
-                : (json['stress_level'] as double?)?.toInt() ??
-                    random.nextInt(21) + 20,
-            'health_status': json['health_status'] is int
-                ? json['health_status']
-                : (json['health_status'] as double?)?.toInt() ??
-                    random.nextInt(21) + 70,
-            'milk_production': json['milk_production'] is int
-                ? json['milk_production']
-                : (json['milk_production'] as double?)?.toInt() ??
-                    random.nextInt(11) + 25,
-          };
-        }).toList();
+  //       // Hanya ambil kolom yang relevan untuk prediksi dan pastikan urutannya sesuai
+  //       final filteredData = cattleJson.map((json) {
+  //         return {
+  //           'hijauan_weight': json['hijauan_weight'] is int
+  //               ? json['hijauan_weight']
+  //               : (json['hijauan_weight'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 20,
+  //           'sentrat_weight': json['sentrat_weight'] is int
+  //               ? json['sentrat_weight']
+  //               : (json['sentrat_weight'] as double?)?.toInt() ??
+  //                   random.nextInt(16) + 10,
+  //           'stress_level': json['stress_level'] is int
+  //               ? json['stress_level']
+  //               : (json['stress_level'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 20,
+  //           'health_status': json['health_status'] is int
+  //               ? json['health_status']
+  //               : (json['health_status'] as double?)?.toInt() ??
+  //                   random.nextInt(21) + 70,
+  //           'milk_production': json['milk_production'] is int
+  //               ? json['milk_production']
+  //               : (json['milk_production'] as double?)?.toInt() ??
+  //                   random.nextInt(11) + 25,
+  //         };
+  //       }).toList();
 
-        // Kirim data yang sudah difilter ke API Flask
-        final classifyUrl = Uri.parse(
-            '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
-        final classifyResponse = await http.post(
-          classifyUrl,
-          body: json.encode(filteredData),
-          headers: {'Content-Type': 'application/json'},
-        );
+  //       // Kirim data yang sudah difilter ke API Flask
+  //       final classifyUrl = Uri.parse(
+  //           '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/classify/cattle');
+  //       final classifyResponse = await http.post(
+  //         classifyUrl,
+  //         body: json.encode(filteredData),
+  //         headers: {'Content-Type': 'application/json'},
+  //       );
 
-        if (classifyResponse.statusCode == 200) {
-          // Hasil klasifikasi dari backend
-          List<dynamic> classifiedData = json.decode(classifyResponse.body);
+  //       if (classifyResponse.statusCode == 200) {
+  //         // Hasil klasifikasi dari backend
+  //         List<dynamic> classifiedData = json.decode(classifyResponse.body);
 
-          return classifiedData.map((json) {
-            return Cattle(
-              id: json['cow_id']?.toString() ?? 'Unknown', // Default 'Unknown'
-              weight: json['weight'] is double
-                  ? json['weight']
-                  : (json['weight'] as int?)?.toDouble() ??
-                      0.0, // Handle double
-              age: json['age'] ?? 0, // Default 0
-              gender: json['gender'] ?? 'Unknown', // Default 'Unknown'
-              healthStatus: json['health_status'] ?? 0, // Default 0
-              isProductive: json['is_productive'] ?? false, // Default false
-              isConnectedToNFCTag:
-                  json['is_connected_to_nfc_tag'] ?? false, // Default false
-            );
-          }).toList();
-        } else {
-          throw Exception('Failed to classify cattle productivity');
-        }
-      } else {
-        throw Exception(
-            'Failed to load cattle data with status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error loading cattle data: $e');
-    }
-  }
+  //         return classifiedData.map((json) {
+  //           return Cattle(
+  //             id: json['cow_id']?.toString() ?? 'Unknown', // Default 'Unknown'
+  //             weight: json['weight'] is double
+  //                 ? json['weight']
+  //                 : (json['weight'] as int?)?.toDouble() ??
+  //                     0.0, // Handle double
+  //             age: json['age'] ?? 0, // Default 0
+  //             gender: json['gender'] ?? 'Unknown', // Default 'Unknown'
+  //             healthStatus: json['health_status'] ?? 0, // Default 0
+  //             isProductive: json['is_productive'] ?? false, // Default false
+  //             isConnectedToNFCTag:
+  //                 json['is_connected_to_nfc_tag'] ?? false, // Default false
+  //           );
+  //         }).toList();
+  //       } else {
+  //         throw Exception('Failed to classify cattle productivity');
+  //       }
+  //     } else {
+  //       throw Exception(
+  //           'Failed to load cattle data with status code: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Error loading cattle data: $e');
+  //   }
+  // }
 
-  Future<List<Cattle>> fetchCattleDataASLI() async {
-    try {
-      final url =
-          Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
+  // Future<List<Cattle>> fetchCattleDataASLI() async {
+  //   try {
+  //     final url =
+  //         Uri.parse('${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 5),
-          onTimeout: () {
-        throw Exception('Request timed out');
-      });
+  //     final response = await http.get(url).timeout(const Duration(seconds: 5),
+  //         onTimeout: () {
+  //       throw Exception('Request timed out');
+  //     });
 
-      if (response.statusCode == 200) {
-        List<dynamic> cattleJson = json.decode(response.body);
+  //     if (response.statusCode == 200) {
+  //       List<dynamic> cattleJson = json.decode(response.body);
 
-        // Mengurutkan data berdasarkan cow_id (konversi String ke int)
-        cattleJson.sort(
-            (a, b) => int.parse(a['cow_id']).compareTo(int.parse(b['cow_id'])));
+  //       // Mengurutkan data berdasarkan cow_id (konversi String ke int)
+  //       cattleJson.sort(
+  //           (a, b) => int.parse(a['cow_id']).compareTo(int.parse(b['cow_id'])));
 
-        return cattleJson.map((json) {
-          return Cattle.fromJson({
-            ...json,
-            'is_connected_to_nfc_tag': json['nfc_id'] != null,
-            'health_status': json['health_record'] ? 'SEHAT' : 'SAKIT'
-          });
-        }).toList();
-      } else {
-        throw Exception(
-            'Failed to load cattle data with status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error loading cattle data: $e');
-    }
-  }
+  //       return cattleJson.map((json) {
+  //         return Cattle.fromJson({
+  //           ...json,
+  //           'is_connected_to_nfc_tag': json['nfc_id'] != null,
+  //           'health_status': json['health_record'] ? 'SEHAT' : 'SAKIT'
+  //         });
+  //       }).toList();
+  //     } else {
+  //       throw Exception(
+  //           'Failed to load cattle data with status code: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Error loading cattle data: $e');
+  //   }
+  // }
 
   Future<void> _refreshData() async {
     setState(() {
