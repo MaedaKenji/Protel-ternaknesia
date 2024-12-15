@@ -551,7 +551,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal mengirim data ke server di data page")),
+          const SnackBar(
+              content: Text("Gagal mengirim data ke server di data page")),
         );
       }
     } catch (e) {
@@ -1550,7 +1551,8 @@ class _DataSapiPageState extends State<DataSapiPage> {
                                 )),
                           const SizedBox(height: 30),
                           if (userRole.role != 'doctor') ...[
-                            if (widget.isConnectedToNFCTag)
+                            if (userRole.role == 'user' &&
+                                widget.isConnectedToNFCTag)
                               Container(
                                 child: OutlinedButton(
                                   onPressed: () {
@@ -1717,7 +1719,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
                           ],
                           if (userRole.role == 'doctor')
                             ElevatedButton(
-                              
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
                                 elevation: 0,
