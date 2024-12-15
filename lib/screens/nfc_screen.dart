@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:ternaknesia/main.dart';
+import 'package:ternaknesia/screens/datasapipage.dart';
 import 'package:ternaknesia/screens/inputdata.dart';
 
 class NFCPage extends StatefulWidget {
@@ -66,6 +67,44 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
     setState(() {});
   }
 
+  static const List<Map<String, dynamic>> dataCowNFC = [
+    {
+      'cow_id': 1,
+      'umur': 83,
+      'nfc_id': '3a:ad:ef:b0',
+      'is_kandang': true,
+      'gender': 'jantan',
+    },
+    {
+      'cow_id': 2,
+      'umur': 70,
+      'nfc_id': '',
+      'is_kandang': true,
+      'gender': 'betina',
+    },
+  ];
+
+  static const List<Map<String, dynamic>> dataSapi = [
+    {
+      'id': 1,
+      'weight': 660.88,
+      'age': 83,
+      'gender': 'jantan',
+      'healthStatus': 'sehat',
+      'isProductive': true,
+      'isConnectedToNFCTag': false,
+    },
+    {
+      'id': 2,
+      'weight': 419.51,
+      'age': 70,
+      'gender': 'betina',
+      'healthStatus': 'sakit',
+      'isProductive': true,
+      'isConnectedToNFCTag': false,
+    },
+  ];
+
   void _startNfcScan() async {
     setState(() {});
 
@@ -74,7 +113,15 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
     try {
       await NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
-          final nfcData = tag.data.toString();
+          // Validate and process NFC data
+          final dynamic nfcData = tag.data;
+
+          if (nfcData is Map<String, dynamic>) {
+            _onNfcRead(nfcData); // Call the function without awaiting
+          } else {
+            // Handle unexpected data format
+            throw Exception('Unexpected NFC data format.');
+          }
 
           setState(() {
             _isNfcEnabled = true;
@@ -85,8 +132,6 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
           }
 
           await NfcManager.instance.stopSession();
-
-          _showNfcResultDialog(nfcData);
         },
       );
     } catch (e) {
@@ -97,6 +142,97 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
       }
 
       _showMessage('Terjadi kesalahan: $e');
+    }
+  }
+
+  void _onNfcRead(Map<String, dynamic> nfcData) async {
+    try {
+      if (nfcData.containsKey('nfca')) {
+        List<int> identifier = nfcData['nfca']['identifier'];
+        String nfcId = identifier
+            .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+            .join(':');
+
+        // Cari di dataCowNFC
+        final Map<String, dynamic> matchedCowNFC = dataCowNFC.firstWhere(
+          (cow) => cow['nfc_id'] == nfcId,
+          orElse: () => {}, // Kembalikan map kosong jika tidak ditemukan
+        );
+
+        if (matchedCowNFC.isNotEmpty) {
+          // Cari di dataSapi
+          final Map<String, dynamic> matchedCowSapi = dataSapi.firstWhere(
+            (sapi) => sapi['id'] == matchedCowNFC['cow_id'],
+            orElse: () => {}, // Kembalikan map kosong jika tidak ditemukan
+          );
+
+          if (matchedCowSapi.isNotEmpty) {
+            // Tutup pop-up dialog dan hentikan sesi NFC sebelum navigasi
+            if (navigatorKey.currentState?.canPop() ?? false) {
+              navigatorKey.currentState?.pop(); // Close pop-up dialog
+            }
+            await NfcManager.instance.stopSession(); // Cancel NFC scan
+
+            // Konversi data ke String
+            final String id = matchedCowSapi['id'].toString();
+            final String gender = matchedCowSapi['gender'].toString();
+            final String age = matchedCowSapi['age'].toString();
+            final String healthStatus =
+                matchedCowSapi['healthStatus'].toString();
+
+            // Navigasi ke DataSapiPage dengan data String
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DataSapiPage(
+                  id: id,
+                  gender: gender,
+                  age: age,
+                  healthStatus: healthStatus,
+                  isProductive: matchedCowSapi['isProductive'],
+                  isConnectedToNFCTag: matchedCowSapi['isConnectedToNFCTag'],
+                ),
+              ),
+            );
+          } else {
+            // Jika cow_id tidak ditemukan di dataSapi
+            if (navigatorKey.currentState?.canPop() ?? false) {
+              navigatorKey.currentState?.pop(); // Close pop-up dialog
+            }
+            await NfcManager.instance.stopSession(); // Cancel NFC scan
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Data Sapi tidak ditemukan untuk cow_id ini.'),
+              ),
+            );
+          }
+        } else {
+          // Jika NFC ID tidak ditemukan di dataCowNFC
+          if (navigatorKey.currentState?.canPop() ?? false) {
+            navigatorKey.currentState?.pop(); // Close pop-up dialog
+          }
+          await NfcManager.instance.stopSession(); // Cancel NFC scan
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tidak ada Data Sapi dengan NFC ID ini: $nfcId'),
+            ),
+          );
+        }
+      } else {
+        throw Exception('Data NFC tidak valid, identifier tidak ditemukan.');
+      }
+    } catch (e) {
+      // Hilangkan pop-up dialog dan cancel sesi NFC jika terjadi kesalahan
+      if (navigatorKey.currentState?.canPop() ?? false) {
+        navigatorKey.currentState?.pop();
+      }
+      await NfcManager.instance.stopSession(); // Cancel NFC scan
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 

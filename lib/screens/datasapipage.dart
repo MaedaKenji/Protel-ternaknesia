@@ -57,12 +57,12 @@ class _DataSapiPageState extends State<DataSapiPage> {
     'beratBadan': {},
   };
   Map<String, List<Map<String, dynamic>>>
+     
       milkProductionAndWeightHistoryDynamic = {
     'produksiSusu': [],
     'beratBadan': [],
   };
-  
-  Map<String, Map<String, List<FlSpot>>> dinamisFeedData = {
+    Map<String, Map<String, List<FlSpot>>> dinamisFeedData = {
     'pakanHijau': {},
     'pakanSentrat': {}
   };
@@ -452,7 +452,7 @@ class _DataSapiPageState extends State<DataSapiPage> {
               ),
             ),
             Text(
-              value,
+              label == 'Umur' ? '$value Bulan' : value,
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -945,9 +945,6 @@ class _DataSapiPageState extends State<DataSapiPage> {
     return result;
   }
 
-
-  
-
   Future<http.Response> fetchDataAsli() async {
     setState(() {
       isLoading = true;
@@ -980,6 +977,28 @@ class _DataSapiPageState extends State<DataSapiPage> {
           'data': '${item['produksi']} L',
         };
       }).toList();
+      // I/flutter (19892): response:
+      // {"id":7,"cow_id":"1","gender":"Jantan","age":12,"health_record":true,
+      // "stress_level":null,"birahi":null,
+      // ","diagnosis_history":[],"treatment_history":[],"health_record_history":[],"stress_level_history":[],
+      // "birahi_history":[],
+      // "note_history":[],
+      // "recent_weights":[{"date":"2023-10-25T17:00:00.000Z","weight":"500"},
+      // {"date":"2023-10-20T17:00:00.000Z","weight":"490"},{"date":"2023-10-15T17:00:00.000Z","weight":"480"},
+      // {"date":"2023-10-10T17:00:00.000Z","weight":"470"},{"date":"2023-10-09T17:00:00.000Z","weight":"460"}]
+      // ,"recent_milk_production":[{"date":"2024-11-15T17:00:00.000Z","production_amount":"10"},
+      // {"date":"2023-10-19T17:00:00.000Z","production_amount":"70"},
+      // {"date":"2023-10-18T17:00:00.000Z","production_amount":
+      //"note":null,"iskandang":true,"nfc_id":"3a:ad:ef:b0
+
+      // Transform `recent_milk_production`
+      List<Map<String, dynamic>> milkProduction =
+          (data['recent_milk_production'] as List).map((item) {
+        return {
+          'date': DateTime.parse(item['tanggal']),
+          'data': '${item['produksi']} L',
+        };
+      }).toList();
 
       List<Map<String, dynamic>> weightHistory =
           (data['recent_weights'] as List).map((item) {
@@ -988,7 +1007,21 @@ class _DataSapiPageState extends State<DataSapiPage> {
           'data': '${item['berat']} Kg',
         };
       }).toList();
+      // Transform `recent_weights`
+      List<Map<String, dynamic>> weightHistory =
+          (data['recent_weights'] as List).map((item) {
+        return {
+          'date': DateTime.parse(item['tanggal']),
+          'data': '${item['berat']} Kg',
+        };
+      }).toList();
 
+      setState(() {
+        milkProductionAndWeightHistoryDynamic = {
+          'produksiSusu': milkProduction,
+          'beratBadan': weightHistory,
+        };
+      });
       setState(() {
         milkProductionAndWeightHistoryDynamic = {
           'produksiSusu': milkProduction,

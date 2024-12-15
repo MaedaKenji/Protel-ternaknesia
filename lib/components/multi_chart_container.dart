@@ -28,9 +28,7 @@ class MultiChartContainer extends StatefulWidget {
       required this.onEdit,
       required this.onDelete,
       required this.id,
-      this.predictionSusu = 0.0
-      });
-      
+      this.predictionSusu = 0.0});
 
   @override
   State<MultiChartContainer> createState() => _MultiChartContainerState();
@@ -40,17 +38,27 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
   late List<String> chartTitles;
   int currentIndex = 0;
   late Map<String, TextEditingController> inputControllers;
-  
 
   get http => null;
+
+  FlSpot? lastSpot; // Variabel untuk menyimpan nilai terakhir
+
+  // Callback untuk menangani nilai terakhir
+  void _handleLastPointUpdated(FlSpot? point) {
+    setState(() {
+      lastSpot = point;
+    });
+    print('Last Point Updated: ${point?.x}, ${point?.y}');
+  }
 
   @override
   void initState() {
     super.initState();
     chartTitles = widget.chartsData.keys.toList();
+    print(chartTitles);
 
     inputControllers = {
-      for (var title in chartTitles) title: TextEditingController(text: '0')
+      for (var title in chartTitles) title: TextEditingController(text: '1')
     };
   }
 
@@ -140,7 +148,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
         widget.historyData[currentTitle] ?? [];
     final formattedTitle = formatTitle(currentTitle);
 
-
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,6 +163,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                   title: formatTitle(title),
                   datas: data,
                   predictionPointWidget: widget.predictionSusu,
+                  onLastPointUpdated: _handleLastPointUpdated,
                 );
               },
               onPageChanged: (index) {
@@ -165,7 +173,6 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
               },
             ),
           ),
-
           const SizedBox(height: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -239,7 +246,7 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                   Row(
                     children: [
                       const Text(
-                        'Saat ini :',
+                        'Saat ini:',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -248,26 +255,27 @@ class _MultiChartContainerState extends State<MultiChartContainer> {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFC35804),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                '${inputControllers[currentTitle]!.text} Kg',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFC35804),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              "${lastSpot?.y.toStringAsFixed(2) ?? '-'} Kg",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          )),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: 10),

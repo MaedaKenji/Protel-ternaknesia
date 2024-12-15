@@ -1,4 +1,4 @@
-import 'dart:ffi';
+// import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -9,6 +9,7 @@ class CustomLineChart extends StatefulWidget {
   double? valueInfo;
   final Map<String, List<FlSpot>> datas;
   double? predictionPointWidget;
+  final Function(FlSpot?)? onLastPointUpdated;
 
   CustomLineChart(
       {super.key,
@@ -16,7 +17,8 @@ class CustomLineChart extends StatefulWidget {
       this.otherInfo,
       this.valueInfo,
       required this.datas,
-      required this.predictionPointWidget});
+      required this.predictionPointWidget,
+      this.onLastPointUpdated});
 
   @override
   State<CustomLineChart> createState() => _CustomLineChartState();
@@ -30,18 +32,43 @@ class _CustomLineChartState extends State<CustomLineChart> {
   void initState() {
     super.initState();
     selectedMonth =
-        widget.datas.isNotEmpty ? widget.datas.keys.first : 'Default';
+        widget.datas.keys.isNotEmpty ? widget.datas.keys.first : 'Default';
+    if (widget.datas[selectedMonth]?.isNotEmpty ?? false) {
+      _updateLastPoint(); // Panggil hanya jika data ada
+    }
+  }
+
+  void _updateLastPoint() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      List<FlSpot>? lastDataPoints = widget.datas[selectedMonth];
+      FlSpot? lastPoint = (lastDataPoints != null && lastDataPoints.isNotEmpty)
+          ? lastDataPoints.last
+          : null;
+
+      // Panggil callback jika tersedia
+      if (widget.onLastPointUpdated != null) {
+        widget.onLastPointUpdated!(lastPoint);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    double maxYValue = widget.datas.values
+    double maxYValueAsli = widget.datas.values
         .expand((spots) => spots.map((spot) => spot.y))
         .fold<double>(
             0,
             (previousValue, element) =>
                 element > previousValue ? element : previousValue);
 
+    double maxYValuePrediksi = 0.0;
+    if (widget.predictionPointWidget != null &&
+        widget.predictionPointWidget! > 0) {
+      maxYValuePrediksi = widget.predictionPointWidget!;
+    }
+
+    double maxYValue =
+        maxYValueAsli > maxYValuePrediksi ? maxYValueAsli : maxYValuePrediksi;
     double maxY = maxYValue + (maxYValue * 0.2);
     double interval = maxY / 5;
 
@@ -54,12 +81,8 @@ class _CustomLineChartState extends State<CustomLineChart> {
       predictionPoint = FlSpot(lastPoint.x + 1, predictionPointValue);
     }
 
-    // Tentukan lebar grafik berdasarkan jumlah titik data
-    double chartWidth =
-        lastDataPoints.length * 50.0; // Lebar berdasarkan jumlah titik
-    chartWidth = chartWidth < 330
-        ? 330
-        : chartWidth; // Jika data sedikit, beri lebar minimal
+    double chartWidth = lastDataPoints.length * 50.0;
+    chartWidth = chartWidth < 330 ? 330 : chartWidth;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -93,9 +116,10 @@ class _CustomLineChartState extends State<CustomLineChart> {
               ),
               const SizedBox(width: 8),
               DropdownButton<String>(
-                value: widget.datas.containsKey(selectedMonth)
+                value: widget.datas.isNotEmpty &&
+                        widget.datas.containsKey(selectedMonth)
                     ? selectedMonth
-                    : widget.datas.keys.firstOrNull ?? 'Default',
+                    : 'Default',
                 icon:
                     const Icon(Icons.arrow_drop_down, color: Color(0xFFC35804)),
                 items: widget.datas.keys.map((String month) {
@@ -107,14 +131,17 @@ class _CustomLineChartState extends State<CustomLineChart> {
                     ),
                   );
                 }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedMonth = newValue ??
-                        (widget.datas.keys.isNotEmpty
-                            ? widget.datas.keys.first
-                            : 'Default');
-                  });
-                },
+                onChanged: widget.datas.isNotEmpty
+                    ? (String? newValue) {
+                        if (newValue != null &&
+                            widget.datas.containsKey(newValue)) {
+                          setState(() {
+                            selectedMonth = newValue;
+                            _updateLastPoint();
+                          });
+                        }
+                      }
+                    : null, // Nonaktifkan dropdown jika tidak ada data
               ),
             ],
           ),
@@ -123,8 +150,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
             height: 200,
             child: widget.datas.isNotEmpty
                 ? SingleChildScrollView(
-                    scrollDirection:
-                        Axis.horizontal, // This allows horizontal scroll
+                    scrollDirection: Axis.horizontal,
                     child: SizedBox(
                       width: chartWidth,
                       child: LineChart(
@@ -240,7 +266,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                           shape: BoxShape.circle, color: Color(0xFFC35804)),
                     ),
                     const SizedBox(width: 8),
-                    const Text('Prediksi'),
+                    const Text('Data Prediksi'),
                   ],
                 ),
             ],

@@ -15,6 +15,23 @@ class CustomBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Nilai maksimal dari data asli
+    double maxYValueAsli = data
+        .expand((group) => group.barRods.map((rod) => rod.toY))
+        .fold<double>(
+          0,
+          (previousValue, element) =>
+              element > previousValue ? element : previousValue,
+        );
+
+    // Nilai maksimal termasuk prediksi
+    double maxYValue =
+        maxYValueAsli > predictedNextMonth ? maxYValueAsli : predictedNextMonth;
+
+    // Tambahkan margin (20) atau gunakan persentase (contoh: 20%)
+    double maxY = maxYValue + 20; // Tambahkan margin tetap
+    // double maxY = maxYValue + (maxYValue * 0.2); // Alternatif: margin dinamis
+
     final predictionBar = BarChartGroupData(
       x: data.length,
       barRods: [
@@ -60,7 +77,7 @@ class CustomBarChart extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 250,
+                      interval: maxY / 5,
                       reservedSize: 40,
                       getTitlesWidget: (value, meta) {
                         return Text(
@@ -110,7 +127,7 @@ class CustomBarChart extends StatelessWidget {
                     bottom: BorderSide(color: Colors.black, width: 1),
                   ),
                 ),
-                maxY: 1000,
+                maxY: maxY,
                 barGroups: [
                   ...data.map((barGroup) {
                     return BarChartGroupData(
