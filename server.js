@@ -24,7 +24,6 @@ const nowUtcPlus7 = moment.tz("Asia/Bangkok").format();
 
 
 const app = express();
-const FLASK_API_URL = 'http://localhost:5000/predict_productivity'; // URL Flask
 app.use(express.json());
 
 const PORT = process.env.PORT;
@@ -203,7 +202,7 @@ app.get('/api/cows/dokter-home', async (req, res) => {
 app.post('/api/cows/update-nfc', async (req, res) => {
   const { cow_id, nfc_id } = req.body;
 
-  
+
 
   // Validasi input
   if (!cow_id || !nfc_id) {
@@ -619,7 +618,7 @@ app.post('/api/cows/tambahdata/:id', async (req, res) => {
   try {
     // Cek key untuk menentukan tabel dan kolom yang tepat
     if (key === 'produksiSusu') {
-      
+
       // Menambahkan data ke tabel milk_production
       const result = await poolTernaknesiaRelational.query(
         'INSERT INTO produksi_susu (cow_id, tanggal, produksi) VALUES ($1, NOW(), $2) RETURNING *',
@@ -1169,6 +1168,68 @@ app.post('/api/classify/cattle', async (req, res) => {
     res.status(500).json({ error: 'Error while classifying cattle productivity' });
   }
 });
+
+
+app.post('/api/data/nfc', async (req, res) => {
+  const nfc_id = req.body.nfc_id;
+  console.log(nfc_id);
+
+  try {
+    const query = `
+WITH LatestWeight AS (
+    SELECT
+        bb.cow_id,
+        bb.berat,
+        bb.tanggal,
+        ROW_NUMBER() OVER (PARTITION BY bb.cow_id ORDER BY bb.tanggal DESC) AS rn
+    FROM public.berat_badan bb
+),
+LatestHealth AS (
+    SELECT
+        k.cow_id,
+        k.status_kesehatan,
+        k.tanggal,
+        ROW_NUMBER() OVER (PARTITION BY k.cow_id ORDER BY k.tanggal DESC) AS rn
+    FROM public.kesehatan k
+)
+SELECT
+    c.cow_id AS id,
+    lw.berat AS weight,
+    c.umur AS age,
+    c.gender,
+    lh.status_kesehatan AS healthStatus,
+    c.nfc_id
+FROM
+    public.cows c
+LEFT JOIN LatestWeight lw ON c.cow_id = lw.cow_id AND lw.rn = 1
+LEFT JOIN LatestHealth lh ON c.cow_id = lh.cow_id AND lh.rn = 1
+WHERE
+    c.nfc_id LIKE $1;
+    `;
+
+    const result = await poolTernaknesiaRelational.query(query, [`%${nfc_id}%`]);
+
+    // Map hasil query ke format yang diminta
+    const response = result.rows.map(row => ({
+      id: row.id,
+      weight: row.weight || null,
+      age: row.age || null,
+      gender: row.gender || null,
+      healthStatus: row.healthstatus || null,
+      isProductive: false,
+      isConnectedToNFCTag: row.nfc_id !== null, // Mengatur true jika nfc_id tidak null
+      nfc_id: row.nfc_id || nfc_id, // Menggunakan nilai dari database jika tersedia, jika tidak, gunakan input
+    }));
+
+    console.log(response);
+    res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error while fetching NFC data' });
+  }
+});
+
+
 
 
 app.post('/api/predict/productivity', async (req, res) => {

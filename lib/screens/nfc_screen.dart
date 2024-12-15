@@ -1,10 +1,12 @@
 // ignore_for_file: deprecated_member_use, empty_catches
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:ternaknesia/main.dart';
 import 'package:ternaknesia/screens/datasapipage.dart';
 import 'package:ternaknesia/screens/inputdata.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 
 class NFCPage extends StatefulWidget {
   const NFCPage({super.key});
@@ -105,7 +107,37 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
     },
   ];
 
-  
+  List<Map<String, dynamic>> dataCowNFCDinamis = [];
+  List<Map<String, dynamic>> dataSapiDinamis = [];
+
+  Future<void> _fetchDataSapiNFCDinamis(String nfcId) async {
+    final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
+    final port = dotenv.env['PORT'] ?? '8080';
+    final url = '$baseUrl:$port/api/data/nfc';
+
+    final body = {"nfc_id": nfcId};
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: jsonEncode(body),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+
+        setState(() {
+          dataSapiDinamis = List<Map<String, dynamic>>.from(jsonData);
+        });
+
+      } else {
+        print('Error: ${response.statusCode}');
+      }
+    } on Exception catch (e) {
+      print('Error: $e');
+    }
+  }
 
   void _startNfcScan() async {
     setState(() {});
@@ -132,7 +164,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
             navigatorKey.currentState?.pop();
           }
 
-          await Future.delayed(const Duration(seconds: 5));
+          // await Future.delayed(const Duration(seconds: 5));
           await NfcManager.instance.stopSession();
         },
       );
@@ -155,8 +187,9 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
             .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
             .join(':');
 
-        // Cari di dataCowNFC
-        final Map<String, dynamic> matchedCowNFC = dataCowNFC.firstWhere(
+        await _fetchDataSapiNFCDinamis(nfcId);
+
+        final Map<String, dynamic> matchedCowNFC = dataSapiDinamis.firstWhere(
           (cow) => cow['nfc_id'] == nfcId,
           orElse: () => {}, // Kembalikan map kosong jika tidak ditemukan
         );
@@ -164,7 +197,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
         if (matchedCowNFC.isNotEmpty) {
           // Cari di dataSapi
           final Map<String, dynamic> matchedCowSapi = dataSapi.firstWhere(
-            (sapi) => sapi['id'] == matchedCowNFC['cow_id'],
+            (sapi) => sapi['id'] == matchedCowNFC['id'],
             orElse: () => {},
           );
 
@@ -199,7 +232,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
             if (navigatorKey.currentState?.canPop() ?? false) {
               navigatorKey.currentState?.pop(); // Close pop-up dialog
             }
-            await Future.delayed(const Duration(seconds: 5));
+            // await Future.delayed(const Duration(seconds: 5));
             await NfcManager.instance.stopSession(); // Cancel NFC scan
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -213,7 +246,7 @@ class _NFCPageState extends State<NFCPage> with SingleTickerProviderStateMixin {
           if (navigatorKey.currentState?.canPop() ?? false) {
             navigatorKey.currentState?.pop(); // Close pop-up dialog
           }
-          await Future.delayed(const Duration(seconds: 5));
+          // await Future.delayed(const Duration(seconds: 5));
           await NfcManager.instance.stopSession(); // Cancel NFC scan
 
           ScaffoldMessenger.of(context).showSnackBar(
