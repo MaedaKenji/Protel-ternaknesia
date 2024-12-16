@@ -167,7 +167,61 @@ app.get('/api/cattles-relational/predict/:cow_id', async (req, res) => {
 app.get('/api/cows/dokter-home', async (req, res) => {
   try {
     const result = await poolTernaknesiaRelational.query(`
+WITH 
+latest_kesehatan AS (
+    SELECT 
+        cow_id, 
+        tanggal AS kesehatan_tanggal, 
+        status_kesehatan,
+        ROW_NUMBER() OVER (PARTITION BY cow_id ORDER BY tanggal DESC) AS rn
+    FROM public.kesehatan
+),
+latest_catatan AS (
+    SELECT 
+        cow_id, 
+        tanggal AS catatan_tanggal, 
+        catatan,
+        ROW_NUMBER() OVER (PARTITION BY cow_id ORDER BY tanggal DESC) AS rn
+    FROM public.catatan
+)
+SELECT 
+    c.cow_id,
+    c.gender,
+    c.umur,
+    c.nfc_id,
+    lc.catatan AS catatan_terakhir,
+    lk.status_kesehatan AS kesehatan_terakhir,
+    lk.kesehatan_tanggal AS tanggal_kesehatan_terakhir
+FROM 
+    public.cows c
+JOIN 
+    latest_kesehatan lk ON c.cow_id = lk.cow_id AND lk.rn = 1 AND lk.status_kesehatan = 'sakit'
+LEFT JOIN 
+    latest_catatan lc ON c.cow_id = lc.cow_id AND lc.rn = 1
+ORDER BY 
+    c.cow_id ASC;
+`);
 
+    // Format the result
+    const formattedResponse = result.rows.map((row) => ({
+      id: row.cow_id.toString(), // Format ID to 3 digits with leading zeros
+      gender: row.gender, // Capitalize first letter
+      info: row.catatan_terakhir || 'Tidak ada catatan', // Default if no notes available
+      checked: false, // Default value as per example
+      isConnectedToNFCTag: row.nfc_id !== null, // Determine connection to NFC tag
+      age: row.umur.toString(), // Convert age in months to years
+    }));
+
+    res.json(formattedResponse);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+app.get('/api/cows/dokter-home', async (req, res) => {
+  const query = ''
+  try {
+    const result = await poolTernaknesiaRelational.query(`
 `);
 
     // Format the result

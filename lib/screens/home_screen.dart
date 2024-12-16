@@ -579,7 +579,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _futureSummaryData = Future.value(summaryData);
       });
 
-      fetchSusuBulanan();
+      await fetchSusuBulanan();
       await assignFetchedData();
       await fetchBestCombination();
 
@@ -611,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _futureSummaryData = Future.value(summaryData);
       });
-      fetchSusuBulanan();
+      await fetchSusuBulanan();
       await assignFetchedData();
       await fetchBestCombination();
     } catch (e) {
