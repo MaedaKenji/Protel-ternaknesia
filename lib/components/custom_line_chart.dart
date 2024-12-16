@@ -119,7 +119,7 @@ class _CustomLineChartState extends State<CustomLineChart> {
                 value: widget.datas.isNotEmpty &&
                         widget.datas.containsKey(selectedMonth)
                     ? selectedMonth
-                    : 'Default',
+                    : null,
                 icon:
                     const Icon(Icons.arrow_drop_down, color: Color(0xFFC35804)),
                 items: widget.datas.keys.map((String month) {

@@ -56,7 +56,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshData();
+    _initializeData();
+  }
+
+Future<void> _initializeData() async {
+    await _refreshData();
   }
 
   String _monthYear(DateTime date) {
@@ -543,7 +547,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("data: " + data.toString());
 
         // Asumsikan API mengembalikan list of maps
         setState(() {
@@ -644,7 +647,8 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
+            : 
+            RefreshIndicator(
                 onRefresh: _refreshData,
                 child: Column(children: [
                   Stack(

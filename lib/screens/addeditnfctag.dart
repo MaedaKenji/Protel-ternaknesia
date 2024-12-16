@@ -397,6 +397,7 @@ class _AddEditNFCTagState extends State<AddEditNFCTag>
                               color: Colors.white,
                             ),
                           ),
+                        
                         ],
                       ),
                       Container(

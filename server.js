@@ -625,6 +625,31 @@ app.get('/api/cows/:id/ASLI', async (req, res) => {
 });
 
 app.post('/api/cows/tambahsapi', async (req, res) => {
+  const {  id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
+
+  
+  try {
+    const query = `INSERT INTO cows `
+    const result = await poolTernaknesiaRelational.query(
+      'INSERT INTO cows (cow_id, gender, umur) VALUES ($1, $2, $3) RETURNING *',
+      [id, gender, age]
+    );
+
+    // Setelah itu, masukkan data weight ke tabel body_weight dengan cow_id yang sudah didapatkan
+    const insertWeightResult = await poolTernaknesiaRelational.query(
+      'INSERT INTO berat_badan (cow_id, tanggal, weight) VALUES ($1, $2, $3) RETURNING *',
+      [id, new Date(), weight]
+    );
+
+
+    res.status(201).json({ message: 'Cow added', cow: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+app.post('/api/cows/tambahsapi', async (req, res) => {
   const { id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
 
   if (!id) {

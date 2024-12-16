@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -89,7 +87,11 @@ class _DataPageState extends State<DataPage> {
   void initState() {
     super.initState();
     cattleData = fetchCattleData();
-    _refreshData();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _refreshData();
   }
 
   Future<List<Cattle>> fetchCattleData() async {
