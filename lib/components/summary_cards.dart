@@ -14,7 +14,7 @@ class SummaryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final userRole = Provider.of<UserRole>(context);
 
-    final Map<String, List<SummaryCard>> summaryCardRole = {
+    Map<String, List<SummaryCard>> summaryCardRole = {
       'user': [
         SummaryCard(
             title: data[0]['title'] + ' L',
@@ -25,14 +25,14 @@ class SummaryCards extends StatelessWidget {
             title: data[2]['title'], subtitle: 'Sapi yang telah diberi pakan'),
       ],
       'doctor': [
-        const SummaryCard(title: '35', subtitle: 'Sapi sehat'),
-        const SummaryCard(title: '8', subtitle: 'Sapi terindikasi sakit'),
-        const SummaryCard(title: '5', subtitle: 'Sapi dalam pengobatan'),
+        SummaryCard(title: data[0]['title'], subtitle: 'Sapi sehat'),
+        SummaryCard(
+            title: data[1]['title'], subtitle: 'Sapi terindikasi sakit'),
       ],
       'dokter': [
-        const SummaryCard(title: '35', subtitle: 'Sapi sehat'),
-        const SummaryCard(title: '8', subtitle: 'Sapi terindikasi sakit'),
-        const SummaryCard(title: '5', subtitle: 'Sapi dalam pengobatan'),
+        SummaryCard(title: data[0]['title'], subtitle: 'Sapi sehat'),
+        SummaryCard(
+            title: data[1]['title'], subtitle: 'Sapi terindikasi sakit'),
       ],
       'admin': [
         SummaryCard(
@@ -43,6 +43,17 @@ class SummaryCards extends StatelessWidget {
         SummaryCard(
             title: data[2]['title'], subtitle: 'Sapi yang telah diberi pakan'),
       ],
+
+      // 'doctor': [
+      //   const SummaryCard(title: '35', subtitle: 'Sapi sehat'),
+      //   const SummaryCard(title: '8', subtitle: 'Sapi terindikasi sakit'),
+      //   const SummaryCard(title: '5', subtitle: 'Sapi dalam pengobatan'),
+      // ],
+      // 'dokter': [
+      //   const SummaryCard(title: '35', subtitle: 'Sapi sehat'),
+      //   const SummaryCard(title: '8', subtitle: 'Sapi terindikasi sakit'),
+      //   const SummaryCard(title: '5', subtitle: 'Sapi dalam pengobatan'),
+      // ],
     };
 
     // Get the correct summary cards for the current role

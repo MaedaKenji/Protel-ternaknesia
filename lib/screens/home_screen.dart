@@ -43,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
     ],
   };
   Future<List<Map<String, String>>> _futureSummaryData = Future.value([]);
+  Future<List<Map<String, String>>> _futureSakitData= Future.value([]);
+  
   Map<String, List<FlSpot>> milkProductionData = {};
   Map<String, List<FlSpot>> greenFodderData = {};
   Map<String, List<FlSpot>> concentratedFodderData = {};
@@ -408,6 +410,66 @@ Future<void> _initializeData() async {
     }
   }
 
+  Future<List<Map<String, String>>> _fetchSakitData() async {
+    final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
+    final port = dotenv.env['PORT'] ?? '8080';
+    final url = '$baseUrl:$port/api/data/summary/dokter';
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonResponse = jsonDecode(response.body);
+
+        // Mengolah data dari JSON response
+        final Map<String, String> dataMap = {
+          for (var item in jsonResponse)
+            item['status_kesehatan']: item['total'],
+        };
+
+        return [
+          {
+            'title': dataMap['sehat'] ?? '0',
+            'subtitle': 'Sapi sehat',
+          },
+          {
+            'title': dataMap['sakit'] ?? '0',
+            'subtitle': 'Sapi terindikasi sakit',
+          },
+          {
+            'title': '0', // Jika diperlukan, tambahkan data lain
+            'subtitle': 'Sapi dalam pengobatan',
+          },
+        ];
+      } else {
+        // Handle jika status code bukan 200
+        return [
+          {'title': 'Error', 'subtitle': 'Gagal mengambil data dari server'},
+          {'title': 'Error', 'subtitle': 'Gagal mengambil data dari server'},
+          {'title': 'Error', 'subtitle': 'Gagal mengambil data dari server'},
+        ];
+      }
+    } catch (e) {
+      // Handle jika terjadi kesalahan
+      return [
+        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
+        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
+        {'title': 'Error', 'subtitle': 'Tidak ada data dari server'},
+      ];
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+
+
   Future<Map<String, Map<String, List<FlSpot>>>> _fetchChartData() async {
     final baseUrl = dotenv.env['BASE_URL'] ?? 'http://defaulturl.com';
     final port = dotenv.env['PORT'] ?? '8080';
@@ -531,14 +593,13 @@ Future<void> _initializeData() async {
     }
   }
 
-  Future<void> fetchSickIndicatedDinamis() async {
+  Future<void> fetchSickIndicatedDinamis() async {    
     final response = await http
         .get(
           Uri.parse(
               '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/predict/monthly'),
         )
         .timeout(const Duration(seconds: 5));
-    print("response: " + response.body);
     String apiUrl =
         '${dotenv.env['BASE_URL']}:${dotenv.env['PORT']}/api/cows/dokter-home'; // Ganti dengan URL API Anda
     try {
@@ -588,6 +649,12 @@ Future<void> _initializeData() async {
 
       // Cek apakah userRole disertakan, jika ya lakukan pengecekan role
       if (RoleRole == 'dokter' || RoleRole == 'doctor') {
+        final summarySakit = await _fetchSakitData();
+
+        setState(() {
+          _futureSakitData = Future.value(summarySakit);
+        });
+
         await fetchSickIndicatedDinamis();
       }
     } catch (e) {
@@ -771,7 +838,7 @@ Future<void> _initializeData() async {
                                       child: CircularProgressIndicator());
                                 } else if (snapshot.hasError) {
                                   return Text('Error: ${snapshot.error}');
-                                } else if (snapshot.hasData) {
+                                } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                                   final data = snapshot.data!;
                                   return SummaryCards(data: data);
                                 } else {
@@ -814,7 +881,7 @@ Future<void> _initializeData() async {
                         child: ListView(
                           children: [
                             FutureBuilder<List<Map<String, String>>>(
-                              future: _futureSummaryData,
+                              future: _futureSakitData,
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
@@ -822,7 +889,7 @@ Future<void> _initializeData() async {
                                       child: CircularProgressIndicator());
                                 } else if (snapshot.hasError) {
                                   return Text('Error: ${snapshot.error}');
-                                } else if (snapshot.hasData) {
+                                } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                                   final data = snapshot.data!;
                                   return SummaryCards(data: data);
                                 } else {

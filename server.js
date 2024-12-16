@@ -644,6 +644,35 @@ app.post('/api/cows/tambahsapi', async (req, res) => {
   }
 });
 
+app.get('/api/data/summary/dokter', async (req, res) => {
+  try {
+    const result = await poolTernaknesiaRelational.query(`
+      WITH LatestStatus AS (
+    SELECT 
+        cow_id, 
+        status_kesehatan, 
+        tanggal
+    FROM kesehatan
+    WHERE (cow_id, tanggal) IN (
+        SELECT 
+            cow_id, 
+            MAX(tanggal) AS latest_date
+        FROM kesehatan
+        GROUP BY cow_id
+    )
+)
+SELECT 
+    status_kesehatan,
+    COUNT(*) AS total
+FROM LatestStatus
+GROUP BY status_kesehatan;
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 
 app.post('/api/cows/tambahsapi', async (req, res) => {
   const { id, gender, age, weight, healthRecord } = req.body; // Make sure 'id' is provided in the body
